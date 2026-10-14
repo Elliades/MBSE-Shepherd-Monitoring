@@ -22,6 +22,8 @@
     copy: '<rect x="8.5" y="8.5" width="11.5" height="11.5" rx="2"/><path d="M15.5 8.5V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v7.5a2 2 0 0 0 2 2h2.5"/>',
     check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
     close: '<path d="M6 6l12 12M18 6L6 18"/>',
+    eyeoff: '<path d="M2.5 12c2.4 4.2 5.8 6.3 9.5 6.3s7.1-2.1 9.5-6.3"/><path d="M5.5 15.4l-1.8 2.4M12 18.3V21M18.5 15.4l1.8 2.4"/>',
+    hand: '<path d="M8 13V5.5a1.5 1.5 0 0 1 3 0V11"/><path d="M11 10.5V4a1.5 1.5 0 0 1 3 0v6.5"/><path d="M14 10.5V5.5a1.5 1.5 0 0 1 3 0V13"/><path d="M17 11.5V8.5a1.5 1.5 0 0 1 3 0V15a7 7 0 0 1-7 7h-1.5a6 6 0 0 1-4.6-2.2L4 15.5a1.6 1.6 0 0 1 2.4-2.1L8 15"/>',
     zoom: '<circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21M10.5 8v5M8 10.5h5"/>',
     open: '<path d="M14 4h6v6"/><path d="M20 4l-9 9"/><path d="M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4"/>',
     plus: '<path d="M12 5v14M5 12h14"/>',
@@ -194,7 +196,9 @@
   }
   function inlineIcon(name) {
     const i = (CFG.icons || {})[name];
-    return i ? `<img class="ico" src="${esc(i.src)}" alt="${esc(i.alt)}">` : '';
+    if (!i) return '';
+    if (i.svg) return `<span class="ico ico-svg" role="img" aria-label="${esc(i.alt)}">${i.svg}</span>`;
+    return `<img class="ico" src="${esc(i.src)}" alt="${esc(i.alt)}">`;
   }
   function linkChip(spec) {
     const [key, label] = spec.split('|');
@@ -245,21 +249,10 @@
     const btn = document.getElementById("cameo-btn");
     if (btn) btn.dataset.status = st.status;
     document.querySelectorAll("[data-cameo-status]").forEach((el) => { el.textContent = cameoHint(); });
-    const box = document.getElementById("cameo-box");
-    if (box) box.innerHTML = cameoBody(st);
-  }
-  function cameoBody(st) {
-    if (st.status === "connected" || st.status === "waiting" || st.status === "connecting") {
-      return `<p><strong>Code ${esc(st.code)}</strong> - ${esc(cameoHint())}</p>
-        <div class="btn-row"><button type="button" class="btn ghost small" data-cameo-leave>Disconnect</button></div>`;
-    }
-    return `<p>Cameo shows a 6-letter code in the menu <strong>OMF &gt; Relay pairing code</strong>. Type it here to open elements of the model from this guide.</p>
-      <form class="cameo-form" data-cameo-form><input class="cameo-code" name="code" maxlength="9" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="ABCDEF" aria-label="Pairing code" value="${esc(st.tried || '')}">
-      <button type="submit" class="btn small">Connect</button></form>${st.error ? `<p class="cameo-error" role="alert">${esc(st.error)}</p>` : ""}`;
+    if (window.CameoDialog) window.CameoDialog.refresh(st);
   }
   function openCameo() {
-    if (!B) return;
-    openOverlay({ kind: "dialog", label: "Cameo", title: "Connect to Cameo", body: `<div id="cameo-box" style="display:grid;gap:.9rem">${cameoBody(B.state())}</div>` });
+    if (B && window.CameoDialog) window.CameoDialog.open(openOverlay);
   }
   function openInCameo(key, btn) {
     const L = LINKS[key];
@@ -289,8 +282,8 @@
   }
 
   function videoHTML(v) {
-    return `<figure class="fig video-fig">
-      <div class="video-frame"><video src="${esc(v.src)}" width="${v.w}" height="${v.h}" aria-label="${esc(v.alt || '')}" autoplay muted loop playsinline controls preload="auto"></video></div>
+    return `<figure class="fig video-fig" style="--w:${v.w};--h:${v.h}">
+      <div class="video-frame"><video src="${esc(v.src)}" width="${v.w}" height="${v.h}" aria-label="${esc(v.alt || '')}" autoplay muted loop playsinline controls preload="auto"></video><button type="button" class="video-zoom" data-video-zoom aria-pressed="false" aria-label="Enlarge the video">${ic('zoom')}</button></div>
       ${v.caption ? `<figcaption>${inline(v.caption)}</figcaption>` : ''}
     </figure>`;
   }
@@ -300,7 +293,7 @@
     const on = !!S.steps[id];
     return `<li class="step" role="checkbox" aria-checked="${on}" tabindex="0" data-step="${esc(id)}">
       <span class="step-n"><b>${n}</b>${CHECK}</span>
-      <div class="step-body${o.fig ? ' step-split' : ''}"><div>${inline(o.t)}${o.note ? `<div class="step-note">${inline(o.note)}</div>` : ''}</div>${o.fig ? figureHTML(o.fig, 'step-fig') : ''}</div>
+      <div class="step-body${o.fig ? ' step-split' : ''}"><div>${inline(o.t)}${o.widget ? `<div data-widget="${esc(o.widget)}"></div>` : ''}${o.note ? `<div class="step-note">${inline(o.note)}</div>` : ''}</div>${o.fig ? figureHTML(o.fig, 'step-fig') : ''}</div>
     </li>`;
   }
 
@@ -348,6 +341,7 @@
     if (q.justify) {
       h += `<div class="field"><label for="q-${q.id}-why">Justify</label><textarea id="q-${q.id}-why" data-ans="${q.id}.why" placeholder="Explain your reasoning in a few lines.">${esc(a.why || '')}</textarea></div>`;
     }
+    h += `<div class="q-call" ${answered(q) ? '' : 'hidden'}>${ic('hand')}<span>Answered? Raise your hand and call the teacher to check it.</span></div>`;
     return h + '<span class="saved" aria-hidden="true">Saved on this device</span></section>';
   }
 
@@ -419,7 +413,13 @@
       return `<div class="pathcard"><div class="pathcard-head"><span class="mono-label">${L.made ? 'Where you create it' : 'Where to go in the Model Browser'}</span></div>${treeHTML(L)}${linkActions(b.path)}</div>`;
     }
     if (b.copy) {
-      return `<div class="copyfield"><span class="mono-label">${esc(b.copy.label)}</span><code>${esc(b.copy.value)}</code><button type="button" class="btn ghost small" data-copy="${esc(b.copy.value)}">${ic('copy')}Copy</button></div>`;
+      // With fromAnswer, one line per function named in that question; an empty row keeps "fct N".
+      const f = b.copy.fromAnswer;
+      const items = f ? (S.answers[f.q] || {}).items || [] : [];
+      const value = f
+        ? Array.from({ length: Math.max(f.min || 4, items.length) }, (_, i) => (items[i] || '').replace(/\s+/g, ' ').trim() || `fct ${i + 1}`).join('\n')
+        : b.copy.value;
+      return `<div class="copyfield"><span class="mono-label">${esc(b.copy.label)}</span><code>${esc(value)}</code><button type="button" class="btn ghost small" data-copy="${esc(value)}">${ic('copy')}Copy</button></div>`;
     }
     if (b.download) {
       const d = b.download;
@@ -435,6 +435,10 @@
     }
     if (b.tip) {
       return `<div class="reveal tip-toggle"><button type="button" class="btn ghost small" data-reveal aria-expanded="false">${ic('bulb')}<span>${esc(b.tip.label)}</span></button><div class="reveal-body"><div><div class="tip-body">${(b.tip.blocks || []).map((x, xi) => renderBlock(x, scene, path + '.tip.' + xi)).join('')}</div></div></div></div>`;
+    }
+    if (b.call) return `<div class="q-call">${ic('hand')}<span>${inline(b.call)}</span></div>`;
+    if (b.solution) {
+      return `<div class="reveal solution"><button type="button" class="solution-cover" data-reveal aria-expanded="false">${ic('eyeoff', 'eye-closed')}${ic('eye', 'eye-open')}<span class="when-closed">${esc(b.solution.label)}</span><span class="when-open">Hide the solution</span></button><div class="reveal-body"><div>${(b.solution.blocks || []).map((x, xi) => renderBlock(x, scene, path + '.solution.' + xi)).join('')}</div></div></div>`;
     }
     if (b.faq) return faqHTML();
     if (b.notes) {
@@ -492,6 +496,8 @@
     opts = opts || {};
     mounted.forEach((fn) => { try { fn(); } catch (e) { /* widget already gone */ } });
     mounted = [];
+    /* Moving to another step folds the drone simulation away: it belongs to the step it was opened in. */
+    if (window.Sim) window.Sim.close();
     const dir = shown && scene.index < shown.index ? 'back' : 'fwd';
     const same = shown === scene;
     shown = scene;
@@ -788,12 +794,6 @@
   }
 
   let resetArmed = 0;
-  document.addEventListener('submit', (e) => {
-    const form = e.target.closest('[data-cameo-form]');
-    if (!form) return;
-    e.preventDefault();
-    B.connect(form.elements.code.value);
-  });
   if (B) { B.onChange(refreshCameo); B.start(); }
 
   document.addEventListener('click', (e) => {
@@ -818,6 +818,14 @@
 
     const zoom = t.closest('[data-zoom]');
     if (zoom) { openLightbox(zoom.dataset.zoom, zoom.dataset.cap); return; }
+
+    const videoZoom = t.closest('[data-video-zoom]');
+    if (videoZoom) {
+      const on = videoZoom.closest('.video-fig').classList.toggle('is-open');
+      videoZoom.setAttribute('aria-pressed', String(on));
+      videoZoom.setAttribute('aria-label', on ? 'Reduce the video' : 'Enlarge the video');
+      return;
+    }
 
     const act = t.closest('[data-action]');
     if (act) {
@@ -884,6 +892,9 @@
       const box = t.closest('.question, .notes');
       const flag = box && $('.saved', box);
       if (flag) { flag.classList.add('show'); clearTimeout(flag._t); flag._t = setTimeout(() => flag.classList.remove('show'), 1600); }
+      const q = box && box.classList.contains('question') && questionById(t.dataset.ans.split('.')[0]);
+      const call = q && $('.q-call', box);
+      if (call) call.hidden = !answered(q);
       return;
     }
     if (t.matches('[data-todo]')) {

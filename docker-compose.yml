@@ -1,0 +1,14 @@
+services:
+  web:
+    build: .
+    image: mbse-shepherd:latest
+    ports:
+      - "${MBSE_SHEPHERD_HOST_PORT:-3130}:80"
+    depends_on:
+      - relay
+    restart: unless-stopped
+  # Pairs Cameo with the guides of the students; reached through /relay/ of the web service.
+  relay:
+    build: ./relay
+    image: mbse-shepherd-relay:latest
+    restart: unless-stopped

@@ -29,8 +29,51 @@ Fonts come from Google Fonts. Without Internet the guide falls back to system fo
 | `assets/img/` | Screenshots taken from the Word handout. |
 | `assets/models/` | Cameo model files students download from the guide (`{download: …}` block). |
 | `js/engine.js` | Navigation, progress, answers, overlays. |
+| `js/bridge.js` | Link to the student's Cameo through the relay (open an element, receive the simulation signals). |
+| `relay/` | The relay itself (copy of the monitoring project's), deployed next to the guide. |
+| `js/sim-core.js`, `js/sim-motion.js`, `js/sim-scene.js`, `js/sim.js` | The simulation panel (see below). |
 | `js/widgets.js` | The interactive parts (state machine simulator, mission, sequence replay…). |
 | `css/app.css` | The whole look, light and dark. |
+| `css/sim.css` | The simulation panel and its pasture. |
+| `assets/sim/` | The drone, sheep, bear and base of the pasture. |
+
+## Simulation panel
+
+The **Simulation** button of the top bar slides a panel down from under the bar (and back up when
+it is hidden, with **Hide**, the same button, or Esc). The panel lies over the guide, it never
+pushes it, so the page does not move. It shows the drone of the Pasture Sentinel mission reacting
+to the simulation running in the student's Cameo:
+
+- Link Cameo with the **Cameo** button (the 6-letter code of the plugin). The panel then follows
+  the signals Cameo sends (`Start SOI`, `Start Patrolling`, ...) and jumps to the current step when
+  it joins in the middle of a mission.
+- Without Cameo it still works as a preview: click the signals offered for the current step, or
+  play the nominal scenario. These buttons never send anything to Cameo.
+- A signal that is not allowed in the current step is logged and ignored.
+
+The logic comes from the monitoring project (`MBSE-Shepard-Monitoring`, `src/poc`): `sim-core.js`
+holds the steps and transitions, `sim-motion.js` the movements, `sim-scene.js` the pasture. If the
+state machine of the drone changes in Cameo, change `TRANSITIONS` in `js/sim-core.js`.
+
+## The relay (Cameo ↔ guide)
+
+The guide and the student's Cameo meet in a small relay (`relay/`, see its README). Both must use
+the **same** relay:
+
+- **Guide:** the **Cameo** button opens a dialog with the pairing code, the state of the link (and why
+  it fails) and the relay address; the address can be changed there and is kept in the browser. The
+  default is `relayUrl` in `content/config.js`. `"auto"` (default) means `wss://<site>/relay` when the
+  guide is online, and `ws://127.0.0.1:8787` when it runs on your computer. `?relay=wss://host/path`
+  overrides it for one visit.
+- **Cameo:** Options > Environment > *Relay bridge* > **Relay address**. Online it is
+  `wss://shepherd.chaos-art.fr/relay`; the default `ws://127.0.0.1:8787` is a relay on the same computer
+  as Cameo. Then **OMF > Relay pairing code** shows the code to type in the guide.
+- **Deploy:** `docker compose up` starts the guide (`web`) and the relay (`relay`); nginx forwards
+  `/relay/` to the relay, so there is one address and one `https` (a secure page cannot open a plain
+  `ws://` socket to another machine).
+
+If the Cameo button keeps saying "Cannot reach the relay at ...", the address in the message is the one
+the guide is trying: it is not the relay Cameo is connected to.
 
 ## Edit a scene
 

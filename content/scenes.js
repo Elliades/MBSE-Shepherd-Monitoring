@@ -66,21 +66,6 @@ window.COURSE = {
             text: "This guide says **Cameo** to refer to the tool. You can read **Magic CSE** instead: it is the same thing here."
           }
         },
-        {
-          callout: {
-            tone: "warn", title: "English here, French in the tool",
-            text: "Menus are sometimes written in English in this guide and shown in French in Cameo. Labels of the interface look like this: {{Create Diagram}}."
-          }
-        },
-        {
-          placeholder: {
-            kind: "text", title: "French labels of the menus used in this guide",
-            todo: [
-              "List the French label of each menu quoted in the guide (Create Diagram, Create element, Specification, Open the project…)",
-              "Decide whether to show them next to the English label or in a glossary"
-            ]
-          }
-        }
       ]
     },
     {
@@ -108,6 +93,22 @@ window.COURSE = {
           callout: {
             tone: "note", title: "Out of scope for the moment",
             text: "The **Ground Station** is not part of our scope of study. It talks to the drone, but you do not design it."
+          }
+        }
+      ]
+    },
+    {
+      id: "handout", ch: "brief", kind: "read",
+      title: "Get the handout",
+      lead: "Optional. The handout is the written version of this guide: keep it open or print it to follow the exercise on paper.",
+      blocks: [
+        {
+          tip: {
+            label: "Optional: download the handout",
+            blocks: [
+              { p: "The handout has the same steps as this guide, in full sentences. Nothing here is required to do the exercise." },
+              { download: { label: "Handout", file: "BE Cameo - Part 1 - Discover -2025 (MAJ).docx", src: "assets/docs/BE Cameo - Part 1 - Discover -2025 (MAJ).docx", size: "1.7 MB" } }
+            ]
           }
         }
       ]
@@ -164,17 +165,51 @@ window.COURSE = {
       ]
     },
     {
+      id: "language", ch: "setup", kind: "do",
+      title: "Switch Cameo to English",
+      lead: "The menus of this guide are in English. Switch the tool to English so both match.",
+      blocks: [
+        {
+          steps: [
+            "Choose {{Options > Environment}}.",
+            "In the search field, type **lang**.",
+            "Choose **English**."
+          ]
+        }
+      ]
+    },
+    {
+      id: "install-plugin", ch: "setup", kind: "do",
+      title: "Install the OMF-ISAE plugin",
+      lead: "The exercise needs the OMF-ISAE plugin. Install it from the plugin manager.",
+      blocks: [
+        { download: { label: "Plugin to install", file: "com.samares-engineering.omf.plugin_1.0.0.zip", src: "assets/plugins/com.samares-engineering.omf.plugin_1.0.0.zip", size: "21 MB" } },
+        {
+          steps: [
+            "In Cameo, choose {{Help > Resource & Plugin Manager}}, then click {{Import}}.",
+            "Select the plugin file you downloaded."
+          ]
+        },
+        {
+          callout: {
+            tone: "warn", title: "Restart MagicDraw",
+            text: "Close and restart Cameo (MagicDraw) once the plugin is imported. The plugin is only loaded at startup."
+          }
+        }
+      ]
+    },
+    {
       id: "load-model", ch: "setup", kind: "do",
       title: "Load the model",
       lead: "The model comes as one archive file. Cameo opens it as it is.",
       blocks: [
+        { download: { label: "File to open", file: "UAV_BE_Note_2024 _V2_Exercice Student.mdzip", src: "assets/models/UAV_BE_Note_2024 _V2_Exercice Student.mdzip", size: "841 KB" } },
         {
           steps: [
-            "Download the model with the button below.",
+            "Download the model with the button above.",
             "In Cameo, choose {{Open the project}} and pick the **UAV** file."
           ]
         },
-        { download: { label: "File to open", file: "UAV_BE_Note_2024 _V2_Exercice Student.mdzip", src: "assets/models/UAV_BE_Note_2024 _V2_Exercice Student.mdzip", size: "848 KB" } },
         {
           callout: {
             tone: "warn", title: "Do not unzip it",
@@ -208,12 +243,6 @@ window.COURSE = {
             { n: "B", title: "Click, then Enter", text: "Click on the element to select it, then press Enter." },
             { n: "C", title: "Right-click, then Specification", text: "Right-click on the element and choose {{Specification}}." }
           ]
-        },
-        {
-          placeholder: {
-            kind: "gif", title: "Opening the Specification window",
-            todo: ["Short screen recording (5 s) of right-click > Specification on a block"]
-          }
         }
       ]
     },
@@ -386,16 +415,14 @@ window.COURSE = {
     },
     {
       id: "a-messages", ch: "A", kind: "do", ref: "A",
-      title: "Add the messages",
-      lead: "Now draw what the three participants exchange, in the order of the scenario.",
+      title: "Send messages between actors",
+      lead: "Draw the exchanges between two participants with a Send Message.",
       blocks: [
         {
           steps: [
-            "Add the messages exchanged between the 3 participants. Use only the {{Send Message}} and {{Message to Self}} elements from the palette (or click on the lifeline).",
-            "When you draw a message, stop the arrow when a blue vertical line appears on the timeline of the receiver.",
-            "Name the two Messages to Self <<Load FlightPlan>> and <<Check FlightPlan Perimeter>>.",
-            "A Send Message, incoming or outgoing, can be associated with a functional signal. You can create a new signal by clicking on the **S** button next to the message name, or use the auto-completion to select an existing signal, or drag and drop an existing signal from [[fd-deployment]] onto the message.",
-            "Organize the signals you created in the Functional Data package [[fd-deployment]]."
+            "Use the {{Send Message}} element from the palette, and draw it from one lifeline to another. Stop the arrow when a blue vertical line appears on the timeline of the receiver.",
+            "Reuse a signal that already exists: drag it from [[fd-deployment]] onto the message, or pick it with the auto-completion.",
+            "Or create a new signal: click on the **S** button next to the message name."
           ]
         },
         {
@@ -406,20 +433,59 @@ window.COURSE = {
           }
         },
         {
-          figure: {
-            src: "assets/img/sd-loading-flight-plan.png", w: 2000, h: 801,
-            alt: "Cameo showing the sequence diagram [SD 1] Loading the flight plan with three lifelines: Mission Operator, Ground station and SOI - Pasture Sentinel, and seven numbered messages. Orange arrows link signals of the Model Browser to messages of the diagram.",
-            caption: "Your scenario should look like this. The orange arrows show signals dragged from the Model Browser onto messages."
+          callout: {
+            tone: "note", title: "Signals are not functions",
+            text: "A signal is data, energy or an element that travels between the participants, such as the flight plan. A function is something a participant does: it comes later, as an activity."
           }
         },
-        { h: "The same scenario, one message at a time" },
-        { widget: "sequence" },
         {
-          placeholder: {
-            kind: "gif", title: "Drawing a message and dropping a signal on it",
-            todo: [
-              "Record drawing one Message between two lifelines until the blue line appears (6 s)",
-              "Record dragging the FlightPlan signal from the Model Browser onto that message (6 s)"
+          steps: [
+            "Organize the signals you created in the Functional Data package [[fd-deployment]]."
+          ]
+        }
+      ]
+    },
+    {
+      id: "a-self-messages", ch: "A", kind: "do", ref: "A",
+      title: "Messages to self",
+      lead: "Some steps are done by one participant alone. They have no signal: they are messages to self, named like the functions they run.",
+      blocks: [
+        {
+          steps: [
+            "On the lifeline of the drone (SOI - Pasture Sentinel), use the {{Message to Self}} element from the palette.",
+            "Name it <<Load FlightPlan>>.",
+            "Add a second message to self and name it <<Check FlightPlan Perimeter>>."
+          ]
+        },
+        { widget: "selfMessage" },
+        {
+          callout: {
+            tone: "note", title: "No signal here",
+            text: "A message to self carries no signal. Its name is the function the drone performs, and you will use the same name for the activity later."
+          }
+        }
+      ]
+    },
+    {
+      id: "a-your-turn", ch: "A", kind: "do", ref: "A",
+      title: "Your turn: model this scenario",
+      lead: "Read the scenario again, then draw it as a sequence diagram with the messages and the signals.",
+      blocks: [
+        { widget: "scenario" },
+        { call: "When your sequence diagram is finished, call the teacher to check it." }
+      ]
+    },
+    {
+      id: "a-solution", ch: "A", kind: "read", ref: "A",
+      title: "The solution, step by step",
+      lead: "Once the teacher has checked your diagram, open the solution and compare.",
+      blocks: [
+        {
+          solution: {
+            label: "Open the solution",
+            blocks: [
+              { h: "The same scenario, one message at a time" },
+              { widget: "sequence" }
             ]
           }
         }
@@ -473,11 +539,14 @@ window.COURSE = {
       blocks: [
         { path: "fa-deployment" },
         {
+          callout: {
+            tone: "note", title: "Goal of this section",
+            text: "The functions are grouped in packages, one package per service of the drone: for example Guard the sheep, Configuration or Mission Monitoring."
+          }
+        },
+        {
           steps: [
-            {
-              t: "Click the small + to the left of [[fa-root]] to show its packages.",
-              note: "Goal: decompose the functions into packages, one package per service. Examples: Guard the sheep, Configuration, Mission Monitoring."
-            },
+            "Click the small + to the left of [[fa-root]] to show its packages.",
             "Right-click on the package **Deployment**, then {{Create element > Activity}}.",
             "The new activity appears in the containment tree. Rename it <<Parameter Mission>>. It represents the use case we specified with \"Parameter Mission\"."
           ]
@@ -513,8 +582,8 @@ window.COURSE = {
           tip: {
             label: "Optional tip: create several activities at once",
             blocks: [
-              { p: "If you already know the names of your functions, you do not need to create them one by one. Copy this text, replace the four lines with your own function names, and keep it ready:" },
-              { copy: { label: "Text to copy", value: "fct 1\nfct 2\nfct 3\nfct 4" } },
+              { p: "You do not need to create the functions one by one. Copy this text: it holds the functions you named in Question 2, and a placeholder (fct 1, fct 2…) for each one you have not named yet." },
+              { copy: { label: "Text to copy", value: "fct 1\nfct 2\nfct 3\nfct 4", fromAnswer: { q: "q2", min: 4 } } },
               {
                 list: [
                   "In the Model Browser, select the package the functions belong to, for example <<Parameter Mission>>.",
@@ -524,12 +593,6 @@ window.COURSE = {
                 ]
               }
             ]
-          }
-        },
-        {
-          placeholder: {
-            kind: "gif", title: "Creating packages and organizing the functions in them",
-            todo: ["Record the creation of the package Parameter Mission, then the drag of the activity into it (8 s)", "Record the creation of two service packages, then the moves of their functions (10 s)"]
           }
         }
       ]
@@ -554,8 +617,20 @@ window.COURSE = {
         {
           callout: {
             tone: "goal", title: "Goal of this chapter",
-            text: "Update the state machine by allocating **Load Flight Plan** as a \"Do activity\". On the way, you allocate three signals on transitions: *FlightPlan*, *FlightPlan Check Failed* and *Ready for mission*."
+            text: "Update the state machine so that it covers the whole mission, and allocate each function to the state where it runs. You allocate **Load Flight Plan** to the state *Configured* as a \"Do activity\". On the way, you allocate three signals on transitions: *FlightPlan*, *FlightPlan Check Failed* and *Ready for mission*."
           }
+        },
+        { h: "Which function runs in which step" },
+        {
+          list: [
+            "**Configured** (load the flight plan and check it): runs **Load Flight Plan**. You allocate it in this chapter.",
+            "**Ready for Mission**: runs **Start subsystems**.",
+            "**Going to Safe Area** (join the safe zone): runs **Going to Safe Area**.",
+            "**Patrolling** (patrol the perimeter and track the sheep): runs **Watch Perimeter** and **Sheep monitoring**, side by side.",
+            "**Predator Detected**: runs **Start Predator Tracking**, then **Trigger predator counter actions**.",
+            "**Crashed**: runs **Start Emergency Mode**.",
+            "**Predator Monitoring** and **Mission Monitoring** have no function of their own."
+          ]
         }
       ]
     },
@@ -575,9 +650,10 @@ window.COURSE = {
           ]
         },
         {
-          placeholder: {
-            kind: "screenshot", title: "The state machine as students find it",
-            todo: ["Export the state machine diagram before the exercise (without the Configured state)"]
+          figure: {
+            src: "assets/img/stm-as-found.png", w: 1202, h: 879,
+            alt: "State machine SOI - Pasture Sentinel as students find it. Undeployed contains Off and Unconfigured; Ready for Mission is in Undeployed, Deployed contains Going to Safe Area, Patrolling and Mission Monitoring, and Crashed is on the right. A TO DO note lists the exercise steps.",
+            caption: "The state machine as you find it: no Configured state yet. Click the image to enlarge it."
           }
         }
       ]
@@ -595,9 +671,9 @@ window.COURSE = {
           ]
         },
         {
-          placeholder: {
-            kind: "gif", title: "Adding and naming a state",
-            todo: ["Record palette > State, the click inside Undeployed and the typing of the name (8 s)"]
+          video: {
+            src: "assets/video/create-state.mp4", w: 844, h: 576,
+            alt: "Cameo: State is picked in the palette, a click inside Undeployed creates a new state next to Unconfigured, and its name is typed as Configured."
           }
         }
       ]
@@ -607,18 +683,32 @@ window.COURSE = {
       title: "Draw a transition and give it a signal",
       lead: "A transition says how to go from one state to another. The signal you put on it is what triggers it.",
       blocks: [
-        { h: "From Unconfigured to Configured, on FlightPlan" },
+        { h: "From Unconfigured to Configured" },
         {
           steps: [
-            "Select the shape of the *Unconfigured* state and click the Transition button ((transition)) on its smart manipulator toolbar. Then right-click on the *Configured* state.",
+            "Left-click on the *Unconfigured* state, then click the Transition button ((transition)) on its smart manipulator toolbar and drag it to the *Configured* state."
+          ]
+        },
+        {
+          video: {
+            src: "assets/video/create-transition.mp4", w: 560, h: 352,
+            alt: "Cameo: the Unconfigured state is selected, its Transition button is clicked on the smart manipulator toolbar, and the transition is drawn to the Configured state."
+          }
+        },
+        { h: "Give the transition its signal" },
+        {
+          p: "The signal is the trigger of the transition. Reuse a signal already described in the scenarios or in the function descriptions: it states the condition under which the transition fires. Reformulate it if needed, so that it reads as a short condition."
+        },
+        {
+          steps: [
             "In the Model Browser, expand [[fd-deployment]].",
             "Select the [[sig-flightplan]] signal and drag it onto the transition between *Unconfigured* and *Configured*."
           ]
         },
         {
-          placeholder: {
-            kind: "gif", title: "Transition from the smart manipulator, then signal dropped on it",
-            todo: ["Record the smart manipulator toolbar appearing and the transition being drawn (6 s)", "Record the FlightPlan signal dragged from the Model Browser onto the transition (6 s)"]
+          video: {
+            src: "assets/video/d-g-signal-transition.mp4", w: 1312, h: 546,
+            alt: "Cameo: the FlightPlan signal is dragged from the Model Browser and dropped onto the transition between Unconfigured and Configured."
           }
         }
       ]
@@ -707,9 +797,9 @@ window.COURSE = {
           }
         },
         {
-          placeholder: {
-            kind: "gif", title: "A complete simulation run",
-            todo: ["Record from Run to the Ready for Mission state, sending Start SOI, FlightPlan and Ready for mission (15 s)"]
+          video: {
+            src: "assets/video/run-simulation.mp4", w: 1390, h: 640,
+            alt: "Cameo: the state machine SOI - Pasture Sentinel is run from the Simulation panel; Play is clicked, then Start SOI is selected in the Trigger list and the machine leaves Unconfigured."
           }
         }
       ]
@@ -719,6 +809,20 @@ window.COURSE = {
       title: "Triggers move the machine",
       lead: "The same state machine, in your browser. Send triggers and watch which transition fires. Try a signal that the current state does not expect, too.",
       blocks: [{ widget: "smSim" }]
+    },
+    {
+      id: "c-drone-live", ch: "C", kind: "try", ref: "C.2",
+      title: "Watch the drone follow Cameo",
+      lead: "The drone of this guide runs the same simulation as Cameo. Pair the guide with Cameo, then watch the drone move.",
+      blocks: [
+        {
+          steps: [
+            "In Cameo, run the simulation and select a signal in the {{Trigger}} list.",
+            { t: "", widget: "linkStatus" },
+            { t: "**Try it!** Click the pink drone button at the top of the page, then send the next signal from Cameo: the drone moves in the app.", widget: "simHint" }
+          ]
+        }
+      ]
     },
     {
       id: "c-cross", ch: "C", kind: "do", ref: "C.3",

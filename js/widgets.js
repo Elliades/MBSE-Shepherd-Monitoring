@@ -176,11 +176,11 @@
   /* ───────── three stages ───────── */
   W.stages = function (root) {
     const rows = [
-      ['1', 'Operational Analysis', 'Who uses the system and for what: use cases, scenarios, operational context.'],
-      ['2', 'Functional Analysis', 'What the system has to do: functions, and the data they exchange.'],
-      ['3', 'Physical Analysis', 'What the system is made of: subsystems, and which one carries out each function.']
+      ['1', 'Operational Analysis', 'Who uses the system and for what: use cases, scenarios, operational context.', '#e8820c', '#ffffff'],
+      ['2', 'Functional Analysis', 'What the system has to do: functions, and the data they exchange.', '#1f6fd1', '#ffffff'],
+      ['3', 'Physical Analysis', 'What the system is made of: subsystems, and which one carries out each function.', '#f2c12e', '#1a1a1a']
     ];
-    root.innerHTML = '<div class="stages">' + rows.map((r, i) => `<div class="stage-row" style="--k:${i}"><span class="num">${r[0]}</span><div><b>${r[1]}</b><span>${r[2]}</span></div></div>`).join('') + '</div>';
+    root.innerHTML = '<div class="stages">' + rows.map((r, i) => `<div class="stage-row" style="--k:${i};--stage:${r[3]};--stage-ink:${r[4]}"><span class="num">${r[0]}</span><div><b>${r[1]}</b><span>${r[2]}</span></div></div>`).join('') + '</div>';
   };
 
   /* ───────── system of interest ───────── */
@@ -520,6 +520,50 @@
   };
 
   /* ───────── message to function ───────── */
+  /* ───────── the drone, opens the simulation panel ───────── */
+  /* "Linked simulation ready", or a button to pair with Cameo. Lives inside a step. */
+  W.linkStatus = function (root) {
+    const paint = () => {
+      if (!root.isConnected) return;
+      const linked = !!window.Bridge && window.Bridge.state().status === 'connected';
+      root.innerHTML = linked
+        ? '<span class="link-ready">Linked simulation ready</span>'
+        : '<button type="button" class="btn small" data-pair>Pair with Cameo</button>';
+    };
+    root.addEventListener('click', (e) => { if (e.target.closest('[data-pair]')) document.getElementById('cameo-btn').click(); });
+    if (window.Bridge) window.Bridge.onChange(paint);
+    paint();
+  };
+
+  /* Turns the drone button of the top bar pink and bouncing while this step is on screen. */
+  W.simHint = function (root) {
+    root.hidden = true;
+    const simBtn = document.getElementById('sim-btn');
+    if (!simBtn) return undefined;
+    const off = () => simBtn.classList.remove('hint');
+    simBtn.classList.add('hint');
+    simBtn.addEventListener('click', off, { once: true });
+    return off;
+  };
+
+  /* ───────── message to self ───────── */
+  W.selfMessage = function (root) {
+    root.className = 'w self-msg';
+    const s = svg('0 0 340 170', 'One lifeline, SOI - Pasture Sentinel, with two messages to self: Load FlightPlan and Check FlightPlan Perimeter. Neither has a signal.');
+    el('line', { x1: 60, y1: 32, x2: 60, y2: 168, class: 'll-line' }, s);
+    el('rect', { x: 16, y: 4, width: 88, height: 28, rx: 3, class: 'll-head' }, s);
+    txt(s, 60, 22, 'Drone', 's-sub', 'middle', 11).setAttribute('style', 'font-weight:700;fill:var(--ink)');
+    el('rect', { x: 56, y: 62, width: 8, height: 90, class: 'act-bar' }, s);
+    [
+      [[[64, 70], [104, 70], [104, 92], [66, 92]], 'Load FlightPlan', 84],
+      [[[64, 120], [104, 120], [104, 142], [66, 142]], 'Check FlightPlan Perimeter', 134]
+    ].forEach(([pts, label, ty]) => {
+      const g = arrow(s, pts, 'msg');
+      txt(g, 112, ty, label, '', 'start', 12);
+    });
+    root.appendChild(s);
+  };
+
   W.msgToFn = function (root) {
     root.className = 'w m2f';
     const s = svg('0 0 360 132', 'On the left, a message on a lifeline of the sequence diagram. An arrow leads to a rounded box on the right: a function, modeled as an activity.');

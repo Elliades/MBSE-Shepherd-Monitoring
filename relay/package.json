@@ -1,0 +1,17 @@
+{
+  "name": "mbse-bridge-relay",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Pairing relay between the MagicDraw plugin and the browser (see PROTOCOL.md)",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}

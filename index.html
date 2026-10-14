@@ -14,6 +14,8 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:ital,wght@0,400;0,600;0,700;1,400&display=swap">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:wght@400;700&display=swap">
 <link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/sim.css">
+<link rel="stylesheet" href="css/cameo.css">
 </head>
 <body>
 <a class="skip" href="#stage">Skip to the scene</a>
@@ -43,6 +45,10 @@
       <span class="crumb-count" id="crumb-count"></span>
     </div>
     <div class="top-actions">
+      <button class="icon-btn" id="sim-btn" aria-expanded="false" aria-controls="sim-drawer" aria-label="Show or hide the drone simulation">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="6" height="6" rx="1.2"/><circle cx="5.5" cy="5.5" r="2.5"/><circle cx="18.5" cy="5.5" r="2.5"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+        <span class="txt">Simulation</span><i class="news" aria-hidden="true"></i>
+      </button>
       <button class="icon-btn" id="cameo-btn" data-status="off" aria-label="Connect to Cameo">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>
         <span class="txt">Cameo</span><i class="dot"></i>
@@ -86,6 +92,11 @@
 <script src="content/scenes.js"></script>
 <script src="js/widgets.js"></script>
 <script src="js/bridge.js"></script>
+<script src="js/cameo-dialog.js"></script>
+<script src="js/sim-core.js"></script>
+<script src="js/sim-motion.js"></script>
+<script src="js/sim-scene.js"></script>
+<script src="js/sim.js"></script>
 <script src="js/engine.js"></script>
 </body>
 </html>

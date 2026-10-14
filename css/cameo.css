@@ -1,0 +1,71 @@
+/* ───────── "Connect to Cameo" dialog (js/cameo-dialog.js) ───────── */
+.cd { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.1rem; }
+
+.cd-status {
+  --tone: var(--ink-3);
+  display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0.8rem; align-items: start;
+  padding: 0.85rem 1rem; border-radius: var(--r-sm); border: 1.5px solid var(--line);
+  border-left: 5px solid var(--tone); background: var(--surface-2);
+}
+.cd-status[data-tone="ok"] { --tone: #2e9d57; }
+.cd-status[data-tone="warn"] { --tone: #d4a017; }
+.cd-status[data-tone="bad"] { --tone: var(--danger); background: var(--danger-soft); }
+.cd-dot { width: 0.8rem; height: 0.8rem; margin-top: 0.4rem; border-radius: 50%; background: var(--tone); }
+.cd-status[data-tone="warn"] .cd-dot { animation: cd-pulse 1.2s ease-in-out infinite; }
+@keyframes cd-pulse { 50% { opacity: 0.35; } }
+.cd-status strong { font-family: var(--font-display); font-size: 1.15rem; line-height: 1.3; }
+.cd-status p { margin: 0.15rem 0 0; font-size: 0.95rem; color: var(--ink-2); overflow-wrap: anywhere; }
+
+.cd-steps { margin: 0 0 0.9rem; padding: 0; list-style: none; display: grid; gap: 0.5rem; counter-reset: cd; }
+.cd-steps li { position: relative; padding-left: 2.1rem; counter-increment: cd; }
+.cd-steps li::before {
+  content: counter(cd); position: absolute; left: 0; top: 0.1rem; width: 1.45rem; height: 1.45rem; display: grid; place-items: center;
+  border-radius: 50%; background: var(--route); color: var(--on-route); font: 700 0.8rem/1 var(--font-mono);
+}
+.cd-menu { padding: 0.05rem 0.4rem; border-radius: 5px; background: var(--surface-2); border: 1px solid var(--line); font-weight: 600; }
+
+.cd-form { display: flex; gap: 0.6rem; align-items: stretch; flex-wrap: wrap; }
+.cd-input {
+  flex: 1 1 11rem; min-width: 0; padding: 0.55rem 0.8rem; border: 2px solid var(--line); border-radius: var(--r-sm);
+  background: var(--surface); color: var(--ink); text-transform: uppercase; text-align: center;
+  font: 700 1.9rem/1.1 var(--font-mono); letter-spacing: 0.3em; text-indent: 0.3em;
+}
+.cd-input::placeholder { color: var(--ink-3); opacity: 0.45; }
+.cd-input:focus { border-color: var(--route); outline: none; box-shadow: 0 0 0 3px var(--route-soft); }
+.cd-form .btn { min-height: 3.4rem; }
+
+.cd-linked { display: flex; align-items: center; gap: 0.8rem; flex-wrap: wrap; }
+.cd-linked .mono-label { flex: none; }
+.cd-code { font: 700 1.6rem/1 var(--font-mono); letter-spacing: 0.25em; }
+.cd-linked .btn { margin-left: auto; }
+
+.cd-relay { border: 1.5px solid var(--line); border-radius: var(--r-sm); }
+.cd-relay summary {
+  display: flex; align-items: center; gap: 0.6rem; padding: 0.6rem 0.9rem; cursor: pointer; list-style: none;
+  font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.09em; text-transform: uppercase; color: var(--ink-3);
+}
+.cd-relay summary::-webkit-details-marker { display: none; }
+.cd-relay summary::before { content: ""; width: 0.45rem; height: 0.45rem; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(-45deg); transition: transform 0.2s var(--ease); }
+.cd-relay[open] summary::before { transform: rotate(45deg); }
+.cd-relay summary code { min-width: 0; margin-left: auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-transform: none; letter-spacing: 0; font-size: 0.78rem; }
+.cd-relay-body { display: grid; gap: 1rem; padding: 0.2rem 0.9rem 1rem; }
+.cd-relay-body p { margin: 0; font-size: 0.95rem; }
+
+.cd-field { display: grid; gap: 0.35rem; }
+.cd-field label, .cd-label { font-weight: 600; font-size: 0.92rem; }
+.cd-row { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+.cd-text {
+  flex: 1 1 14rem; min-width: 0; padding: 0.5rem 0.7rem; border: 1.5px solid var(--line); border-radius: var(--r-sm);
+  background: var(--surface); color: var(--ink); font: 0.95rem/1.3 var(--font-mono);
+}
+.cd-text:focus { border-color: var(--route); outline: none; box-shadow: 0 0 0 3px var(--route-soft); }
+.cd-text:disabled { opacity: 0.6; }
+.cd-addr {
+  flex: 1 1 14rem; min-width: 0; padding: 0.5rem 0.7rem; border-radius: var(--r-sm); background: var(--surface-2);
+  border: 1px dashed var(--line); font: 0.95rem/1.3 var(--font-mono); overflow-wrap: anywhere;
+}
+.cd-note { font-size: 0.85rem; color: var(--ink-3); }
+.cd-note.bad { color: var(--danger); font-weight: 600; }
+.cd-relay-body .cd-note { margin: 0; }
+
+@media (prefers-reduced-motion: reduce) { .cd-status[data-tone="warn"] .cd-dot { animation: none; } }

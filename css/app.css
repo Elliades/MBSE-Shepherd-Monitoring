@@ -107,7 +107,8 @@
 /* ───────── base ───────── */
 *, *::before, *::after { box-sizing: border-box; }
 [hidden] { display: none !important; }
-html { -webkit-text-size-adjust: 100%; scroll-padding-top: calc(var(--top-h) + 1rem); }
+/* No sideways panning on phones: Chrome Android ignores overflow-x on body alone, so it is set on both. */
+html { -webkit-text-size-adjust: 100%; scroll-padding-top: calc(var(--top-h) + 1rem); overflow-x: hidden; overflow-x: clip; max-width: 100%; }
 body {
   margin: 0;
   background: var(--bg);
@@ -117,6 +118,8 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
+  overflow-x: clip;
+  max-width: 100%;
 }
 img, svg { max-width: 100%; }
 button, input, textarea, select { font: inherit; color: inherit; }
@@ -283,6 +286,11 @@ strong { font-weight: 700; }
   display: inline-block; height: 1.5em; width: auto; vertical-align: -0.4em;
   border-radius: 4px; background: var(--paper); border: 1px solid var(--line); padding: 1px;
 }
+.ico-svg {
+  width: 1.5em; height: 1.5em; background: none; border: 0; padding: 0; border-radius: 0;
+  color: inherit;
+}
+.ico-svg svg { display: block; width: 100%; height: 100%; }
 .nb { white-space: nowrap; }
 .nb > * { white-space: normal; }
 .mlink, .cchip {
@@ -381,11 +389,30 @@ strong { font-weight: 700; }
 .fig.xs img { max-width: min(100%, 15rem); }
 .fig.sm img { max-width: min(100%, 24rem); }
 .fig figcaption { font-size: 0.9rem; color: var(--ink-2); max-width: 36rem; }
+/* compact by default, so a video never forces a long scroll: the size follows the
+   video's own ratio (--w / --h set on the figure), hover enlarges, the button pins it open */
+.video-fig { position: relative; z-index: 1; max-width: 100%; }
 .video-frame {
-  padding: 6px; border: 1.5px solid var(--line); border-radius: 10px; background: var(--paper);
-  width: min(100%, 44rem); max-width: 100%;
+  position: relative; padding: 6px; border: 1.5px solid var(--line); border-radius: 10px; background: var(--paper);
+  width: min(100%, 26rem, calc(18rem * var(--w, 16) / var(--h, 9)));
+  max-width: 100%; transform-origin: top left;
+  transition: width 0.3s var(--ease), transform 0.25s var(--ease), box-shadow 0.25s;
 }
 .video-frame video { display: block; width: 100%; height: auto; border-radius: 5px; }
+.video-fig.is-open .video-frame { width: min(100%, 44rem, calc(70vh * var(--w, 16) / var(--h, 9))); }
+.video-zoom {
+  position: absolute; top: 10px; right: 10px; z-index: 1; display: grid; place-items: center; width: 2rem; height: 2rem;
+  border: 0; border-radius: 8px; background: rgba(21, 34, 26, 0.82); color: #fff; cursor: zoom-in;
+}
+.video-zoom svg { width: 1.1rem; height: 1.1rem; }
+.video-fig.is-open .video-zoom { cursor: zoom-out; }
+@media (hover: hover) and (pointer: fine) and (min-width: 640px) {
+  .video-fig:hover .video-frame {
+    transform: scale(1.4); z-index: 2; box-shadow: 0 12px 32px rgba(21, 34, 26, 0.22);
+    transition-delay: 0.2s;
+  }
+  .video-fig.is-open:hover .video-frame { transform: none; box-shadow: none; }
+}
 
 /* ───────── placeholders (author mode only) ───────── */
 .ph {
@@ -508,6 +535,31 @@ body:not(.author) .ph, body:not(.author) .author-only { display: none; }
 .q-item b { display: grid; place-items: center; width: 2rem; height: 2rem; border-radius: 50%; background: var(--amber-soft); color: var(--amber); font-family: var(--font-mono); }
 .saved { font-family: var(--font-mono); font-size: 0.75rem; color: var(--grass); opacity: 0; transition: opacity 0.3s; }
 .saved.show { opacity: 1; }
+.q-call { display: flex; align-items: center; gap: 0.6rem; padding: 0.7rem 0.9rem; border-radius: var(--r); background: var(--amber-soft, var(--surface)); color: var(--ink); font-weight: 600; }
+.q-call[hidden] { display: none; }
+.q-call svg { width: 1.6rem; height: 1.6rem; flex: none; }
+.link-ready { font-family: var(--font-mono); font-weight: 700; color: var(--grass); }
+/* A pink frame around the drone button of the top bar, bouncing to invite a click. Kept even when the
+   phone asks for reduced motion: this is the one movement the step asks for. */
+#sim-btn.hint { color: #e4007c; background: rgba(255, 95, 162, 0.18); border: 2px solid #ff5fa2; border-radius: 8px; outline: 3px solid #ff5fa2; outline-offset: 3px; animation: sim-hint-bounce 0.9s ease-in-out infinite; }
+@keyframes sim-hint-bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+.reveal.solution { max-width: none; }
+.solution-cover { display: flex; flex-direction: column; align-items: center; gap: 0.6rem; width: 100%; padding: 1.6rem 1rem; border: 2px dashed var(--line); border-radius: var(--r); background: var(--surface); color: var(--ink); font: inherit; font-weight: 700; cursor: pointer; }
+.solution-cover { transition: padding 0.4s var(--ease); }
+.solution-cover svg { width: 5rem; height: 5rem; flex: none; transition: width 0.4s var(--ease), height 0.4s var(--ease); }
+.solution-cover .eye-open { display: none; }
+.reveal.solution.open .solution-cover { padding: 0.5rem 1rem; }
+.reveal.solution.open .solution-cover svg { width: 2.4rem; height: 2.4rem; }
+.reveal.solution.open .solution-cover .eye-closed { display: none; }
+.reveal.solution.open .solution-cover .eye-open { display: block; animation: solution-eye-open 0.4s var(--ease); }
+@keyframes solution-eye-open { from { opacity: 0; transform: scaleY(0.2); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .solution-cover, .solution-cover svg, .reveal.solution.open .solution-cover .eye-open { transition: none; animation: none; }
+}
+.solution-cover .when-open { display: none; }
+.reveal.solution.open .solution-cover .when-open { display: inline; }
+.reveal.solution.open .solution-cover .when-closed { display: none; }
+.reveal.solution .reveal-body > div { display: grid; gap: 1rem; }
 .notes { display: grid; gap: 0.4rem; max-width: 42rem; }
 
 .sheet-answers { display: grid; gap: 1rem; padding: 1.2rem; background: var(--surface); border: 1.5px solid var(--ink); border-radius: 4px var(--r) var(--r) var(--r); box-shadow: 5px 5px 0 var(--line); max-width: 44rem; }
@@ -712,8 +764,11 @@ body:not(.author) .ph, body:not(.author) .author-only { display: none; }
 .cover-authors { margin: 0; font-size: 0.9rem; color: var(--ink-3); }
 .cover-art { border-radius: var(--r); border: 1.5px solid var(--line); background: var(--surface); overflow: hidden; }
 .cover-art svg { display: block; width: 100%; height: auto; }
-.cover-art .c-route { fill: none; stroke: var(--route); stroke-width: 2.5; stroke-dasharray: 9 8; animation: march 1.2s linear infinite; }
-@keyframes march { to { stroke-dashoffset: -34; } }
+.cover-art .c-route { fill: none; stroke: var(--route); stroke-width: 2.5; stroke-dasharray: 9 8; animation: march-17 1.2s linear infinite; }
+/* Each dashed line moves by exactly one pattern (the sum of its dasharray), so the loop has no jump. */
+@keyframes march-10 { to { stroke-dashoffset: -10; } }
+@keyframes march-14 { to { stroke-dashoffset: -14; } }
+@keyframes march-17 { to { stroke-dashoffset: -17; } }
 .cover-art .c-wp { fill: var(--surface); stroke: var(--route); stroke-width: 2.5; }
 .cover-art .c-wp.end { fill: var(--route); }
 .cover-art .c-lbl { font-family: var(--font-mono); font-size: 11px; font-weight: 700; fill: var(--ink-2); }
@@ -749,12 +804,12 @@ body:not(.author) .ph, body:not(.author) .author-only { display: none; }
   display: grid; grid-template-columns: 3rem minmax(0, 1fr); gap: 0.9rem; align-items: center; padding: 0.9rem 1rem;
   border-radius: var(--r); background: var(--surface); border: 1.5px solid var(--line); margin-left: calc(var(--k) * clamp(0.6rem, 3vw, 2rem));
 }
-.stage-row .num { width: 3rem; height: 3rem; display: grid; place-items: center; border-radius: 50%; font-family: var(--font-display); font-weight: 800; font-size: 1.4rem; background: var(--ink); color: var(--surface); }
+.stage-row .num { width: 3rem; height: 3rem; display: grid; place-items: center; border-radius: 50%; font-family: var(--font-display); font-weight: 800; font-size: 1.4rem; background: var(--stage, var(--ink)); color: var(--stage-ink, var(--surface)); }
 .stage-row b { font-family: var(--font-display); font-size: 1.15rem; display: block; line-height: 1.2; }
 .stage-row span { color: var(--ink-2); font-size: 0.95rem; }
 
 /* ───────── scope ───────── */
-.scope .soi { fill: var(--route-soft); stroke: var(--route); stroke-width: 2; stroke-dasharray: 8 6; animation: march 2.4s linear infinite; }
+.scope .soi { fill: var(--route-soft); stroke: var(--route); stroke-width: 2; stroke-dasharray: 8 6; animation: march-14 2.4s linear infinite; }
 .scope .out { fill: var(--surface-2); stroke: var(--ink-3); stroke-width: 1.4; stroke-dasharray: 3 3; }
 .scope .tag { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.06em; }
 .drone-body { fill: var(--ink); }
@@ -877,7 +932,7 @@ body:not(.author) .ph, body:not(.author) .author-only { display: none; }
 /* ───────── message to function ───────── */
 .m2f .fn { fill: var(--sky-soft); stroke: var(--sky); stroke-width: 1.6; }
 .m2f .hint { font-size: 10px; fill: var(--ink-3) !important; font-family: var(--font-mono); letter-spacing: 0.05em; }
-.m2f .flow { stroke: var(--sky); stroke-width: 2; fill: none; stroke-dasharray: 5 5; animation: march 1.4s linear infinite; }
+.m2f .flow { stroke: var(--sky); stroke-width: 2; fill: none; stroke-dasharray: 5 5; animation: march-10 1.4s linear infinite; }
 
 /* ───────── anatomy ───────── */
 .anat { display: grid; gap: 0.9rem; }
@@ -965,8 +1020,8 @@ body:not(.author) .ph, body:not(.author) .author-only { display: none; }
 .duo-card b { font-family: var(--font-display); font-size: 1.15rem; }
 .duo-card p { margin: 0; color: var(--ink-2); font-size: 0.97rem; }
 .duo-card .way { fill: none; stroke: var(--ink-2); stroke-width: 2; }
-.duo-card .way.hot { stroke: var(--route); stroke-width: 3; stroke-dasharray: 8 6; animation: march 1.2s linear infinite; }
-.duo-card .way.wet { stroke: var(--sky); stroke-width: 3; stroke-dasharray: 8 6; animation: march 1.2s linear infinite; }
+.duo-card .way.hot { stroke: var(--route); stroke-width: 3; stroke-dasharray: 8 6; animation: march-14 1.2s linear infinite; }
+.duo-card .way.wet { stroke: var(--sky); stroke-width: 3; stroke-dasharray: 8 6; animation: march-14 1.2s linear infinite; }
 .duo-card .node { fill: var(--surface); stroke: var(--ink-2); stroke-width: 2; }
 .duo-card .sunny { fill: var(--amber); }
 .duo-card .rainy { fill: var(--sky); }
@@ -1024,7 +1079,8 @@ body:not(.author) .ph, body:not(.author) .author-only { display: none; }
 
 /* ───────── motion and print ───────── */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+  /* the pasture of the simulation panel is the motion the student asked for: it keeps moving */
+  *:not(.poc-scene *):not(#sim-btn.hint), *:not(.poc-scene *)::before, *:not(.poc-scene *)::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
 }
 @media print {
   .top, .dock, .chart-bg, #toast, .ov, .ph, .btn-row, .recap, .scene-head .stamp-row, .waypoint-rule { display: none !important; }
@@ -1037,6 +1093,3 @@ body:not(.author) .ph, body:not(.author) .author-only { display: none; }
 #cameo-btn .dot { width: .6rem; height: .6rem; border-radius: 50%; background: var(--ink-3); flex: none; }
 #cameo-btn[data-status="connected"] .dot { background: #2e9d57; }
 #cameo-btn[data-status="connecting"] .dot, #cameo-btn[data-status="waiting"] .dot { background: #d4a017; }
-.cameo-form { display: flex; gap: .6rem; align-items: center; }
-.cameo-code { font: 700 1.6rem/1 ui-monospace, Menlo, Consolas, monospace; letter-spacing: .25em; text-transform: uppercase; width: 11ch; padding: .5rem .6rem; border: 1px solid var(--line); border-radius: .5rem; background: var(--surface); color: var(--ink); }
-.cameo-error { margin: 0; padding: .6rem .8rem; border-radius: .5rem; background: #fbe4e1; color: #8c2a1f; font-weight: 600; }
