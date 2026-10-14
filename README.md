@@ -6,6 +6,9 @@ on a laptop next to Cameo or on their phone.
 
 No build step and no dependency: plain HTML, CSS and JavaScript.
 
+**Part 2**, the marked seminar (BE Cameo · Part 2 · Marked), is a second guide in `part2/`, served at
+`/part2/` (online: `https://shepherd.chaos-art.fr/part2/`). See [Part 2](#part-2-the-marked-seminar) below.
+
 ## Run it
 
 - **Quick look:** double-click `index.html`.
@@ -45,11 +48,14 @@ pushes it, so the page does not move. It shows the drone of the Pasture Sentinel
 to the simulation running in the student's Cameo:
 
 - Link Cameo with the **Cameo** button (the 6-letter code of the plugin). The panel then follows
-  the signals Cameo sends (`Start SOI`, `Start Patrolling`, ...) and jumps to the current step when
-  it joins in the middle of a mission.
+  the signals Cameo sends (`Start SOI`, `Start Patrolling`, ...) and the state Cameo publishes at
+  every change, so it also joins in the middle of a mission.
 - Without Cameo it still works as a preview: click the signals offered for the current step, or
   play the nominal scenario. These buttons never send anything to Cameo.
-- A signal that is not allowed in the current step is logged and ignored.
+- A signal that is not in `TRANSITIONS` is only logged: the state Cameo publishes moves the drone.
+- The transitions between the predator steps are left out of `TRANSITIONS` on purpose: they are the
+  answer to Question 4 of the marked seminar (Part 2), and the preview buttons would show them. The
+  preview and its nominal scenario stop at *Predator tracking*.
 
 The logic comes from the monitoring project (`MBSE-Shepard-Monitoring`, `src/poc`): `sim-core.js`
 holds the steps and transitions, `sim-motion.js` the movements, `sim-scene.js` the pasture. If the
@@ -143,3 +149,32 @@ Placeholders, "no link" tags and the to-do board only show in author mode.
 Ticks, notes and answers are stored in the browser (`localStorage`), per device. Nothing is sent
 anywhere. Students get their answers out with **Copy my answers** or **Print** on the last scene.
 Change `storageKey` in `content/config.js` to start everybody from zero after a big content change.
+
+## Part 2: the marked seminar
+
+`part2/` is a second guide built on the same engine. It shares `js/`, `css/` and `assets/` with Part 1
+and only has its own content and images:
+
+| File | What it holds |
+| --- | --- |
+| `part2/index.html` | The page. Same as `index.html`, with `../` in front of `css/` and `js/`. |
+| `part2/content/scenes.js` | The tasks and questions of the marked seminar, the FAQ, the author notes. |
+| `part2/content/model-links.js` | The places of the model it points to. |
+| `part2/content/config.js` | Its own title, `storageKey`, and the settings below. |
+| `part2/assets/` | Its images and the Word handout. |
+
+**The seminar is marked.** Its scenes say what each task asks for and where to work in the model, never
+exactly what to do: no signal, transition, function, subsystem or allocation is named, and there is no
+solution block. Keep it that way when editing it. What it adds:
+
+- `pts: 2` (and `bonus: true`) on a scene shows its points; the `marks` widget lists every marked question.
+- `{ recall: { items: [{ id: "a-messages", title: "Send messages between actors" }] } }` links to the
+  scenes of Part 1 that show a gesture again (they open in a new tab; `recallBase` in its config).
+- `{ question: { type: "text", ... } }` is a free-text answer.
+- `simPreview: false` in its config: the simulation panel never lists signals or plays the nominal
+  scenario. It only follows the states Cameo publishes, so it works whatever the students named their
+  signals.
+- `sharedBase: "../"` tells the simulation panel where the shared `assets/` folder is.
+
+Open it locally at `http://localhost:5178/part2/` (same server as Part 1). Both guides keep their progress
+under different `storageKey`s; the Cameo pairing code and the relay address are shared.

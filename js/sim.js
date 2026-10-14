@@ -12,6 +12,9 @@
 
   const B = window.Bridge;
   const pilot = window.SimCore.createPilot();
+  /* simPreview: false (a marked guide) hides the signal buttons and the nominal scenario: they would
+     give away the transitions. The panel then only follows the simulation running in Cameo. */
+  const PREVIEW = (window.COURSE_CONFIG || {}).simPreview !== false;
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
   /* ───────── markup ───────── */
@@ -60,6 +63,11 @@
   top.appendChild(drawer);
 
   const $ = (sel) => drawer.querySelector(sel);
+  if (!PREVIEW) {
+    $('#sim-nominal').remove();
+    $('#sim-tab-go').textContent = 'Now';
+    $('.sim-hint').textContent = 'This panel only follows Cameo: link it with the Cameo button.';
+  }
   const scene = window.SimScene.create($('#sim-stage'));
 
   /* ───────── what the pilot tells us ───────── */
@@ -74,7 +82,9 @@
   function renderNow(snap) {
     const focused = drawer.contains(document.activeElement) ? document.activeElement.dataset.signal : undefined;
     let h = `<div class="sim-step"><span class="mono-label">Now</span><strong>${esc(snap.step)}</strong></div>`;
-    if (!snap.outgoing.length) {
+    if (!PREVIEW) {
+      h += `<p class="sim-none">${snap.crashed ? 'The drone crashed: the mission is over.' : 'Run the simulation in Cameo and send its signals there: the drone follows it.'}</p>`;
+    } else if (!snap.outgoing.length) {
       h += `<p class="sim-none">${snap.crashed ? 'The drone crashed: the mission is over.' : 'No signal leaves this step.'}</p>`;
     } else {
       const edges = snap.outgoing.slice().sort((a, b) => /crash/i.test(a.signal) - /crash/i.test(b.signal));
@@ -118,8 +128,10 @@
     renderObjectives(snap);
     renderLog(snap);
     const nominal = $('#sim-nominal');
-    nominal.querySelector('span').textContent = snap.running ? 'Stop the scenario' : 'Play the nominal scenario';
-    nominal.querySelector('path').setAttribute('d', snap.running ? 'M6 6h12v12H6z' : 'M7 4.5v15l12-7.5z');
+    if (nominal) {
+      nominal.querySelector('span').textContent = snap.running ? 'Stop the scenario' : 'Play the nominal scenario';
+      nominal.querySelector('path').setAttribute('d', snap.running ? 'M6 6h12v12H6z' : 'M7 4.5v15l12-7.5z');
+    }
     scene.setStep(snap.step);
     if (snap.step !== lastStep) {
       if (lastStep) $('#sim-live').textContent = `Step: ${snap.step}`;
@@ -156,7 +168,7 @@
     document.getElementById('cameo-btn').click();
   });
 
-  /* The first state Cameo sends after we join says where the simulation is now. */
+  /* Cameo sends its state right after we join, then at every change: it says where the simulation is now. */
   let lastState = null;
   let awaitingState = false;
   function markNews() {
@@ -167,11 +179,32 @@
   if (B) {
     B.onChange(renderLink);
     B.onFrame((f) => {
+      if (!PREVIEW) {
+        /* Follow mode: the state Cameo publishes at each change moves the drone, whatever the students
+           named their signals. A signal is only written in the log. */
+        if (f.kind === 'state') {
+          lastState = f;
+          if (window.SimCore.stepFromName(f.step)) pilot.jumpTo(f.step);
+          else pilot.note('info', `Cameo state: ${f.step}`);
+          markNews();
+        } else if (f.kind === 'signal') {
+          pilot.note('info', `Cameo: ${f.signal}`);
+          markNews();
+        } else if (f.kind === 'resync') {
+          pilot.reset('Cameo asked to start over: some signals were lost.');
+          if (lastState) pilot.jumpTo(lastState.step);
+        }
+        return;
+      }
       if (f.kind === 'hello') {
         awaitingState = !f.resumed;
       } else if (f.kind === 'state') {
+        /* Cameo publishes its state at every change: it also moves the drone through the transitions
+           that TRANSITIONS leaves out (the predator ones, see js/sim-core.js). */
         lastState = f;
-        if (awaitingState) { awaitingState = false; pilot.jumpTo(f.step); markNews(); }
+        if (awaitingState) markNews();
+        awaitingState = false;
+        pilot.jumpTo(f.step);
       } else if (f.kind === 'signal') {
         awaitingState = false;
         pilot.remote(f.signal, f.id);
@@ -192,7 +225,12 @@
       if (pilot.getSnapshot().running) pilot.stopNominal(); else pilot.runNominal();
       return;
     }
-    if (e.target.closest('#sim-reset')) { pilot.reset(); return; }
+    if (e.target.closest('#sim-reset')) {
+      pilot.reset();
+      /* following Cameo: start again from where Cameo is, not from Off */
+      if (!PREVIEW && lastState) pilot.jumpTo(lastState.step);
+      return;
+    }
     if (e.target.closest('#sim-close')) { setOpen(false, true); return; }
     const tab = e.target.closest('[data-tab]');
     if (tab) selectTab(tab.dataset.tab, false);

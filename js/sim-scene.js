@@ -8,7 +8,8 @@
 (function () {
   const { STEPS } = window.SimCore;
   const M = window.SimMotion;
-  const ASSET = 'assets/sim/';
+  /* sharedBase: where the shared assets/ folder is, seen from the page ('../' for a guide in a sub-folder). */
+  const ASSET = ((window.COURSE_CONFIG || {}).sharedBase || '') + 'assets/sim/';
 
   const BLEATS = ['baa', 'beeeh', 'baaah', 'beh', 'mehh', 'baa-baa', 'beeh'];
   const PATROL_SHEEP_LINES = ['beep! one sheep…', 'two…', 'three…', 'four…'];

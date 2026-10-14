@@ -19,7 +19,11 @@
   const INITIAL = STEPS.Off;
 
   /* step -> { signal: next step }. A signal listed on the current step is accepted, even when it
-     leaves the step unchanged. Anything else is refused. */
+     leaves the step unchanged. Anything else is refused.
+     The transitions between the predator steps (tracking, counteraction, back to patrolling) and their
+     signals are left out on purpose: they are what Question 4 of the marked seminar (Part 2) asks for,
+     and the preview buttons would show them. The drone still reaches those steps when it follows Cameo,
+     through the state that Cameo publishes (see js/sim.js). */
   const TRANSITIONS = {
     [STEPS.Off]: { 'Start SOI': STEPS.Unconfigured },
     [STEPS.Unconfigured]: { FlightPlan: STEPS.Configured, 'FlightPlan Check Failed': STEPS.Unconfigured },
@@ -30,15 +34,8 @@
       'Predator Detected inside tracking perimeter': STEPS.PredatorTracking,
       'Crashed Detected': STEPS.Crashed
     },
-    [STEPS.PredatorTracking]: {
-      'Predator Entering Safe Area': STEPS.PredatorCounteraction,
-      'Predator Leaving Tracking Perimeter': STEPS.Patrolling,
-      'Crashed Detected': STEPS.Crashed
-    },
-    [STEPS.PredatorCounteraction]: {
-      'Predator Leaving Safe Area': STEPS.PredatorTracking,
-      'Crashed Detected': STEPS.Crashed
-    }
+    [STEPS.PredatorTracking]: { 'Crashed Detected': STEPS.Crashed },
+    [STEPS.PredatorCounteraction]: { 'Crashed Detected': STEPS.Crashed }
   };
 
   /* Steps in the order the state machine diagram groups them. */
@@ -56,8 +53,7 @@
     ['Ready for mission', 1100],
     ['Start Sheep Guard Mission', 1300],
     ['Start Patrolling', 4800],
-    ['Predator Detected inside tracking perimeter', 6500],
-    ['Predator Entering Safe Area', 7500]
+    ['Predator Detected inside tracking perimeter', 6500]
   ];
 
   const ORDER = LANES.flatMap((lane) => lane.steps);
@@ -105,7 +101,9 @@
       }
       const target = (TRANSITIONS[step] || {})[signal];
       if (step === STEPS.Crashed || target === undefined) {
-        add('info', `${source === 'Cameo' ? 'Cameo sent' : 'Refused'}: ${signal}${source === 'Cameo' ? ' (not allowed in this step, ignored)' : ''}`);
+        /* From Cameo it is not an error: the table is incomplete on purpose, and the state Cameo publishes
+           next moves the drone (js/sim.js). */
+        add('info', `${source === 'Cameo' ? 'Cameo' : 'Refused'}: ${signal}`);
         publish();
         return { accepted: false, step };
       }

@@ -229,6 +229,12 @@ a { color: var(--sky); }
 .kind-answer { background: var(--amber-soft); color: var(--amber); }
 .kind-try { background: var(--grass-soft); color: var(--grass); }
 .ref { font-family: var(--font-mono); font-size: 0.75rem; color: var(--ink-3); }
+/* points of a marked question */
+.pts {
+  font-family: var(--font-mono); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+  color: var(--amber); border: 1.5px solid var(--amber); border-radius: 999px; padding: 0.12rem 0.55rem; line-height: 1.3;
+}
+.pts.bonus { color: var(--grass); border-color: var(--grass); }
 .done-stamp {
   margin-left: auto; font-family: var(--font-mono); font-weight: 700; font-size: 0.75rem;
   letter-spacing: 0.14em; text-transform: uppercase; color: var(--grass);
@@ -538,6 +544,19 @@ body:not(.author) .ph, body:not(.author) .author-only { display: none; }
 .q-call { display: flex; align-items: center; gap: 0.6rem; padding: 0.7rem 0.9rem; border-radius: var(--r); background: var(--amber-soft, var(--surface)); color: var(--ink); font-weight: 600; }
 .q-call[hidden] { display: none; }
 .q-call svg { width: 1.6rem; height: 1.6rem; flex: none; }
+
+/* ───────── links to the scenes of another guide (Part 1) ───────── */
+.recall { display: grid; gap: 0.5rem; padding: 0.8rem 0.9rem; border: 1.5px dashed var(--sky); border-radius: var(--r); max-width: 40rem; }
+.recall .mono-label { color: var(--sky); }
+.recall-list { display: flex; flex-wrap: wrap; gap: 0.45rem; }
+.recall-item {
+  display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.35rem 0.7rem; border-radius: 999px;
+  background: var(--sky-soft); color: var(--sky); font-weight: 600; font-size: 0.92rem; text-decoration: none; line-height: 1.3;
+}
+.recall-item:hover { text-decoration: underline; }
+.recall-item svg { width: 0.95rem; height: 0.95rem; flex: none; }
+.xlink { color: var(--sky); font-weight: 600; text-underline-offset: 2px; }
+.xlink svg { width: 0.85em; height: 0.85em; margin-left: 0.2em; vertical-align: -0.05em; }
 .link-ready { font-family: var(--font-mono); font-weight: 700; color: var(--grass); }
 /* A pink frame around the drone button of the top bar, bouncing to invite a click. Kept even when the
    phone asks for reduced motion: this is the one movement the step asks for. */
@@ -875,6 +894,25 @@ body:not(.author) .ph, body:not(.author) .author-only { display: none; }
 .m-ping { fill: none; stroke: var(--danger); stroke-width: 2; transform-box: fill-box; transform-origin: center; animation: ping 1.2s ease-out infinite; }
 @keyframes ping { from { transform: scale(0.4); opacity: 1; } to { transform: scale(2.2); opacity: 0; } }
 .m-shepherd { fill: var(--ink); }
+
+/* ───────── the bear comes closer (three steps) ───────── */
+.b-track { fill: var(--sky-soft); stroke: var(--sky); stroke-width: 2; }
+.w svg text.b-track-tag { fill: var(--sky); }
+.b-bear { fill: var(--ink); }
+.b-zone-danger { fill: var(--danger-soft); stroke: var(--danger); }
+.b-range-danger { fill: var(--danger); stroke: var(--danger); }
+.b-banner--ink { fill: var(--ink); }
+.b-banner--amber { fill: var(--amber); }
+.b-banner--danger { fill: var(--danger); }
+.w svg text.b-banner-txt { fill: var(--surface); font-size: 11px; }
+.b-cone { fill: var(--amber); fill-opacity: 0.35; }
+.b-wave { fill: none; stroke: var(--danger); stroke-width: 2.4; stroke-linecap: round; animation: b-wave 1.1s ease-out infinite; }
+@keyframes b-wave { from { opacity: 1; } to { opacity: 0.15; } }
+@media (prefers-reduced-motion: reduce) { .b-wave, .m-ping { animation: none; } }
+.marks .recap-row { grid-template-columns: 3.2rem minmax(0, 1fr) auto; }
+.marks .recap-row .crumb-code { min-width: 2.6rem; text-align: center; }
+.marks-total { margin: 0.3rem 0 0; font-family: var(--font-mono); font-size: 0.9rem; color: var(--ink-2); text-align: right; }
+.marks-total b { color: var(--ink); }
 
 /* ───────── scenario ───────── */
 .scn-steps { margin: 0; padding-left: 1.8rem; display: grid; gap: 0.5rem; max-width: 38rem; font-size: 1.05em; line-height: 1.6; }

@@ -54,6 +54,7 @@
     sd: '<rect x="3" y="4" width="18" height="16" rx="1.5"/><path d="M8 7v10M16 7v10M8 10.5h8M16 14h-8"/>',
     ad: '<rect x="3" y="4" width="18" height="16" rx="1.5"/><rect x="6" y="9.5" width="5" height="5" rx="2"/><rect x="13.5" y="9.5" width="5" height="5" rx="2"/><path d="M11 12h2.5"/>',
     stm: '<rect x="3" y="4" width="18" height="16" rx="1.5"/><circle cx="7.5" cy="12" r="1.3" fill="currentColor"/><rect x="11.5" y="9" width="7" height="6" rx="2.5"/><path d="M9 12h2.5"/>',
+    bdd: '<rect x="3" y="4" width="18" height="16" rx="1.5"/><rect x="9.5" y="7" width="5" height="3.5"/><rect x="5.5" y="14" width="5" height="3.5"/><rect x="13.5" y="14" width="5" height="3.5"/><path d="M12 10.5v1.8M8 14v-1.7h8V14"/>',
     matrix: '<rect x="3" y="4" width="18" height="16" rx="1.5"/><path d="M3 9.5h18M3 14.5h18M9 4v16M15 4v16"/>'
   };
   function ic(name, cls) {
@@ -68,7 +69,7 @@
   };
   const TYPE_LABEL = {
     package: 'package', block: 'block', ucd: 'use case diagram', ibd: 'internal block diagram',
-    sd: 'sequence diagram', ad: 'activity diagram', stm: 'state machine', matrix: 'allocation matrix',
+    sd: 'sequence diagram', ad: 'activity diagram', stm: 'state machine', bdd: 'block definition diagram', matrix: 'allocation matrix',
     usecase: 'use case', actor: 'actor', activity: 'activity', signal: 'signal'
   };
   const PH = {
@@ -151,6 +152,11 @@
     if (q.type === 'list') return (a.items || []).some((x) => (x || '').trim());
     return !!(a.text || '').trim();
   }
+  // Points of a scene, as shown next to its kind: "2 pts", "Bonus · 1 pt".
+  function ptsLabel(scene) {
+    if (scene.pts == null) return '';
+    return (scene.bonus ? 'Bonus · ' : '') + scene.pts + (scene.pts > 1 ? ' pts' : ' pt');
+  }
   // Steps of a scene: the fixed ones, plus one per row of any list the scene reads from an answer.
   function stepIds(scene) {
     return scene._dyn.reduce((ids, d) => {
@@ -172,7 +178,7 @@
 
   /* ───────── inline marks ───────── */
   function inline(src) {
-    const rx = /\*\*(.+?)\*\*|\*(.+?)\*|\[\[(.+?)\]\]|\{\{(.+?)\}\}|\(\((.+?)\)\)|<<(.+?)>>/g;
+    const rx = /\*\*(.+?)\*\*|\*(.+?)\*|\[\[(.+?)\]\]|\{\{(.+?)\}\}|\(\((.+?)\)\)|<<(.+?)>>|\[([^[\]]+)\]\(([^()\s]+)\)/g;
     let out = '';
     let last = 0;
     let m;
@@ -191,6 +197,7 @@
       else if (m[4] != null) out += '<span class="ui">' + esc(m[4]).replace(/ &gt; /g, ' <i>›</i> ') + '</span>';
       else if (m[5] != null) out += inlineIcon(m[5]);
       else if (m[6] != null) out += `<button type="button" class="cchip" data-copy="${esc(m[6])}" title="Copy">${esc(m[6])}${ic('copy')}</button>`;
+      else if (m[7] != null) out += `<a class="xlink" href="${esc(m[8])}" target="_blank" rel="noopener">${inline(m[7])}${ic('open')}</a>`;
     }
     return out + esc(src.slice(last));
   }
@@ -338,6 +345,9 @@
       h += `<div class="q-list" data-list="${q.id}">` + Array.from({ length: rowCount(q) }).map((_, i) => listRowHTML(q, i, a.items || [])).join('') + '</div>' +
         `<button type="button" class="btn ghost small q-add" data-add-item="${q.id}">${ic('plus')}Add a ${esc((q.itemLabel || 'item').toLowerCase())}</button>`;
     }
+    if (q.type === 'text') {
+      h += `<div class="field"><label for="q-${q.id}-text">${esc(q.label || 'Your answer')}</label><textarea id="q-${q.id}-text" data-ans="${q.id}.text" placeholder="${esc(q.hint || '')}" style="min-height:8rem">${esc(a.text || '')}</textarea></div>`;
+    }
     if (q.justify) {
       h += `<div class="field"><label for="q-${q.id}-why">Justify</label><textarea id="q-${q.id}-why" data-ans="${q.id}.why" placeholder="Explain your reasoning in a few lines.">${esc(a.why || '')}</textarea></div>`;
     }
@@ -356,6 +366,7 @@
         const items = (a.items || []).map((x) => (x || '').trim()).filter(Boolean);
         h += items.length ? '<ol>' + items.map((x) => `<li>${esc(x)}</li>`).join('') + '</ol>' : '<p class="empty">Not answered yet</p>';
       }
+      if (q.type === 'text') h += (a.text || '').trim() ? `<p class="why">${esc(a.text)}</p>` : '<p class="empty">Not answered yet</p>';
       if (q.justify) h += a.why ? `<p class="why">${esc(a.why)}</p>` : '<p class="empty">No justification yet</p>';
       h += `<button type="button" class="btn ghost small" data-goto="${q.scene}" style="justify-self:start;margin-top:.3rem">${ic('pencil')}Edit</button></div>`;
     });
@@ -377,6 +388,7 @@
         if (items.length) items.forEach((x, i) => L.push((i + 1) + '. ' + x));
         else L.push('(not answered)');
       }
+      if (q.type === 'text') L.push((a.text || '').trim() || '(not answered)');
       if (q.justify) L.push('Justification: ' + (a.why || ''));
       L.push('');
     });
@@ -437,6 +449,14 @@
       return `<div class="reveal tip-toggle"><button type="button" class="btn ghost small" data-reveal aria-expanded="false">${ic('bulb')}<span>${esc(b.tip.label)}</span></button><div class="reveal-body"><div><div class="tip-body">${(b.tip.blocks || []).map((x, xi) => renderBlock(x, scene, path + '.tip.' + xi)).join('')}</div></div></div></div>`;
     }
     if (b.call) return `<div class="q-call">${ic('hand')}<span>${inline(b.call)}</span></div>`;
+    if (b.recall) {
+      // Scenes of another guide (config.recallBase, Part 1) that show a gesture again. They open in a new tab.
+      const r = b.recall;
+      const base = CFG.recallBase || '';
+      return `<div class="recall"><span class="mono-label">${esc(r.label || 'Forgot how? See it again in Part 1')}</span><div class="recall-list">` +
+        r.items.map((it) => `<a class="recall-item" href="${esc(base + '#' + it.id)}" target="_blank" rel="noopener">${ic('open')}<span>${inline(it.title)}</span></a>`).join('') +
+        '</div></div>';
+    }
     if (b.solution) {
       return `<div class="reveal solution"><button type="button" class="solution-cover" data-reveal aria-expanded="false">${ic('eyeoff', 'eye-closed')}${ic('eye', 'eye-open')}<span class="when-closed">${esc(b.solution.label)}</span><span class="when-open">Hide the solution</span></button><div class="reveal-body"><div>${(b.solution.blocks || []).map((x, xi) => renderBlock(x, scene, path + '.solution.' + xi)).join('')}</div></div></div>`;
     }
@@ -460,7 +480,8 @@
       const any = items.some((x) => x && x.trim());
       let h = '';
       if (!any) {
-        h += `<div class="callout tone-warn"><span class="callout-ico">${ic('alert')}</span><div><strong class="callout-title">Question 2 is still empty</strong><p>Name the functions there and they will show up in this checklist.</p><button type="button" class="btn ghost small" data-goto="${esc(f.scene)}" style="margin-top:.5rem">${ic('pencil')}Go to Question 2</button></div></div>`;
+        const qt = esc(byId[f.scene] ? byId[f.scene].title : 'The question');
+        h += `<div class="callout tone-warn"><span class="callout-ico">${ic('alert')}</span><div><strong class="callout-title">${qt} is still empty</strong><p>Name the functions there and they will show up in this checklist.</p><button type="button" class="btn ghost small" data-goto="${esc(f.scene)}" style="margin-top:.5rem">${ic('pencil')}Go to ${qt}</button></div></div>`;
       }
       h += '<ol class="steps">' + Array.from({ length: n }).map((_, i) => {
         const name = (items[i] || '').trim();
@@ -483,6 +504,7 @@
         <div class="stamp-row">
           <span class="kind kind-${scene.kind}">${ic(k.icon)}${k.label}</span>
           ${scene.ref && !/^Question/.test(scene.ref) ? `<span class="ref" title="Section of the handout">§ ${esc(scene.ref)}</span>` : ''}
+          ${scene.pts != null ? `<span class="pts${scene.bonus ? ' bonus' : ''}" title="Points of this question">${esc(ptsLabel(scene))}</span>` : ''}
           <span class="done-stamp"${done ? '' : ' hidden'}>Done</span>
         </div>
         <h1>${inline(scene.title)}</h1>
@@ -529,7 +551,7 @@
       const key = scene.id + '/' + el.dataset.widget + (opts.mode ? ':' + opts.mode : '');
       const api = {
         scene, scenes, chapters, config: CFG, links: LINKS, inline, icon: ic, esc,
-        go, next: () => step(1), toast, openLink, status: sceneStatus, stepsDone,
+        go, next: () => step(1), toast, openLink, status: sceneStatus, stepsDone, ptsLabel,
         last: S.last, answers: () => S.answers,
         get: () => S.widgets[key],
         set: (v) => { S.widgets[key] = v; save(); },

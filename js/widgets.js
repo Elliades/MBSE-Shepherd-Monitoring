@@ -89,9 +89,11 @@
     const last = api.last && api.last !== api.scene.id ? api.scenes.find((s) => s.id === api.last) : null;
     const pts = [[40, 252], [98, 196], [58, 128], [124, 66], [196, 98], [238, 168], [176, 236], [268, 258], [330, 196], [356, 104]];
     const d = pathD(pts);
-    const wps = api.chapters.map((c, i) => {
+    /* one waypoint per chapter, ten at most */
+    const chs = api.chapters.slice(0, pts.length);
+    const wps = chs.map((c, i) => {
       const p = pts[i];
-      const end = i === pts.length - 1;
+      const end = i === chs.length - 1;
       const lx = p[0] + (i % 2 ? 13 : -13);
       return `<g data-goto="${c.scenes[0].id}" style="cursor:pointer" role="link" tabindex="0" aria-label="${api.esc(c.code + ' ' + c.title)}"><title>${api.esc(c.title)}</title>
         <circle class="c-wp${end ? ' end' : ''}" cx="${p[0]}" cy="${p[1]}" r="7"/><circle cx="${p[0]}" cy="${p[1]}" r="16" fill="transparent"/>
@@ -1033,6 +1035,164 @@
           btn.textContent = 'Send another token';
         });
       });
+    });
+    return lf.end;
+  };
+
+  /* ───────── marking scheme ───────── */
+  /* Every scene with points (scene.pts), in reading order, with the total. A row opens its scene. */
+  W.marks = function (root, opts, api) {
+    const marked = api.scenes.filter((s) => s.pts != null);
+    const base = marked.filter((s) => !s.bonus).reduce((n, s) => n + s.pts, 0);
+    const bonus = marked.filter((s) => s.bonus).reduce((n, s) => n + s.pts, 0);
+    const short = (s) => String(s.ref || '').replace(/^Question\s*/i, 'Q').replace(/^BONUS\s*/i, '');
+    root.innerHTML = '<div class="recap marks">' + marked.map((s) => {
+      const done = api.status(s) === 'done';
+      return `<button type="button" class="recap-row${done ? ' done' : ''}" data-goto="${s.id}"><span class="crumb-code">${api.esc(short(s))}</span><b>${api.inline(s.title)}</b><span>${api.esc(api.ptsLabel(s))}</span></button>`;
+    }).join('') + `<p class="marks-total"><b>${base} points</b>${bonus ? ` + ${bonus} bonus point${bonus > 1 ? 's' : ''}` : ''}</p></div>`;
+  };
+
+  /* ───────── the bear comes closer: three steps ───────── */
+  /* The three pictures of the handout, played: outside the tracking perimeter, inside it, inside the safe zone. */
+  W.bearApproach = function (root) {
+    const STEPS = [
+      { banner: 'PREDATOR DETECTED', tone: 'ink', text: 'The bear is detected **outside** the tracking perimeter: the system continues its mission.' },
+      { banner: 'TRACKING MODE', tone: 'amber', text: 'The bear **enters** the tracking perimeter: the system tracks it from a distance, without interfering.' },
+      { banner: 'COUNTER ACTIONS', tone: 'danger', text: 'The bear **enters** the safe zone: the system triggers counter actions and warns the shepherd.' }
+    ];
+    const bold = (t) => t.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    root.className = 'w mission bear-steps';
+    root.innerHTML = `<div class="mission-text">${STEPS.map((s, i) => `<button type="button" class="mission-part" data-part="${i}" aria-pressed="${i === 0}"><b>${i + 1}</b><span>${bold(s.text)}</span></button>`).join('')}
+        <p class="w-caption">Tap a step to play it. Redrawn from the three pictures of the handout.</p></div>
+      <div class="mission-art" data-noswipe></div>`;
+    const s = svg('0 0 400 300', 'A pasture seen from above. A green safe zone with a flock of sheep sits inside a blue band, the tracking perimeter. A bear comes from the left, and a drone patrols around the safe zone.');
+    root.querySelector('.mission-art').appendChild(s);
+
+    el('rect', { x: 56, y: 8, width: 336, height: 256, rx: 4, class: 'b-track' }, s);
+    txt(s, 224, 24, 'TRACKING PERIMETER', 'm-tag b-track-tag', 'middle');
+    const zone = el('rect', { x: 100, y: 40, width: 248, height: 192, class: 'm-zone' }, s);
+    el('rect', { x: 179, y: 46, width: 90, height: 20, rx: 3, class: 'm-tagbox' }, s);
+    txt(s, 224, 60, 'SAFE ZONE', 'm-tag', 'middle');
+    const route = el('path', { d: 'M112,220 L112,52 L336,52 L336,220 Z', class: 'm-path', opacity: 0.55 }, s);
+
+    const drawSheep = (g) => {
+      for (let i = 0; i < 8; i++) el('circle', { cx: Math.cos(i * Math.PI / 4) * 8, cy: Math.sin(i * Math.PI / 4) * 8, r: 5, class: 'm-wool' }, g);
+      el('circle', { r: 9, class: 'm-wool' }, g);
+      el('ellipse', { cx: -6.5, cy: -3, rx: 3.2, ry: 1.6, class: 'm-face' }, g);
+      el('ellipse', { cx: 6.5, cy: -3, rx: 3.2, ry: 1.6, class: 'm-face' }, g);
+      el('ellipse', { cy: 0, rx: 4.8, ry: 4.2, class: 'm-face' }, g);
+    };
+    const CALM = [[170, 96], [246, 112], [298, 92], [212, 146], [300, 144], [178, 178], [262, 176]];
+    const HUDDLE = [[294, 70], [316, 76], [334, 64], [302, 96], [324, 100], [336, 86], [314, 120]];
+    const sheep = CALM.map(() => el('g', {}, s));
+    sheep.forEach(drawSheep);
+
+    /* shepherd, outside the pasture, warned in step 3 */
+    const shep = el('g', { transform: 'translate(378,284)' }, s);
+    const ping = el('circle', { r: 11, class: 'm-ping' }, shep);
+    el('circle', { cy: -7, r: 4.5, class: 'm-shepherd' }, shep);
+    el('path', { d: 'M-7,10 Q0,-5 7,10 Z', class: 'm-shepherd' }, shep);
+    txt(s, 360, 290, 'Shepherd', 'm-tag', 'end');
+    const warn = el('path', { d: '', class: 'm-link' }, s);
+
+    /* bear: a plain silhouette, facing right */
+    const bear = el('g', {}, s);
+    el('path', { class: 'b-bear', transform: 'scale(1.25)', d: 'M-15,3 C-16,-6 -9,-10 0,-10 C5,-10 7,-12 10,-12 C12,-14 14,-14 15,-12 C18,-11 20,-8 21,-6 L22,-3 C20,-2 17,-2 15,-2 L13,4 L13,10 L9,10 L8,5 L-4,5 L-5,10 L-9,10 L-10,5 C-13,6 -15,5 -15,3 Z' }, bear);
+
+    /* drone, its sensor, and the counter actions */
+    const fx = el('g', { class: 'b-fx' }, s);
+    const cone = el('path', { d: '', class: 'b-cone' }, fx);
+    const waves = el('g', {}, fx);
+    [14, 22, 30].forEach((r, i) => el('path', { d: `M${r * 0.7},${-r * 0.7} A${r},${r} 0 0 1 ${r * 0.7},${r * 0.7}`, class: 'b-wave', style: `animation-delay:${i * 0.25}s` }, waves));
+    const dg = el('g', {}, s);
+    const range = el('circle', { r: 42, class: 'm-range' }, dg);
+    drone(dg, 1);
+
+    const bannerG = el('g', {}, s);
+    const bannerBox = el('rect', { x: 186, y: 200, width: 150, height: 24, rx: 3 }, bannerG);
+    const bannerTxt = txt(bannerG, 261, 216, '', 'm-tag b-banner-txt', 'middle');
+
+    const L = route.getTotalLength();
+    const lf = life();
+    const vis = (n, on) => { n.style.display = on ? '' : 'none'; };
+    const lerp = (a, b, k) => a + (b - a) * k;
+    const BEAR_AT = [{ x: 26, y: 132 }, { x: 76, y: 196 }, { x: 140, y: 206 }];
+    const st = {
+      step: 0, s: 30, t: 0, bear: { ...BEAR_AT[0] }, from: { ...BEAR_AT[0] }, move: 1, drone: { x: 112, y: 120 },
+      herd: 1, sheep: CALM.map((p) => p.slice()), sheepFrom: CALM.map((p) => p.slice())
+    };
+
+    function place() {
+      const k = ease(Math.min(1, st.move));
+      const goal = BEAR_AT[st.step];
+      const sway = reduced() ? 0 : Math.sin(st.t * 0.9) * (st.step === 1 ? 18 : st.step === 0 ? 5 : 3);
+      st.bear = { x: lerp(st.from.x, goal.x, k), y: lerp(st.from.y, goal.y, k) + sway * Math.min(1, st.move) };
+      move(bear, st.bear.x, st.bear.y);
+
+      if (st.step === 0) {
+        const p = route.getPointAtLength(st.s % L);
+        st.drone = { x: p.x, y: p.y };
+      } else {
+        const off = st.step === 1 ? { x: 40, y: -34 } : { x: -14, y: -40 };
+        const target = { x: st.bear.x + off.x, y: st.bear.y + off.y };
+        const f = reduced() ? 1 : 0.06;
+        st.drone = { x: lerp(st.drone.x, target.x, f), y: lerp(st.drone.y, target.y, f) };
+      }
+      move(dg, st.drone.x, st.drone.y);
+
+      const h = ease(Math.min(1, st.herd));
+      const herdTo = st.step === 2 ? HUDDLE : CALM;
+      sheep.forEach((g, i) => {
+        st.sheep[i] = [lerp(st.sheepFrom[i][0], herdTo[i][0], h), lerp(st.sheepFrom[i][1], herdTo[i][1], h)];
+        move(g, st.sheep[i][0], st.sheep[i][1]);
+      });
+
+      /* step 1: the banner shows while the drone flies along the side the bear is on */
+      const near = Math.hypot(st.drone.x - st.bear.x, st.drone.y - st.bear.y) < 100;
+      const on = st.step > 0 || near || reduced();
+      vis(bannerG, on);
+      const B = STEPS[st.step];
+      bannerTxt.textContent = B.banner;
+      bannerBox.setAttribute('class', 'b-banner b-banner--' + B.tone);
+      zone.setAttribute('class', st.step === 2 ? 'm-zone b-zone-danger' : 'm-zone');
+      range.setAttribute('class', st.step === 2 ? 'm-range b-range-danger' : 'm-range');
+
+      vis(fx, st.step === 2);
+      [ping, warn].forEach((n) => vis(n, st.step === 2));
+      if (st.step === 2) {
+        const dx = st.bear.x - st.drone.x;
+        const dy = st.bear.y - st.drone.y;
+        const ang = Math.atan2(dy, dx);
+        const d = Math.hypot(dx, dy) + 26;
+        const p1 = { x: st.drone.x + Math.cos(ang - 0.38) * d, y: st.drone.y + Math.sin(ang - 0.38) * d };
+        const p2 = { x: st.drone.x + Math.cos(ang + 0.38) * d, y: st.drone.y + Math.sin(ang + 0.38) * d };
+        cone.setAttribute('d', `M${st.drone.x.toFixed(1)},${st.drone.y.toFixed(1)} L${p1.x.toFixed(1)},${p1.y.toFixed(1)} L${p2.x.toFixed(1)},${p2.y.toFixed(1)} Z`);
+        waves.setAttribute('transform', `translate(${st.drone.x.toFixed(1)},${st.drone.y.toFixed(1)}) rotate(${(ang * 180 / Math.PI).toFixed(1)})`);
+        warn.setAttribute('d', `M${st.drone.x.toFixed(1)},${st.drone.y.toFixed(1)} L372,276`);
+      }
+    }
+
+    const buttons = Array.from(root.querySelectorAll('.mission-part'));
+    buttons.forEach((b) => b.addEventListener('click', () => {
+      const n = +b.dataset.part;
+      buttons.forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      if (n === st.step) return;
+      st.from = { ...st.bear };
+      st.move = reduced() ? 1 : 0;
+      st.sheepFrom = st.sheep.map((p) => p.slice());
+      st.herd = reduced() ? 1 : 0;
+      if (n === 0) st.s = 30;
+      st.step = n;
+      place();
+    }));
+    place();
+    if (reduced()) return;
+    lf.loop((dt) => {
+      st.t += dt;
+      if (st.move < 1) st.move = Math.min(1, st.move + dt / 1.8);
+      if (st.herd < 1) st.herd = Math.min(1, st.herd + dt / 1.4);
+      if (st.step === 0) st.s += dt * 58;
+      place();
     });
     return lf.end;
   };
