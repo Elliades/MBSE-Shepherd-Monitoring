@@ -193,7 +193,7 @@ window.COURSE = {
       title: "Install the OMF-ISAE plugin",
       lead: "The exercise needs the OMF-ISAE plugin. Install it from the plugin manager.",
       blocks: [
-        { download: { label: "Plugin to install", file: "com.elliades.isae.mbseShepherd_1.0.5.zip", src: "assets/plugins/com.elliades.isae.mbseShepherd_1.0.5.zip", size: "18 MB" } },
+        { download: { label: "Plugin to install", file: "com.elliades.isae.mbseShepherd_1.0.6.zip", src: "assets/plugins/com.elliades.isae.mbseShepherd_1.0.6.zip", size: "18 MB" } },
         {
           steps: [
             "In Cameo, choose {{Help > Resource & Plugin Manager}}, then click {{Import}}.",
