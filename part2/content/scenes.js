@@ -12,19 +12,27 @@
    Extra blocks:
      { recall: { items: [{ id: "a-messages", title: "Send messages between actors" }] } }
                       links to scenes of Part 1 (config.recallBase), opened in a new tab
+     { icons: [{ src, alt, label }] }      a row of small pictures, each with its label
      { question: { type: "text", ... } }   a free-text answer */
 window.COURSE = {
+  /* Levels of the method: each tagged chapter takes the colour of its level (see content/scenes.js of Part 1). */
+  phases: [
+    { id: "op", title: "Operational analysis", short: "Operational", q: "What is expected of the system?" },
+    { id: "fn", title: "Functional architecture", short: "Functional", q: "How does it do it?" },
+    { id: "ph", title: "Physical architecture", short: "Physical", q: "Who does what?" }
+  ],
+
   chapters: [
     { id: "brief", code: "0", title: "Briefing", blurb: "How the marked seminar works." },
     { id: "setup", code: "1", title: "Set up Cameo", blurb: "Start the tool and open the model." },
     { id: "problem", code: "2", title: "The problem", blurb: "A bear near the flock." },
-    { id: "T1", code: "T1", title: "Operational context", blurb: "Bring the bear into the context." },
-    { id: "T2", code: "T2", title: "Use cases", blurb: "A use case against predators." },
-    { id: "T3", code: "T3", title: "Scenario", blurb: "Signals, sequence diagram, flows." },
-    { id: "T4", code: "T4", title: "Functional architecture", blurb: "Functions, state machine, activities, simulation." },
-    { id: "T5", code: "T5", title: "Physical architecture", blurb: "Subsystems for the new functions." },
-    { id: "T6", code: "T6", title: "Allocation", blurb: "Give each new function to a subsystem." },
-    { id: "end", code: "✓", title: "Hand in", blurb: "Drop the model, FAQ, your answers." }
+    { id: "T1", code: "T1", title: "Operational context", blurb: "Bring the bear into the context.", phase: "op" },
+    { id: "T2", code: "T2", title: "Use cases", blurb: "A use case against predators.", phase: "op" },
+    { id: "T3", code: "T3", title: "Scenario", blurb: "Scenarios, sequence diagram, flows.", phase: "op" },
+    { id: "T4", code: "T4", title: "Functional architecture", blurb: "Functions, state machine, activities, simulation.", phase: "fn" },
+    { id: "T5", code: "T5", title: "Physical architecture", blurb: "Subsystems for the new functions.", phase: "ph" },
+    { id: "T6", code: "T6", title: "Allocation", blurb: "Give each new function to a subsystem.", phase: "ph" },
+    { id: "end", code: "✓", title: "Hand in", blurb: "Show your model, FAQ, your answers." }
   ],
 
   scenes: [
@@ -43,7 +51,7 @@ window.COURSE = {
           cards: [
             { n: "1", title: "Two hours, in pairs", text: "The seminar lasts **2 hours** and is done in pairs." },
             { n: "2", title: "Step by step", text: "Work through the tasks in order. When you judge a question is done, ask the teacher to come and see what you have done." },
-            { n: "3", title: "Drop the model", text: "At the end of the session, drop the model on the LMS. There is no work to take away and no report to submit afterwards." }
+            { n: "3", title: "Call the teacher", text: "At each task, call the teacher to come and see your model. There is no work to take away and no report to submit afterwards." }
           ]
         },
         {
@@ -110,6 +118,7 @@ window.COURSE = {
       title: "Load the model",
       lead: "The model of the seminar is on the LMS. It comes as two files: keep them together.",
       blocks: [
+        { download: { label: "File to open", file: "UAV_BE_Note_2026 _BE GRADED - Student.mdzip", src: "assets/models/UAV_BE_Note_2026 _BE GRADED - Student.mdzip", size: "913 KB" } },
         {
           steps: [
             "Download the two model files from the LMS.",
@@ -122,23 +131,31 @@ window.COURSE = {
             tone: "warn", title: "Do not unzip them",
             text: "A .mdzip file is the project itself. Unzipping it gives you a folder Cameo cannot open."
           }
-        },
-        {
-          placeholder: {
-            kind: "link", title: "The model files, if they should be downloadable from the guide",
-            todo: [
-              "Decide whether students download the model from the LMS only (as the handout says) or from this guide too",
-              "If from the guide: put the two .mdzip files in part2/assets/models and add a { download } block here, as in Part 1"
-            ]
-          }
         }
       ]
     },
     {
       id: "settings", ch: "setup", kind: "do",
-      title: "Perspective, language, Expert mode",
-      lead: "The same three settings as in Part 1.",
+      title: "Plugin, perspective, language, Expert mode",
+      lead: "Check the OMF-ISAE plugin first, then the same three settings as in Part 1.",
       blocks: [
+        {
+          steps: [
+            "Look at the menu bar of Cameo. Is there an **ISAE** menu, after {{Help}}?"
+          ]
+        },
+        {
+          callout: {
+            tone: "tip", title: "ISAE menu there?",
+            text: "The plugin is already installed. Go on with the settings below."
+          }
+        },
+        {
+          recall: {
+            label: "No ISAE menu? Install the plugin as in Part 1, then restart Cameo",
+            items: [{ id: "install-plugin", title: "Install the OMF-ISAE plugin" }]
+          }
+        },
         {
           steps: [
             "When the tool starts, choose the **Systems Engineer** perspective. You can also do it later with {{Options > Perspectives}}.",
@@ -182,6 +199,16 @@ window.COURSE = {
         },
         {
           p: "In this context, your autonomous drone must patrol around the breeding areas and detect whether one or more Pyrenean bears are in critical approach."
+        },
+        {
+          p: "Your company already has a shepherd solution that monitors the sheep. This seminar tackles the new requirement, the bear, by improving the drone."
+        },
+        {
+          icons: [
+            { src: "../assets/sim/Drone-without-circle.svg", alt: "Drone icon", label: "Your drone" },
+            { src: "../assets/sim/sheep.svg", alt: "Sheep icon", label: "The sheep" },
+            { src: "../assets/sim/bear.svg", alt: "Bear icon", label: "The bear" }
+          ]
         }
       ]
     },
@@ -192,9 +219,9 @@ window.COURSE = {
       blocks: [
         {
           cards: [
-            { n: "1", title: "See in the dark", text: "The bear also moves at night. Your solution must detect the animal in the dark, with an infrared camera and recognition software." },
-            { n: "2", title: "Follow from a distance", text: "If a bear is detected, the drone must change its flight plan to follow it from a distance and assess the risk of approach." },
-            { n: "3", title: "Alert and scare", text: "If the bear crosses the alert line (less than 1 km from the flock) and heads towards the flock, the drone must send an alert signal to the shepherds concerned, and try to scare the bear." }
+            { n: "1", icon: "moon", tone: "note", title: "See in the dark", text: "The bear also moves at night. Your solution must detect the animal in the dark, with an infrared camera and recognition software." },
+            { n: "2", icon: "binoculars", tone: "tip", title: "Follow from a distance", text: "If a bear is detected, the drone must change its flight plan to follow it from a distance and assess the risk of approach." },
+            { n: "3", icon: "bell", tone: "warn", title: "Alert and scare", text: "If the bear crosses the alert line (less than 1 km from the flock) and heads towards the flock, the drone must send an alert signal to the shepherds concerned, and try to scare the bear." }
           ]
         }
       ]
@@ -222,16 +249,45 @@ window.COURSE = {
       title: "Top-down, then bottom-up",
       lead: "When designing a system, you go down and back up: working on one SysML diagram often means updating another one.",
       blocks: [
-        { p: "In this seminar, you complete the context diagram and the use cases, then detail the use case about predators with a scenario, then come back to the context diagram, and so on:" },
+        { p: "The six tasks sit in three layers, from the operational to the physical. Each task asks one question:" },
+        { h: "Operational layer" },
         {
-          list: [
-            "**Task 1**: the operational context diagram.",
-            "**Task 2**: the use case diagram.",
-            "**Task 3**: the signals and a sequence diagram, then back to the context diagram.",
-            "**Task 4**: the functions, the state machine, the activity diagrams and the simulation.",
-            "**Task 5**: the physical architecture.",
-            "**Task 6**: the allocation of the new functions."
-          ]
+          callout: {
+            tone: "note", title: "Task 1",
+            text: "Has the operational context changed?"
+          }
+        },
+        {
+          callout: {
+            tone: "note", title: "Task 2",
+            text: "Do we need a new use case?"
+          }
+        },
+        {
+          callout: {
+            tone: "note", title: "Task 3",
+            text: "What are the scenarios: the sunny day (**SD**), the rainy days (**RD**), the alternatives (**ALT**)?"
+          }
+        },
+        { h: "Functional layer" },
+        {
+          callout: {
+            tone: "warn", title: "Task 4",
+            text: "Do we need new modes and new functions?"
+          }
+        },
+        { h: "Physical layer" },
+        {
+          callout: {
+            tone: "tip", title: "Task 5",
+            text: "Do we already have all the hardware and software (**HW/SW**)?"
+          }
+        },
+        {
+          callout: {
+            tone: "tip", title: "Task 6",
+            text: "Allocate the new functions to the hardware."
+          }
         }
       ]
     },
@@ -246,10 +302,38 @@ window.COURSE = {
         {
           steps: [
             "Open the **Operational Context** diagram.",
-            "Add the bear to the diagram. The bear part is already in the model: you do not create it.",
-            "Connect the bear to the SoI. The type of the bear already declares two ports, and they should be used. The specification tells you enough to understand what they are.",
-            "When you connect them, create the conjugated ports on the SoI side."
+            "Add the bear to the diagram. The bear part is already in the model: you do not create it."
           ]
+        },
+        {
+          tip: {
+            label: "Show the bear as a bear",
+            blocks: [
+              { p: "Select the block named bear on the diagram, then click {{Show as Image}} in the toolbar of the diagram." },
+              { figure: { src: "assets/img/show-as-image.png", w: 453, h: 108, size: "sm", alt: "Toolbar of the Operational Context diagram, with the tooltip Show as Image on one of its buttons.", caption: "The Show as Image button." } }
+            ]
+          }
+        },
+        {
+          steps: [
+            "Connect the bear to the SoI. The type of the bear already declares two ports, and they should be used. The specification tells you enough to understand what they are."
+          ],
+          start: 3
+        },
+        {
+          tip: {
+            label: "Show the ports the bear already has",
+            blocks: [
+              { p: "Select the **bear** block: a small palette appears next to it. Click the button with three stacked rows, just below the picture icon, to display the ports of the bear on the block." },
+              { video: { src: "assets/video/display-ports.mp4", w: 364, h: 508, alt: "Cameo: the bear block is selected, the palette opens, and the button with three stacked rows displays its ports, light and s_l." } }
+            ]
+          }
+        },
+        {
+          steps: [
+            "When you connect them, create the conjugated ports on the SoI side."
+          ],
+          start: 4
         },
         {
           callout: {
@@ -259,15 +343,15 @@ window.COURSE = {
         },
         {
           tip: {
-            label: "Two tips from the handout",
+            label: "Tip from the handout",
             blocks: [
-              { p: "**Show the bear as a bear.** Select the block named bear on the diagram, then click {{Show as Image}} in the toolbar of the diagram." },
-              { figure: { src: "assets/img/show-as-image.png", w: 194, h: 112, size: "xs", alt: "Toolbar of the Operational Context diagram, with the tooltip Show as Image on one of its buttons.", caption: "The Show as Image button." } },
               { p: "**Conjugated ports.** When you connect an existing port to a target part, Cameo (MagicDraw) automatically creates on the target a conjugated port typed by the same interface." }
             ]
           }
         },
-        { recall: { items: [{ id: "context-diagram", title: "Start from the operational context" }] } }
+        { recall: { items: [
+          { id: "m-fp-port", title: "Create the ports and connections for the flight plan" }
+        ] } }
       ]
     },
 
@@ -295,23 +379,49 @@ window.COURSE = {
       ]
     },
     {
+      id: "t2-extend-brief", ch: "T2", kind: "read",
+      title: "Extend and extension points",
+      lead: "Before you create the new use case, a short reminder of the «extend» relationship, with an example that has nothing to do with bears.",
+      blocks: [
+        {
+          figure: {
+            src: "assets/img/extend-uber.svg", w: 800, h: 420,
+            alt: "Use case diagram of a ride-hailing app. The Passenger actor is linked to the use case Transport passenger from A to B, which shows an extension point named Passenger needs assistance. A dashed arrow labelled extend goes from the use case Transport a disabled person to the base use case. A note on the arrow gives the condition, wheelchair requested, and the extension point, Passenger needs assistance.",
+            caption: "Uber: transporting a disabled person extends the ordinary ride."
+          }
+        },
+        {
+          cards: [
+            { n: "1", title: "The base use case", text: "**Transport passenger from A to B** is the ordinary ride: book, pick up, drive, drop off. It is complete on its own and does not know the extension exists." },
+            { n: "2", title: "The extension point", text: "A named place in the base use case where extra behaviour may plug in: here **Passenger needs assistance**. It is listed in a compartment of the base use case." },
+            { n: "3", title: "The «extend» relationship", text: "A dashed arrow **from the extension to the base**. Under a condition (a wheelchair is requested), **Transport a disabled person** adds its behaviour at the extension point: adapted vehicle, help to get in and out." }
+          ]
+        },
+        {
+          callout: {
+            tone: "goal", title: "Each use case has value on its own",
+            text: "If Uber only ever built the ordinary ride, it would still deliver value to its passengers. Transporting a disabled person is also a real service with its own value. «extend» does not cut one use case into pieces: it links two use cases that each make sense alone, and says where and when one enriches the other."
+          }
+        },
+        {
+          callout: {
+            tone: "warn", title: "Do not overdo it",
+            text: "A use case diagram says **what** the system offers to its actors, not **how** or in which order. Do not chain «extend» arrows to express if/then logic or steps: that belongs to the scenarios (sequence diagrams) and the activities you build later. Use «extend» only when a second goal of value hooks onto an existing one."
+          }
+        }
+      ]
+    },
+    {
       id: "t2-use-case", ch: "T2", kind: "do", ref: "Task 2",
-      title: "Create the use case and an extension point",
-      lead: "A new use case for predators, and a new extension point in an existing use case.",
+      title: "Create the use case and the extend relationship",
+      lead: "A new use case for predators, extending the surveillance use case.",
       blocks: [
         {
           steps: [
             "Create the use case <<Protect the sheeps from predators>>.",
-            "In the use case **Surveillance of sheep in a safe zone area**, create an extension point and name it <<Predator entering the safe zone>>.",
-            "In the {{Extension Points}} window, click {{Create}} to create a new extension point. Do not tick the extension point already listed (**Sheep guarding activated**)."
+            "Create an **extend** relationship from <<Protect the sheeps from predators>> to **Surveillance of sheep in a safe zone area**. Cameo creates the extension point on the surveillance use case with this relationship: name it <<Predator entering the safe zone>>.",
+            "The surveillance use case still applies as before; when a bear enters the safe zone, the new use case takes over."
           ]
-        },
-        {
-          figure: {
-            src: "assets/img/extension-points.png", w: 432, h: 265, size: "sm",
-            alt: "Extension Points window. The list shows the unticked extension point Sheep guarding activated. The Create button, at the bottom right, is framed in blue.",
-            caption: "The Extension Points window: click Create, leave the existing extension point unticked."
-          }
         }
       ]
     },
@@ -346,67 +456,69 @@ window.COURSE = {
       title: "Scenario 1",
       lead: "Task 3: create a sequence diagram in the use case \"Protect the sheeps from predators\", from the following scenario.",
       blocks: [
+        { h: "Description of scenario 1" },
         {
-          quote: {
-            label: "Description of scenario 1",
-            text: "The drone receives an infrared signal from an animal on the ground. After analysis of this signal, it appears that the thermal and gestural signature of the animal corresponds to a bear. The drone calculates the position of the bear. The bear enters the tracking perimeter, so the SOI shall start tracking the predator. It turns out that the bear enters the safe area. The drone deploys counter actions: it sends an alert signal to the shepherd and tries to scare the bear away with sound and light."
-          }
+          list: [
+            "The drone receives an infrared signal from an animal on the ground.",
+            "After analysis of this signal, it appears that the thermal and gestural signature of the animal corresponds to a bear.",
+            "The drone calculates the position of the bear.",
+            "The bear enters the tracking perimeter, so the SOI shall start tracking the predator.",
+            "It turns out that the bear enters the safe area.",
+            "The drone deploys counter actions: it sends an alert signal to the shepherd and tries to scare the bear away with sound and light."
+          ]
         },
         {
           callout: {
-            tone: "note", title: "Note 1 · Reuse the signals",
-            text: "Reuse as many existing signals as possible. You will still need new signals for the messages that enter or leave the lifelines of the diagram. New physical signals go in the package [[fd-root]] of 2 - Functional Analysis."
-          }
-        },
-        {
-          callout: {
-            tone: "warn", title: "Note 2 · No signal on a message to self",
-            text: "Signals are only used for messages, because they describe an exchange. NEVER put one on a reflexive message: a message to self represents a behavior."
-          }
-        },
-        {
-          callout: {
-            tone: "tip", title: "Signals first, or diagram first",
-            text: "You can create the signals first (Question 1.0), then the diagram (Question 1.1), or the other way round. Going back and forth is normal: you may miss a signal or a message on the first pass."
+            tone: "note", title: "The story as the customer tells it",
+            text: "Scenario 1 is the story where everything goes as planned. In the pasture, many other things can happen: before you model anything, Question 1.0 asks which stories the drone must be ready for."
           }
         }
       ]
     },
     {
       id: "q1-0", ch: "T3", kind: "answer", ref: "Question 1.0", pts: 2,
-      title: "Question 1.0: the signals",
-      lead: "What signals are needed to describe Scenario 1?",
+      title: "Question 1.0: the scenarios to consider",
+      lead: "Protecting the flock from a bear is not a single story. Which scenarios must the drone be ready for?",
       blocks: [
-        { p: "Reuse the existing signals, as Note 1 says. Create in Cameo the ones that do not exist yet, in [[fd-root]]." },
+        { p: "Put yourself in the shoes of the shepherd who buys the drone: what can happen in the pasture, what can go wrong, and what must the drone still do then? A use case is only covered when its main scenarios are known." },
+        {
+          cards: [
+            { n: "SD", title: "Sunny day", text: "The nominal story: everything goes as planned and the goal of the use case is reached." },
+            { n: "RD", title: "Rainy day", text: "Something goes wrong: an event, a failure or a condition prevents the nominal story. What happens to the goal, and how does the system react?" },
+            { n: "ALT", title: "Alternative", text: "Another path to the same goal: the situation differs from the nominal one, yet the goal is still reached." }
+          ]
+        },
         {
           question: {
-            id: "q1-0", type: "list", initial: 1,
-            prompt: "List the signals needed to describe Scenario 1.",
-            itemLabel: "Signal"
+            id: "q1-0", type: "list", initial: 3,
+            prompt: "List at least 3 scenarios of the use case <<Protect the sheeps from predators>>, with at least one of each kind. For each one, give its kind (SD, RD or ALT), then in one sentence what happens and how it ends for the flock.",
+            itemLabel: "Scenario"
           }
         },
         {
-          recall: {
-            items: [
-              { id: "a-messages", title: "Send messages between actors" },
-              { id: "a-self-messages", title: "Messages to self" }
-            ]
+          callout: {
+            tone: "goal", title: "Think business, not diagram",
+            text: "This question is about the stories, not about Cameo. A good scenario names a trigger, what the drone and the other actors do, and an outcome the shepherd cares about."
           }
         }
       ]
     },
     {
       id: "q1-1", ch: "T3", kind: "do", ref: "Question 1.1", pts: 3,
-      title: "Question 1.1: the sequence diagram",
-      lead: "In the use case \"Protect the sheeps from predators\", create the sequence diagram that specifies Scenario 1.",
+      title: "Question 1.1: model the sunny day scenario",
+      lead: "In the use case \"Protect the sheeps from predators\", model your sunny day scenario (Scenario 1) as a sequence diagram.",
       blocks: [
         {
           steps: [
             "Create the sequence diagram from the use case <<Protect the sheeps from predators>>, so that it stays attached to it.",
-            "Add the participants of the scenario as lifelines.",
-            "Draw the exchanges between participants as messages, each with its signal.",
-            "Draw what a participant does on its own as a message to self, without a signal (Note 2)."
+            "Tell the story of the sunny day in the diagram: who takes part, what they exchange, and what the drone does on its own, in the order the shepherd would tell it."
           ]
+        },
+        {
+          callout: {
+            tone: "note", title: "Stay consistent with the model",
+            text: "The scenario belongs to the model, not next to it. Its participants should match the actors of the use case and the operational context. Reuse the elements that already exist (signals, actors, parts) before creating new ones; new physical signals go in [[fd-root]]."
+          }
         },
         {
           recall: {
@@ -428,11 +540,11 @@ window.COURSE = {
       blocks: [
         { path: "op-context" },
         { h: "a) Which flows, on which connectors" },
-        { p: "On the connectors you created in Task 1, indicate which ones carry the physical flows created in Question 1.0." },
+        { p: "On the connectors you created in Task 1, indicate which ones carry the new physical flows of your sunny day scenario (Question 1.1)." },
         {
           question: {
             id: "q2a", type: "text",
-            prompt: "a) On which connectors do the physical flows of Question 1.0 go?",
+            prompt: "a) On which connectors do the new physical flows of your sunny day scenario go?",
             hint: "One line per connector: the connector, then the flow(s) it carries."
           }
         },
@@ -659,11 +771,11 @@ window.COURSE = {
     },
     {
       q: "Where do the new signals go?",
-      a: "New physical signals go in the package **B - Functional Data** of **2 - Functional Analysis** (Note 1 of Task 3)."
+      a: "New physical signals go in the package **B - Functional Data** of **2 - Functional Analysis** (Question 1.1)."
     },
     {
       q: "Can I put a signal on a message to self?",
-      a: "No. Signals describe an exchange, so they only go on messages between two lifelines. A message to self represents a behavior: it has no signal (Note 2 of Task 3)."
+      a: "No. Signals describe an exchange, so they only go on messages between two lifelines. A message to self represents a behavior: it has no signal."
     },
     {
       q: "A new port appeared when I connected two parts. Is that normal?",
@@ -687,6 +799,7 @@ window.COURSE = {
     { scene: "t1-context", text: "The handout says “Display as Image”; the screenshot shows the tooltip “Show as Image”. The guide follows the screenshot." },
     { scene: "t2-use-case", text: "Names kept as written in the handout: “Protect the sheeps from predators” (sheeps), “Surveillance of sheep in a safe zone area”. Part 1 calls a use case “Surveillance of a \"safe zone\" area”. Check the exact names in the marked model." },
     { scene: "t2-use-case", text: "How does the Extension Points window open (from the use case, or while drawing the Extend relation)? Neither handout says it. Once confirmed, start step 3 with that gesture." },
+    { scene: "q1-0", text: "The Word handout of Part 2 still asks for the signals of Scenario 1 in Question 1.0, with Notes 1 and 2 in Task 3. The guide now asks for at least 3 scenarios (SD, RD, ALT) and leaves the signals to Question 1.1, less guided. Update the handout and the marking sheet." },
     { scene: "t3-scenario", text: "The grammar of scenario 1 was corrected (enter/enters, thus/so, deploy counter action/deploys counter actions). Check that the meaning is unchanged." },
     { scene: "requirements", text: "The handout does not say which boundary the alert line (< 1 km from the flock) is: the tracking perimeter or the safe zone of the three steps. The guide does not explain it until you confirm." },
     { scene: "q4", text: "The handout does not name the state machine of Question 4, nor say whether the predator states already exist. The guide assumes SOI - Pasture Sentinel (named in Question 7) and existing states. Check in the marked model." },

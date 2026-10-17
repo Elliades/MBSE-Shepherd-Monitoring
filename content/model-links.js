@@ -4,12 +4,14 @@
    show the whole path. Change a path here and it changes everywhere.
 
    name   what the student sees on the chip
-   type   package | block | ucd | ibd | sd | ad | stm | matrix | usecase | actor | activity | signal
+   type   package | block | ucd | ibd | sd | ad | stm | matrix | usecase | actor | activity | signal | iface
    path   where it sits in the Model Browser, top-down (last item = the element)
    kinds  optional, same length as path, when a parent is not a package
    id     UUID of the element in the model; "Open in Cameo" uses it through the relay
    url    deep link that opens the element in Cameo. Empty = not set yet.
-   made   true when the student creates this element during the exercise
+   made   true when the student creates this element during the exercise. It has no id: the button
+          "Find in Cameo" sends its name, type and path, and Cameo looks it up (README, "Links by name").
+          Spell name and path exactly as the steps tell the student to type them.
    note   optional remark shown in the sheet */
 /* op-context points at the diagram (ibd), not at its owner block. */
 window.MODEL_LINKS = {
@@ -55,6 +57,20 @@ window.MODEL_LINKS = {
     path: ["1 - Operational Analysis", "C - Use Cases and Scenarios", "Actors"],
     url: ""
   },
+  "if-pkg": {
+    name: "D - Physical Interfaces",
+    type: "package",
+    id: "_18_5_1_150503da_1505402151080_135734_22144",
+    path: ["1 - Operational Analysis", "D - Physical Interfaces"],
+    url: ""
+  },
+  "if-flightplan": {
+    name: "IF_FlightPlan",
+    type: "iface",
+    path: ["1 - Operational Analysis", "D - Physical Interfaces", "IF_FlightPlan"],
+    made: true,
+    url: ""
+  },
   "fa-root": {
     name: "A - Functional architecture",
     type: "package",
@@ -74,6 +90,14 @@ window.MODEL_LINKS = {
     type: "package",
     path: ["2 - Functional Analysis", "A - Functional architecture", "Deployment", "Parameter Mission"],
     made: true,
+    url: ""
+  },
+  "fa-parameter-mission-act": {
+    name: "Parameter Mission",
+    type: "activity",
+    path: ["2 - Functional Analysis", "A - Functional architecture", "Deployment", "Parameter Mission"],
+    made: true,
+    note: "Same name as the package next to it: the type tells them apart. Once moved into the package, it sits one level deeper.",
     url: ""
   },
   "fn-load-flight-plan": {
@@ -140,6 +164,15 @@ window.MODEL_LINKS = {
     path: ["3 - Physical Analysis", "A - Physical architecture", "SOI - Pasture Sentinel", "SOI - Pasture Sentinel", "SOI - Pasture Sentinel"],
     kinds: ["package", "package", "block", "stm", "stm"],
     note: "The handout shortens this path to 3-A-SOI-SOI-SOI.",
+    url: ""
+  },
+  "soi-configured": {
+    name: "Configured",
+    type: "state",
+    path: ["3 - Physical Analysis", "A - Physical architecture", "SOI - Pasture Sentinel", "SOI - Pasture Sentinel", "Undeployed", "Configured"],
+    kinds: ["package", "package", "block", "stm", "state", "state"],
+    made: true,
+    note: "A state lives in the state machine, not in the diagram. Cameo may show a region between the state machine and its states.",
     url: ""
   },
   "uav-data": {

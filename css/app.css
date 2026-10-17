@@ -23,6 +23,10 @@
   --grass-soft: #d4ebd1;
   --danger: #b3261e;
   --danger-soft: #f9dfdc;
+  /* the three levels of the method, same hues as the stages widget: operational orange, functional blue, physical yellow */
+  --ph-op: #b85400;
+  --ph-fn: #1f62c4;
+  --ph-ph: #8f6800;
   --pasture: #a6de90;
   --pasture-edge: #2c5a33;
   --wool: #34343a;
@@ -64,6 +68,9 @@
     --grass-soft: #1c3a25;
     --danger: #ff8f85;
     --danger-soft: #4a1f1c;
+    --ph-op: #ffa45c;
+    --ph-fn: #84b5ff;
+    --ph-ph: #f2c12e;
     --pasture: #3f7a45;
     --pasture-edge: #a6de90;
     --wool: #e8e6df;
@@ -94,6 +101,9 @@
   --grass-soft: #1c3a25;
   --danger: #ff8f85;
   --danger-soft: #4a1f1c;
+  --ph-op: #ffa45c;
+  --ph-fn: #84b5ff;
+  --ph-ph: #f2c12e;
   --pasture: #3f7a45;
   --pasture-edge: #a6de90;
   --wool: #e8e6df;
@@ -207,6 +217,161 @@ a { color: var(--sky); }
 .route-drone svg { display: block; width: 100%; height: 100%; }
 .route-drone.flying .rotor { animation: rotor 0.25s linear 3; transform-box: fill-box; transform-origin: center; }
 @keyframes rotor { 50% { transform: scale(0.55); } }
+
+/* ───────── levels of the method (phases) ─────────
+   A chapter tagged with a level paints a thin band along the top bar, its crumb code,
+   its legs of the route and the rule under the title, so the student always sees where they are. */
+[data-phase="op"] { --phase: var(--ph-op); }
+[data-phase="fn"] { --phase: var(--ph-fn); }
+[data-phase="ph"] { --phase: var(--ph-ph); }
+.top { box-shadow: inset 0 3px 0 var(--phase, transparent); }
+body[data-phase] .crumb-code { border-color: var(--phase); color: var(--phase); }
+body[data-phase] .waypoint-rule { color: var(--phase); }
+.leg[data-phase] { background: color-mix(in srgb, var(--phase) 22%, var(--line)); }
+.leg[data-phase] i { background: var(--phase); }
+.leg[data-phase].now { background: color-mix(in srgb, var(--phase) 38%, var(--line)); }
+.leg[data-phase].now b { color: var(--phase); }
+.toc-ch[data-phase] .toc-ch-head .crumb-code { border-color: var(--phase); color: var(--phase); }
+.phase-chip {
+  font-family: var(--font-mono); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+  color: var(--phase, var(--ink-2)); border: 1.5px solid currentColor; border-radius: 999px; padding: 0.12rem 0.55rem; line-height: 1.3;
+}
+
+/* the three levels in one line, in an intro or wrap-up scene */
+.phases { list-style: none; margin: 0; padding: 0; display: flex; align-items: stretch; gap: 1.5rem; }
+.phases li {
+  position: relative; flex: 1 1 0; min-width: 0; display: flex; gap: 0.55rem; align-items: center;
+  padding: 0.55rem 0.7rem; border-radius: var(--r-sm); border: 1.5px solid var(--line); background: var(--surface); color: var(--ink-3);
+}
+.phases li:not(:last-child)::after {
+  content: ""; position: absolute; right: -1.05rem; top: 50%; width: 0.55rem; height: 0.55rem;
+  border-top: 2px solid var(--ink-3); border-right: 2px solid var(--ink-3); transform: translateY(-50%) rotate(45deg);
+}
+.phases li.past:not(:last-child)::after, .phases li.now:not(:last-child)::after { border-color: var(--phase); }
+.phases-t { min-width: 0; display: grid; }
+.phases b { font-family: var(--font-display); font-weight: 700; line-height: 1.2; }
+.phases .phases-short { display: none; }
+.phases em { font-style: normal; font-size: 0.85rem; line-height: 1.3; }
+.phases-n {
+  flex: none; display: grid; place-items: center; width: 1.8rem; height: 1.8rem; border-radius: 50%;
+  font-family: var(--font-mono); font-weight: 700; font-size: 0.85rem; border: 1.5px solid currentColor;
+}
+.phases-n svg { width: 1rem; height: 1rem; }
+.phases li.past { color: var(--ink-2); }
+.phases li.past .phases-n { color: var(--surface); background: var(--phase); border-color: var(--phase); }
+.phases li.now { border-color: var(--phase); background: color-mix(in srgb, var(--phase) 12%, var(--surface)); color: var(--ink); }
+.phases li.now b { color: var(--phase); }
+.phases li.now .phases-n { background: var(--phase); color: var(--surface); border-color: var(--phase); }
+.scene.enter .phases li.now .phases-n { animation: ping 1.4s 0.5s var(--ease) 2; }
+@keyframes ping { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--phase) 55%, transparent); } 100% { box-shadow: 0 0 0 12px transparent; } }
+@media (max-width: 640px) {
+  .phases { gap: 1rem; }
+  .phases li { flex-direction: column; gap: 0.3rem; padding: 0.5rem 0.3rem; text-align: center; }
+  .phases li:not(:last-child)::after { right: -0.8rem; width: 0.45rem; height: 0.45rem; }
+  .phases b:not(.phases-short), .phases em { display: none; }
+  .phases .phases-short { display: block; font-size: 0.9rem; }
+}
+
+/* steps of a level, as small animated diagrams in a row (widget phaseSteps) */
+.psteps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); gap: 1.5rem; }
+.pstep { display: grid; gap: 0.55rem; align-content: start; min-width: 0; }
+.pstep-pic {
+  position: relative; display: block; width: 100%; padding: 0.35rem; border-radius: var(--r-sm); cursor: pointer;
+  border: 1.5px solid var(--line); background: var(--surface); transition: border-color 0.3s, box-shadow 0.3s, transform 0.3s var(--ease);
+}
+.pstep-pic svg { display: block; width: 100%; height: auto; overflow: visible; }
+.pstep-pic svg text { font-family: var(--font-body); fill: var(--ink-2); }
+.pstep:not(:last-child) .pstep-pic::after {
+  content: ""; position: absolute; right: -1.05rem; top: 50%; width: 0.5rem; height: 0.5rem;
+  border-top: 2px solid var(--ink-3); border-right: 2px solid var(--ink-3); transform: translateY(-50%) rotate(45deg);
+}
+.pstep.on .pstep-pic { border-color: var(--pc); box-shadow: 0 0 0 3px color-mix(in srgb, var(--pc) 22%, transparent); transform: translateY(-2px); }
+.pstep-txt { display: grid; gap: 0.15rem; }
+.pstep-n { font-family: var(--font-mono); font-size: 0.72rem; font-weight: 700; color: var(--pc); }
+.pstep-txt b { font-family: var(--font-display); font-weight: 700; line-height: 1.2; }
+.pstep-d { color: var(--ink-2); font-size: 0.92rem; line-height: 1.4; }
+.pstep-off { font-style: normal; font-family: var(--font-mono); font-size: 0.68rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-3); }
+.pstep.off .pstep-pic { border-style: dashed; }
+.pstep.off .pstep-pic svg { opacity: 0.5; }
+.pstep.off .pstep-txt b, .pstep.off .pstep-d { color: var(--ink-3); }
+.pstep-ok {
+  position: absolute; top: -0.55rem; right: -0.55rem; width: 1.5rem; height: 1.5rem; border-radius: 50%; display: grid; place-items: center;
+  background: var(--grass); color: var(--surface); transform: scale(0); transition: transform 0.4s var(--ease);
+}
+.pstep-ok svg { width: 1rem; height: 1rem; fill: none; stroke: currentColor; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.pstep.ok .pstep-ok { transform: scale(1); }
+.psteps-live { display: none; margin: 0.9rem 0 0; min-height: 3em; padding: 0.6rem 0.8rem; border-radius: var(--r-sm); background: var(--surface-2); color: var(--ink-2); font-size: 0.95rem; }
+.psteps-live b { color: var(--ink); }
+@media (max-width: 640px) {
+  .psteps { gap: 0.9rem; }
+  .pstep:not(:last-child) .pstep-pic::after { right: -0.72rem; width: 0.4rem; height: 0.4rem; }
+  .pstep-pic { padding: 0.2rem; }
+  .pstep-pic .pf-lbl { display: none; }
+  .pstep-txt { text-align: center; }
+  .pstep-txt b { font-size: 0.85rem; }
+  .pstep-d, .pstep-off, .pstep-n { display: none; }
+  .psteps-live { display: block; }
+}
+
+/* the vocabulary of the small diagrams; --pc is the colour of the level of the picture */
+.pf-lbl { font-size: 7px; font-weight: 700; }
+.pf-mark { font-size: 11px; font-weight: 800; fill: var(--pc) !important; }
+.pf-hot { fill: color-mix(in srgb, var(--pc) 14%, var(--surface)); stroke: var(--pc); stroke-width: 1.6; }
+.pf-fn { fill: color-mix(in srgb, var(--ph-fn) 16%, var(--surface)); stroke: var(--ph-fn); stroke-width: 1.6; }
+.pf-fill { fill: var(--pc); }
+.pf-line { fill: none; stroke: var(--pc); stroke-width: 1.6; }
+.pf-doc { fill: none; stroke: var(--ink-3); stroke-width: 2; stroke-linecap: round; }
+.pf-actor circle, .pf-actor path { fill: none; stroke: var(--ink-2); stroke-width: 1.5; stroke-linecap: round; }
+.pf-msg .s-line { stroke: var(--pc); stroke-width: 1.6; }
+.pf-msg .s-head { fill: var(--pc); }
+.pf-bad .s-line { stroke: var(--danger); stroke-width: 1.5; stroke-dasharray: 3 2; }
+.pf-bad .s-head { fill: var(--danger); }
+.pf-arrow .s-line { stroke-width: 1.2; }
+.pf-flow { fill: none; stroke: var(--pc); stroke-width: 1.5; stroke-dasharray: 3 3; }
+.pf-st { fill: var(--surface); stroke: var(--ink-2); stroke-width: 1.4; }
+.pf-st[style*="--i:0"] { fill: color-mix(in srgb, var(--pc) 14%, var(--surface)); stroke: var(--pc); stroke-width: 2; }
+.pf-route { fill: none; stroke: none; }
+.pf-token { fill: var(--pc); stroke: var(--surface); stroke-width: 1.5; }
+.pstep:not(.on) .pf-token { opacity: 0; }
+.pf-check circle { fill: var(--grass); }
+.pf-check path { fill: none; stroke: var(--surface); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* the pictures replay while their tile is lit */
+.pstep.on .a-pop { animation: pf-pop 0.5s var(--d, 0.1s) var(--ease) both; transform-box: fill-box; transform-origin: center; }
+@keyframes pf-pop { from { opacity: 0; transform: scale(0.5); } }
+.pstep.on .a-draw .s-line, .pstep.on path.a-draw { stroke-dasharray: 140; animation: pf-draw 0.9s var(--d, 0.2s) ease-out both; }
+.pstep.on .a-draw .s-head { animation: pf-fade 0.3s calc(var(--d, 0.2s) + 0.6s) both; }
+@keyframes pf-draw { from { stroke-dashoffset: 140; } to { stroke-dashoffset: 0; } }
+@keyframes pf-fade { from { opacity: 0; } }
+.pstep.on .a-in { animation: pf-in 0.4s var(--d, 0.2s) ease-out both; }
+@keyframes pf-in { from { opacity: 0; transform: translateX(-4px); } }
+.pstep.on .a-msg { animation: pf-in 0.45s var(--d, 0.2s) ease-out both; }
+.pstep.on .pf-flow { animation: march-6 0.8s linear infinite; }
+@keyframes march-6 { to { stroke-dashoffset: -6; } }
+.pstep.on .pf-st { animation: pf-lit 2.4s calc(var(--i) * 0.8s) linear infinite both; }
+@keyframes pf-lit {
+  0%, 33% { fill: color-mix(in srgb, var(--pc) 22%, var(--surface)); stroke: var(--pc); stroke-width: 2.2; }
+  34%, 100% { fill: var(--surface); stroke: var(--ink-2); stroke-width: 1.4; }
+}
+.pstep.on .pf-drop { animation: pf-drop 2.2s var(--ease) infinite; }
+@keyframes pf-drop {
+  0% { transform: translateY(-36px); opacity: 0; }
+  15%, 35% { transform: translateY(-36px); opacity: 1; }
+  70%, 100% { transform: none; opacity: 1; }
+}
+
+/* who carries out a function (widget allocChoice) */
+.alloc-choice svg { max-width: 34rem; justify-self: center; }
+.alloc-choice .ac-fn { fill: color-mix(in srgb, var(--ph-fn) 16%, var(--surface)); stroke: var(--ph-fn); stroke-width: 2; }
+.alloc-choice .ac-ph { fill: color-mix(in srgb, var(--ph-ph) 18%, var(--surface)); stroke: var(--ph-ph); stroke-width: 2; }
+.alloc-choice .ac-back .s-line { stroke: var(--ph-fn); stroke-dasharray: 5 4; }
+.alloc-choice .ac-back .s-head { fill: var(--ph-fn); }
+.alloc-choice svg text.ac-back-t { font-size: 10.5px; font-weight: 700; fill: var(--ph-fn); }
+.alloc-choice .hl .s-line { stroke: var(--ph-ph); stroke-width: 2.4; }
+.alloc-choice .hl .s-head { fill: var(--ph-ph); }
+.alloc-choice .ac-back.hl .s-line { stroke: var(--ph-fn); }
+.alloc-choice .ac-back.hl .s-head { fill: var(--ph-fn); }
+.alloc-choice .ac-tok { fill: var(--ph-fn); stroke: var(--surface); stroke-width: 2; }
 
 /* ───────── stage and scene ───────── */
 #stage {
@@ -473,6 +638,21 @@ body:not(.author) .ph, body:not(.author) .author-only { display: none; }
 }
 .card-title { font-family: var(--font-display); font-weight: 700; font-size: 1.1rem; line-height: 1.25; }
 .card p { margin: 0; color: var(--ink-2); }
+.card-top { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; }
+.card-ico {
+  width: 3.1rem; height: 3.1rem; display: grid; place-items: center; border-radius: var(--r-sm);
+  background: var(--tone-soft, var(--surface-2)); color: var(--tone, var(--ink)); border: 1.5px solid var(--tone, var(--line));
+}
+.card-ico svg { width: 1.9rem; height: 1.9rem; }
+
+/* ───────── icon row: small pictures with a label ───────── */
+.icon-row { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 1rem 1.8rem; }
+.icon-row li { display: grid; justify-items: center; gap: 0.4rem; }
+.icon-row img {
+  width: 4.5rem; height: 4.5rem; object-fit: contain; padding: 0.35rem;
+  background: #fff; border: 1px solid var(--line); border-radius: var(--r);
+}
+.icon-row span { font-size: 0.92rem; color: var(--ink-2); }
 
 /* ───────── model path card ───────── */
 .pathcard {
@@ -735,6 +915,8 @@ body:not(.author) .ph, body:not(.author) .author-only { display: none; }
   transition: opacity 0.25s, transform 0.25s var(--ease);
 }
 #toast.show { opacity: 1; transform: translate(-50%, 0); }
+#toast { white-space: normal; width: max-content; max-width: min(92vw, 30rem); text-align: center; line-height: 1.35; }
+#toast.bad { background: var(--danger); color: var(--bg); pointer-events: auto; box-shadow: 0 6px 20px rgb(0 0 0 / 0.25); }
 
 .confetti { position: fixed; inset: 0; pointer-events: none; z-index: 70; overflow: hidden; }
 .confetti i { position: absolute; top: -12px; width: 9px; height: 14px; border-radius: 2px; animation: fall linear forwards; }
@@ -950,6 +1132,8 @@ body:not(.author) .ph, body:not(.author) .author-only { display: none; }
 .seq { display: grid; gap: 0.9rem; }
 @media (min-width: 760px) { .seq { grid-template-columns: minmax(0, 1fr) minmax(0, 0.85fr); align-items: start; } }
 .seq-art { max-width: 27rem; }
+.seq.seq-solo { display: block; }
+.seq-solo .seq-art { max-width: 12rem; }
 .seq .ll-head { fill: var(--grass-soft); stroke: var(--ink-2); stroke-width: 1.3; }
 .seq .ll-line { stroke: var(--ink-3); stroke-width: 1.2; stroke-dasharray: 5 4; }
 .seq .act-bar { fill: var(--grass-soft); stroke: var(--ink-3); stroke-width: 1; }
@@ -992,6 +1176,28 @@ body:not(.author) .ph, body:not(.author) .author-only { display: none; }
 .anat .hot text { fill: var(--route) !important; }
 .anat .hot.pin circle { fill: var(--route); }
 .anat .hot.pin text { fill: var(--on-route) !important; }
+
+/* ───────── element sketches: one drawing per step ───────── */
+.sketch svg { width: 100%; max-width: 30rem; justify-self: center; }
+.sketch .sk-hot { fill: var(--route-soft); }
+.sketch .w-caption { max-width: none; width: 100%; text-align: center; }
+.sketch .item-flow .s-line { stroke: var(--route); stroke-width: 2.4; }
+.sketch .item-flow .s-head { fill: var(--route); }
+
+/* ───────── item flow: kettle and cup ───────── */
+.ifw-art { max-width: 34rem; }
+.ifw-ctl { display: grid; gap: 0.5rem; }
+.ifw .item, .ifw .drops { opacity: 0; transition: opacity 0.3s; }
+.ifw.picked .item, .ifw.picked .drops { opacity: 1; }
+.ifw .item .s-head { fill: var(--route); }
+.ifw .item text { fill: var(--route) !important; }
+.ifw .drop { stroke: var(--surface); stroke-width: 1.5; }
+.ifw .drop.liquid { fill: var(--ink-3); }
+.ifw .drop.water { fill: var(--sky); }
+.ifw .drop.coffee { fill: #8a5a33; }
+.ifw .steam { opacity: 0; transition: opacity 0.4s; }
+.ifw .steam .s-line { stroke: var(--ink-3); stroke-linecap: round; }
+.ifw.boiling .steam { opacity: 1; }
 
 /* ───────── state machine ───────── */
 .sm { display: grid; gap: 1rem; }
@@ -1080,7 +1286,24 @@ body:not(.author) .ph, body:not(.author) .author-only { display: none; }
 .dec .diamond { fill: var(--surface); stroke: var(--ink-2); stroke-width: 1.6; }
 .fk .bar { fill: var(--ink); }
 .fk .act.run .s-box { stroke: var(--danger); stroke-width: 2.6; fill: var(--danger-soft); }
-.fk-art, .dec-art { max-width: 30rem; }
+.fk-art, .dec-art, .flw-art { max-width: 30rem; }
+.lfp > svg { display: block; width: 100%; max-width: 30rem; }
+.lfp .guard { font-family: var(--font-mono); font-size: 10.5px; font-weight: 700; fill: var(--ink-2); }
+.lfp .diamond { fill: var(--surface); stroke: var(--ink-2); stroke-width: 1.6; }
+.lfp .bar { fill: var(--ink); }
+.lfp .obj { font-size: 10.5px; font-weight: 600; fill: var(--ink-2); }
+.lfp .fin { fill: none; stroke: var(--ink); stroke-width: 1.6; }
+.lfp .new .bar { fill: var(--route); }
+.lfp .new .s-box { stroke: var(--route); stroke-width: 2.2; fill: var(--route-soft); }
+.lfp .new .s-line { stroke: var(--route); }
+.lfp .new .s-head { fill: var(--route); }
+.flw { display: grid; gap: 0.8rem; }
+.flw .row { transition: opacity 0.3s; }
+.flw .row.off { opacity: 0.3; }
+.flw .row.on .s-line { stroke: var(--route); stroke-width: 2.4; }
+.flw .row.on .s-head { fill: var(--route); }
+.flw .row.on .pin { stroke: var(--route); stroke-width: 2; fill: var(--route-soft); }
+.flw .doc { fill: var(--danger-soft); stroke: var(--danger); stroke-width: 1.4; }
 
 /* ───────── crud ───────── */
 .crud { display: grid; gap: 0.6rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr)); }

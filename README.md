@@ -81,6 +81,44 @@ the **same** relay:
 If the Cameo button keeps saying "Cannot reach the relay at ...", the address in the message is the one
 the guide is trying: it is not the relay Cameo is connected to.
 
+## Links by name (elements the student creates)
+
+An element the student creates (`made: true` in `content/model-links.js`) has no UUID when the guide is
+written. Its chip opens the usual sheet, and the button there says **Find in Cameo** instead of **Open in
+Cameo**. Any entry without an `id` works the same way. The guide sends this to the plugin, through the
+relay, in the usual request frame:
+
+```json
+{ "req": "r7", "category": "browser", "name": "selectByName",
+  "args": [{
+    "name": "Load Flight Plan",
+    "type": "activity",
+    "path": ["2 - Functional Analysis", "A - Functional architecture", "Deployment", "Parameter Mission", "Load Flight Plan"],
+    "kinds": ["package", "package", "package", "package", "activity"],
+    "qualifiedName": "2 - Functional Analysis::A - Functional architecture::Deployment::Parameter Mission::Load Flight Plan"
+  }] }
+```
+
+For a diagram type (`ucd ibd sd ad stm bdd req`) the guide first sends `category: "diagram"`,
+`name: "openByName"` with the same argument, and falls back to `browser/selectByName`.
+
+What the plugin does with it:
+
+1. Candidates are the model elements whose **name equals `name`** and whose UML kind matches `type`
+   (`package` Package, `block` Block, `iface` InterfaceBlock, `usecase` UseCase, `actor` Actor,
+   `activity` Activity, `state` State, `signal` Signal, `stm` StateMachine, diagrams their diagram type).
+   The type is what tells apart an activity and a package that share a name.
+2. If there are several, keep those whose owners contain the items of `path` in order, best match first.
+   A missing owner (a Region, a package the student skipped) only lowers the score. It never rules out.
+3. One candidate: select it in the Model Browser (or open it, for a diagram) and answer
+   `{ "res": "r7", "ok": true, "result": ... }`.
+   None: `"ok": false, "error": "not-found"`. Several equal: select them all and answer
+   `"error": "ambiguous"`. The guide shows a message for these two; any other error shows "Cameo could not show it".
+
+Things to add in the guide for this to work: give the entry a `path` that matches the steps, spell `name` as
+the steps tell the student to type it. For the functions the student names in Question 2, the guide builds the
+entry itself (`fromAnswer` with `under: "<link key>"`, in `b-exercise`).
+
 ## Edit a scene
 
 A scene is an object in `content/scenes.js`:
@@ -171,6 +209,8 @@ solution block. Keep it that way when editing it. What it adds:
 - `{ recall: { items: [{ id: "a-messages", title: "Send messages between actors" }] } }` links to the
   scenes of Part 1 that show a gesture again (they open in a new tab; `recallBase` in its config).
 - `{ question: { type: "text", ... } }` is a free-text answer.
+- `{ icons: [{ src, alt, label }] }` is a row of small pictures, each with its label (the drone, sheep and bear
+  of "The request" scene).
 - `simPreview: false` in its config: the simulation panel never lists signals or plays the nominal
   scenario. It only follows the states Cameo publishes, so it works whatever the students named their
   signals.

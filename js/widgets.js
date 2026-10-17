@@ -549,21 +549,25 @@
   };
 
   /* ───────── message to self ───────── */
+  /* Same drawing as the sequence replay below (.seq styles), one lifeline and two messages to self. */
   W.selfMessage = function (root) {
-    root.className = 'w self-msg';
-    const s = svg('0 0 340 170', 'One lifeline, SOI - Pasture Sentinel, with two messages to self: Load FlightPlan and Check FlightPlan Perimeter. Neither has a signal.');
-    el('line', { x1: 60, y1: 32, x2: 60, y2: 168, class: 'll-line' }, s);
-    el('rect', { x: 16, y: 4, width: 88, height: 28, rx: 3, class: 'll-head' }, s);
-    txt(s, 60, 22, 'Drone', 's-sub', 'middle', 11).setAttribute('style', 'font-weight:700;fill:var(--ink)');
-    el('rect', { x: 56, y: 62, width: 8, height: 90, class: 'act-bar' }, s);
+    root.className = 'w seq seq-solo self-msg';
+    root.innerHTML = '<div class="seq-art" data-noswipe></div>';
+    const s = svg('0 0 170 176', 'One lifeline, SOI - Pasture Sentinel, with two messages to self: Load FlightPlan and Check FlightPlan Perimeter. Neither has a signal.');
+    root.querySelector('.seq-art').appendChild(s);
+    const X = 50;
+    el('line', { x1: X, y1: 40, x2: X, y2: 172, class: 'll-line' }, s);
+    el('rect', { x: X - 46, y: 8, width: 92, height: 32, rx: 3, class: 'll-head' }, s);
+    txt(s, X, 28, 'Drone', 's-sub', 'middle', 11).setAttribute('style', 'font-weight:700;fill:var(--ink)');
+    el('rect', { x: X - 4, y: 62, width: 8, height: 92, class: 'act-bar' }, s);
     [
-      [[[64, 70], [104, 70], [104, 92], [66, 92]], 'Load FlightPlan', 84],
-      [[[64, 120], [104, 120], [104, 142], [66, 142]], 'Check FlightPlan Perimeter', 134]
-    ].forEach(([pts, label, ty]) => {
-      const g = arrow(s, pts, 'msg');
-      txt(g, 112, ty, label, '', 'start', 12);
+      { y: 80, label: ['Load FlightPlan'] },
+      { y: 128, label: ['Check FlightPlan', 'Perimeter'] }
+    ].forEach((m) => {
+      const x = X + 4;
+      const g = arrow(s, [[x, m.y], [x + 28, m.y], [x + 28, m.y + 24], [x + 2, m.y + 24]], 'msg');
+      txt(g, x + 4, m.y - 6 - (m.label.length - 1) * 12, m.label, '', 'start', 12);
     });
-    root.appendChild(s);
   };
 
   W.msgToFn = function (root) {
@@ -892,7 +896,7 @@
       ['do', 'Do activity', 'A function assigned to a state. It runs while the system is in that state.']
     ];
     root.className = 'w anat';
-    root.innerHTML = `<div class="anat-art"></div><div class="anat-keys">${KEYS.map((k, i) => `<button type="button" class="anat-key" data-key="${k[0]}" aria-pressed="false"><i>${i + 1}</i><span><b>${k[1]}</b><span>${k[2]}</span></span></button>`).join('')}</div>`;
+    root.innerHTML = anatHTML(KEYS);
     const s = svg('0 0 360 200', 'Two states, Unconfigured and Configured, linked by a transition labelled FlightPlan. Configured contains do / Load Flight Plan. Four numbered pins point at a state, the transition, the signal and the do activity.');
     root.querySelector('.anat-art').appendChild(s);
     const part = (name) => el('g', { 'data-part': name }, s);
@@ -909,11 +913,12 @@
     el('line', { x1: 204, y1: 147, x2: 340, y2: 147, class: 's-line' }, s2);
     const d = part('do');
     txt(d, 272, 165, 'do / Load Flight Plan', 's-sub', 'middle');
-    [['state', 22, 34], ['transition', 272, 86], ['signal', 170, 30], ['do', 204, 162]].forEach((p, i) => {
-      const g = el('g', { 'data-part': p[0], class: 'pin' }, s);
-      el('circle', { cx: p[1], cy: p[2], r: 9 }, g);
-      txt(g, p[1], p[2] + 3.5, String(i + 1), '', 'middle');
-    });
+    anatPins(s, [['state', 22, 34], ['transition', 272, 86], ['signal', 170, 30], ['do', 204, 162]]);
+    anatKeys(root, s);
+  };
+
+  /* Numbered keys beside an anatomy drawing: pressing one lights its parts and dims the others. */
+  function anatKeys(root, s) {
     const keys = Array.from(root.querySelectorAll('.anat-key'));
     keys.forEach((b) => b.addEventListener('click', () => {
       const on = b.getAttribute('aria-pressed') !== 'true';
@@ -921,6 +926,209 @@
       root.classList.toggle('focus', on);
       s.querySelectorAll('[data-part]').forEach((n) => n.classList.toggle('hot', on && n.getAttribute('data-part') === b.dataset.key));
     }));
+  }
+  const anatHTML = (keys) => `<div class="anat-art"></div><div class="anat-keys">${keys.map((k, i) => `<button type="button" class="anat-key" data-key="${k[0]}" aria-pressed="false"><i>${i + 1}</i><span><b>${k[1]}</b><span>${k[2]}</span></span></button>`).join('')}</div>`;
+  function anatPins(s, pins) {
+    pins.forEach((p, i) => {
+      const g = el('g', { 'data-part': p[0], class: 'pin' }, s);
+      el('circle', { cx: p[1], cy: p[2], r: 9 }, g);
+      txt(g, p[1], p[2] + 3.5, String(i + 1), '', 'middle');
+    });
+  }
+
+  /* ───────── anatomy of a connection: ports, interface, connector ───────── */
+  W.portAnatomy = function (root) {
+    const KEYS = [
+      ['port', 'Port', 'A point of connection on the border of a part, like a USB port, a button or a socket.'],
+      ['iface', 'Interface block', 'The contract of the port: what it exchanges, of which type, in which direction. Several ports can share it.'],
+      ['flow', 'Flow property', 'One line of the contract: flightPlan, typed by the signal FlightPlan, going out.'],
+      ['conj', 'Conjugated port', 'Same interface block, directions reversed: the ~ turns the out into an in.'],
+      ['conn', 'Connector', 'The link between two ports, inside this context.'],
+      ['item', 'Item flow', 'What really travels on this connector. Optional.']
+    ];
+    root.className = 'w anat';
+    root.innerHTML = anatHTML(KEYS);
+    const s = svg('0 0 380 190', 'Two parts, Operator and Ground Station. Each has a port typed by the interface block IF_FlightPlan, which holds the flow property out flightPlan : FlightPlan. The port of the ground station is conjugated. A connector links the two ports and carries the item flow FlightPlan. Six numbered pins point at these elements.');
+    root.querySelector('.anat-art').appendChild(s);
+    const part = (name) => el('g', { 'data-part': name }, s);
+    el('rect', { x: 6, y: 110, width: 90, height: 60, rx: 3, class: 's-box' }, s);
+    txt(s, 48, 145, 'Operator', 's-name', 'middle');
+    el('rect', { x: 284, y: 110, width: 90, height: 60, rx: 3, class: 's-box' }, s);
+    txt(s, 333, 139, ['Ground', 'Station'], 's-name', 'middle', 13);
+    const ib = part('iface');
+    el('rect', { x: 112, y: 10, width: 156, height: 66, rx: 3, class: 's-box' }, ib);
+    txt(ib, 190, 26, '«interfaceBlock»', 's-sub', 'middle');
+    txt(ib, 190, 41, 'IF_FlightPlan', 's-name', 'middle');
+    el('line', { x1: 112, y1: 50, x2: 268, y2: 50, class: 's-line' }, ib);
+    el('path', { d: 'M120,76 L93,133', class: 's-line s-dash' }, ib);
+    el('path', { d: 'M260,76 L287,133', class: 's-line s-dash' }, ib);
+    txt(part('flow'), 190, 66, 'out flightPlan : FlightPlan', 's-sub', 'middle');
+    /* both arrows point right: out of the operator, into the ground station */
+    const port = (g, cx) => {
+      el('rect', { x: cx - 6, y: 134, width: 12, height: 12, class: 's-box' }, g);
+      el('path', { d: `M${cx - 4},140 H${cx + 4} M${cx + 1},137 L${cx + 4},140 L${cx + 1},143`, class: 's-line' }, g);
+    };
+    const p1 = part('port');
+    port(p1, 96);
+    txt(p1, 106, 130, 'fp : IF_FlightPlan', 's-sub', 'start');
+    const p2 = part('conj');
+    port(p2, 284);
+    txt(p2, 274, 160, 'fp : ~IF_FlightPlan', 's-sub', 'end');
+    el('path', { d: 'M102,140 H278', class: 's-line' }, part('conn'));
+    const it = part('item');
+    el('path', { d: 'M146,140 L136,135 L136,145 Z', class: 's-head' }, it);
+    txt(it, 140, 160, 'FlightPlan', 's-lbl', 'middle');
+    anatPins(s, [['port', 80, 124], ['iface', 112, 10], ['flow', 112, 62], ['conj', 300, 124], ['conn', 215, 140], ['item', 140, 178]]);
+    anatKeys(root, s);
+  };
+
+  /* ───────── element sketches: the element of a step, drawn under its title ───────── */
+  const SKETCHES = {
+    iface: {
+      view: '0 0 360 120',
+      label: 'The interface block IF_FlightPlan drawn as a box: a header, its name, and one compartment for the flow property.',
+      caption: 'An interface block: the box holds the contract. Its compartments list the flow properties.',
+      draw(s) {
+        el('rect', { x: 80, y: 8, width: 200, height: 100, rx: 3, class: 's-box' }, s);
+        txt(s, 180, 28, '«interfaceBlock»', 's-sub', 'middle');
+        txt(s, 180, 44, 'IF_FlightPlan', 's-name', 'middle');
+        el('line', { x1: 80, y1: 54, x2: 280, y2: 54, class: 's-line' }, s);
+        txt(s, 180, 80, 'out flightPlan : FlightPlan', 's-sub', 'middle');
+      }
+    },
+    flow: {
+      view: '0 0 360 120',
+      label: 'A flow property flightPlan inside IF_FlightPlan, with an out arrow leaving the interface toward the signal FlightPlan.',
+      caption: 'A flow property: one line of the contract. Its type is the signal FlightPlan, and the arrow says it goes out.',
+      draw(s) {
+        el('rect', { x: 14, y: 14, width: 190, height: 92, rx: 3, class: 's-box' }, s);
+        txt(s, 109, 32, '«interfaceBlock»', 's-sub', 'middle');
+        txt(s, 109, 47, 'IF_FlightPlan', 's-name', 'middle');
+        el('line', { x1: 14, y1: 56, x2: 204, y2: 56, class: 's-line' }, s);
+        el('rect', { x: 14, y: 62, width: 190, height: 26, class: 'sk-hot' }, s);
+        txt(s, 109, 79, 'out flightPlan : FlightPlan', 's-sub', 'middle').setAttribute('style', 'fill:var(--route);font-weight:700');
+        arrow(s, [[206, 75], [246, 75]], 'msg');
+        txt(s, 226, 68, 'out', 's-lbl', 'middle');
+        el('rect', { x: 250, y: 50, width: 100, height: 50, rx: 3, class: 's-box' }, s);
+        txt(s, 300, 68, '«signal»', 's-sub', 'middle');
+        txt(s, 300, 84, 'FlightPlan', 's-name', 'middle');
+      }
+    },
+    ports: {
+      view: '0 0 360 150',
+      label: 'The operator with a port whose out arrow leaves it, and the ground station with a conjugated port whose in arrow enters it.',
+      caption: 'A port is a square on the border of its part. Out: the operator sends. In: the ground station receives, because its port is conjugated.',
+      draw(s) {
+        el('rect', { x: 20, y: 40, width: 110, height: 70, rx: 3, class: 's-box' }, s);
+        txt(s, 75, 80, 'Operator', 's-name', 'middle');
+        el('rect', { x: 230, y: 40, width: 110, height: 70, rx: 3, class: 's-box' }, s);
+        txt(s, 285, 74, ['Ground', 'Station'], 's-name', 'middle', 13);
+        el('rect', { x: 124, y: 70, width: 12, height: 12, class: 's-box' }, s);
+        arrow(s, [[136, 76], [170, 76]], 'msg');
+        txt(s, 153, 66, 'out', 's-lbl', 'middle');
+        el('rect', { x: 224, y: 70, width: 12, height: 12, class: 's-box' }, s);
+        arrow(s, [[190, 76], [221, 76]], 'msg');
+        txt(s, 207, 66, 'in', 's-lbl', 'middle');
+        txt(s, 75, 128, 'fp : IF_FlightPlan', 's-sub', 'middle');
+        txt(s, 285, 128, 'fp : ~IF_FlightPlan', 's-sub', 'middle');
+      }
+    },
+    item: {
+      view: '0 0 360 150',
+      label: 'The operator and the ground station, joined by a connector. On the connector, the item flow FlightPlan points from the operator to the ground station.',
+      caption: 'The item flow: what really travels on the connector. Here, the flight plan goes from the operator to the ground station.',
+      draw(s) {
+        el('rect', { x: 20, y: 40, width: 110, height: 70, rx: 3, class: 's-box' }, s);
+        txt(s, 75, 80, 'Operator', 's-name', 'middle');
+        el('rect', { x: 230, y: 40, width: 110, height: 70, rx: 3, class: 's-box' }, s);
+        txt(s, 285, 74, ['Ground', 'Station'], 's-name', 'middle', 13);
+        el('rect', { x: 124, y: 70, width: 12, height: 12, class: 's-box' }, s);
+        el('rect', { x: 224, y: 70, width: 12, height: 12, class: 's-box' }, s);
+        el('path', { d: 'M136,76 H224', class: 's-line' }, s);
+        arrow(s, [[168, 76], [192, 76]], 'item-flow');
+        txt(s, 180, 64, 'FlightPlan', 's-lbl', 'middle').setAttribute('style', 'fill:var(--route)');
+        txt(s, 75, 128, 'fp : IF_FlightPlan', 's-sub', 'middle');
+        txt(s, 285, 128, 'fp : ~IF_FlightPlan', 's-sub', 'middle');
+      }
+    }
+  };
+  W.sketch = function (root, opts) {
+    const sk = SKETCHES[opts.kind];
+    if (!sk) return;
+    root.className = 'w sketch';
+    const s = svg(sk.view, sk.label);
+    sk.draw(s);
+    root.appendChild(s);
+    const cap = document.createElement('p');
+    cap.className = 'w-caption';
+    cap.textContent = sk.caption;
+    root.appendChild(cap);
+  };
+
+  /* ───────── item flow: the kettle and the cup ───────── */
+  W.itemFlow = function (root) {
+    const CHOICES = [
+      { id: 'liquid', label: 'Liquid', tone: '', text: '<b>Liquid</b> is true, but it says nothing new: the interface already says that the cup accepts any liquid. The item flow should name what this kettle really pours.' },
+      { id: 'water', label: 'Boiling water', tone: 'ok', text: 'Yes. The port of the cup accepts <b>any liquid</b>: that is the interface. On this connector, <b>boiling water</b> is what flows: that is the item flow.' },
+      { id: 'coffee', label: 'Coffee', tone: 'no', text: 'The port would accept it, since coffee is a liquid. But this kettle never pours coffee. The interface cannot say so; the item flow can.' }
+    ];
+    root.className = 'w ifw';
+    root.innerHTML = `<div class="ifw-art" data-noswipe></div>
+      <div class="ifw-ctl"><p class="w-caption">Which item flow would you put on the connector?</p>
+        <div class="chips">${CHOICES.map((c) => `<button type="button" class="chip" data-id="${c.id}" aria-pressed="false">${c.label}</button>`).join('')}</div></div>
+      <p class="w-live" aria-live="polite">The kettle and the cup share the interface IF_Liquid: the cup can receive any liquid. Pick what really travels between them.</p>`;
+    const s = svg('0 0 400 190', 'A kettle and a tea cup, each with a port typed by the interface block IF_Liquid, whose flow property is out liquid : Liquid. The port of the cup is conjugated. A connector links them; the item flow on it is the answer you pick.');
+    root.querySelector('.ifw-art').appendChild(s);
+    el('rect', { x: 140, y: 8, width: 120, height: 54, rx: 3, class: 's-box' }, s);
+    txt(s, 200, 22, '«interfaceBlock»', 's-sub', 'middle');
+    txt(s, 200, 36, 'IF_Liquid', 's-name', 'middle');
+    el('line', { x1: 140, y1: 42, x2: 260, y2: 42, class: 's-line' }, s);
+    txt(s, 200, 55, 'out liquid : Liquid', 's-sub', 'middle');
+    /* kettle */
+    el('path', { d: 'M24,116 C6,116 6,150 24,150', class: 's-line' }, s);
+    el('path', { d: 'M94,124 L114,110 L118,116 L96,136 Z', class: 's-box' }, s);
+    el('rect', { x: 24, y: 104, width: 72, height: 56, rx: 14, class: 's-box' }, s);
+    el('path', { d: 'M38,104 Q60,84 82,104 Z', class: 's-box' }, s);
+    el('circle', { cx: 60, cy: 91, r: 3.5, class: 's-dot' }, s);
+    txt(s, 60, 180, 'kettle : Kettle', 's-sub', 'middle');
+    /* cup, with steam when the water is boiling */
+    el('path', { d: 'M360,126 C382,126 382,152 356,152', class: 's-line' }, s);
+    el('path', { d: 'M302,118 H362 L356,160 H308 Z', class: 's-box' }, s);
+    const steam = el('g', { class: 'steam' }, s);
+    [316, 332, 348].forEach((x) => el('path', { d: `M${x},110 c-5,-5 5,-9 0,-14 c-5,-5 5,-9 0,-14`, class: 's-line' }, steam));
+    txt(s, 332, 180, 'cup : Tea Cup', 's-sub', 'middle');
+    /* ports and connector */
+    const port = (cx) => {
+      el('rect', { x: cx - 6, y: 134, width: 12, height: 12, class: 's-box' }, s);
+      el('path', { d: `M${cx - 4},140 H${cx + 4} M${cx + 1},137 L${cx + 4},140 L${cx + 1},143`, class: 's-line' }, s);
+    };
+    el('path', { d: 'M102,140 H298', class: 's-line' }, s);
+    port(96);
+    port(304);
+    txt(s, 106, 158, 'out : IF_Liquid', 's-sub', 'start');
+    txt(s, 294, 158, 'in : ~IF_Liquid', 's-sub', 'end');
+    const drops = el('g', { class: 'drops' }, s);
+    const dots = [0, 1, 2].map(() => el('circle', { r: 4.5, cy: 140, cx: 110, class: 'drop' }, drops));
+    const item = el('g', { class: 'item' }, s);
+    el('path', { d: 'M206,140 L194,134 L194,146 Z', class: 's-head' }, item);
+    const itemLbl = txt(item, 200, 127, '', 's-lbl', 'middle');
+    const live = root.querySelector('.w-live');
+    pressGroup(Array.from(root.querySelectorAll('.chip')), (b) => {
+      const c = CHOICES.find((x) => x.id === b.dataset.id);
+      root.classList.add('picked');
+      root.classList.toggle('boiling', c.id === 'water');
+      dots.forEach((d) => d.setAttribute('class', 'drop ' + c.id));
+      itemLbl.textContent = c.label;
+      live.className = 'w-live' + (c.tone ? ' ' + c.tone : '');
+      live.innerHTML = c.text;
+    });
+    const place = (t) => dots.forEach((d, i) => d.setAttribute('cx', (110 + ((t + i / 3) % 1) * 180).toFixed(1)));
+    place(0);
+    if (reduced()) return;
+    const lf = life();
+    let t = 0;
+    lf.loop((dt) => { t = (t + dt * 0.45) % 1; place(t); });
+    return lf.end;
   };
 
   /* ───────── one scenario versus all scenarios ───────── */
@@ -1035,6 +1243,123 @@
           btn.textContent = 'Send another token';
         });
       });
+    });
+    return lf.end;
+  };
+
+  /* ───────── Load Flight Plan: solution diagram ───────── */
+  W.lfpSolution = function (root, opts) {
+    const notify = !!(opts && opts.notify);
+    root.className = 'w lfp';
+    const s = svg('0 0 360 250', notify
+      ? 'Activity diagram Load Flight Plan. Read FlightPlan passes the FlightPlan to Check FlightPlan. A decision follows. On FlightPlan OK, a fork starts Send Mission Ready and the send signal FlightPlan Correct at the same time; a join brings them together before the final node. On else, the signal FlightPlan Check Failed is sent, then the activity ends.'
+      : 'Activity diagram Load Flight Plan. Read FlightPlan passes the FlightPlan to Check FlightPlan. A decision follows. On FlightPlan OK, Send Mission Ready runs, then the activity ends. On else, the signal FlightPlan Check Failed is sent, then the activity ends.');
+    const dash = (g) => { g.querySelector('.s-line').classList.add('s-dash'); return g; };
+    const box = (p, x, y, w, h, name) => {
+      el('rect', { x, y, width: w, height: h, rx: 14, class: 's-box' }, p);
+      txt(p, x + w / 2, y + h / 2 + ([].concat(name).length > 1 ? -2 : 4), name, 's-name', 'middle', 13);
+    };
+    const signal = (p, x, y, w, h, name) => {
+      el('path', { d: `M${x},${y} h${w - 12} l12,${h / 2} l-12,${h / 2} h${-(w - 12)} z`, class: 's-box' }, p);
+      txt(p, x + (w - 12) / 2, y + h / 2 + ([].concat(name).length > 1 ? -2 : 4), name, 's-name', 'middle', 13);
+    };
+    const final = (x, y) => { el('circle', { cx: x, cy: y, r: 8, class: 'fin' }, s); el('circle', { cx: x, cy: y, r: 4.5, class: 's-dot' }, s); };
+
+    el('circle', { cx: 12, cy: 40, r: 7, class: 's-dot' }, s);
+    dash(arrow(s, [[19, 40], [32, 40]]));
+    box(s, 34, 20, 104, 40, ['Read', 'FlightPlan']);
+    el('rect', { x: 138, y: 34, width: 12, height: 12, class: 's-box pin' }, s);
+    arrow(s, [[150, 40], [204, 40]]);
+    txt(s, 177, 33, 'FlightPlan', 'obj', 'middle');
+    el('rect', { x: 206, y: 34, width: 12, height: 12, class: 's-box pin' }, s);
+    box(s, 218, 20, 112, 40, ['Check', 'FlightPlan']);
+    dash(arrow(s, [[274, 60], [274, 82]]));
+    el('path', { d: 'M274,84 l16,16 -16,16 -16,-16 z', class: 'diamond' }, s);
+    txt(s, 180, 92, '[FlightPlan OK]', 'guard', 'middle');
+    txt(s, 282, 134, '[else]', 'guard', 'start');
+
+    if (notify) {
+      const g = el('g', { class: 'new' }, s);
+      dash(arrow(s, [[258, 100], [103, 100], [103, 120]]));
+      el('rect', { x: 14, y: 122, width: 178, height: 5, rx: 2, class: 'bar' }, g);
+      dash(arrow(s, [[54, 127], [54, 146]]));
+      dash(arrow(g, [[152, 127], [152, 146]]));
+      box(s, 10, 148, 88, 40, ['Send Mission', 'Ready']);
+      signal(g, 106, 148, 94, 40, ['FlightPlan', 'Correct']);
+      dash(arrow(s, [[54, 188], [54, 204]]));
+      dash(arrow(g, [[152, 188], [152, 204]]));
+      el('rect', { x: 14, y: 206, width: 178, height: 5, rx: 2, class: 'bar' }, g);
+      dash(arrow(s, [[103, 211], [103, 224]]));
+    } else {
+      dash(arrow(s, [[258, 100], [103, 100], [103, 146]]));
+      box(s, 40, 148, 126, 40, ['Send Mission', 'Ready']);
+      dash(arrow(s, [[103, 188], [103, 224]]));
+    }
+    final(103, 233);
+    dash(arrow(s, [[274, 116], [274, 146]]));
+    signal(s, 210, 148, 140, 40, ['FlightPlan', 'Check Failed']);
+    dash(arrow(s, [[274, 188], [274, 224]]));
+    final(274, 233);
+    root.appendChild(s);
+    const p = document.createElement('p');
+    p.className = 'w-caption';
+    p.innerHTML = notify
+      ? 'The fork sends <b>Ready for mission</b> (inside Send Mission Ready) and <b>FlightPlan Correct</b> at the same time. The join waits for both before the activity ends.'
+      : '<b>Send Mission Ready</b> sends the signal <b>Ready for mission</b>. A send signal action <b>Ready for mission</b> in its place is also correct.';
+    root.appendChild(p);
+  };
+
+  /* ───────── control flow versus object flow ───────── */
+  W.flows = function (root) {
+    const CHOICES = [
+      { id: 'ctl', label: 'Control flow', text: 'A <b>control flow</b> carries only a token that means “you may start now”. No data travels on it. It goes from action to action, and Cameo draws it <b>dashed</b>.' },
+      { id: 'obj', label: 'Object flow', text: 'An <b>object flow</b> carries data, here a <b>Photo</b>. It goes from an <b>output pin</b> to an <b>input pin</b>, and Cameo draws it <b>solid</b>. <strong>Detect sheep</strong> cannot start before the photo arrives.' }
+    ];
+    root.className = 'w flw';
+    root.innerHTML = `<div class="flw-art" data-noswipe></div>
+      <div class="chips" data-noswipe>${CHOICES.map((c) => `<button type="button" class="chip" data-id="${c.id}" aria-pressed="false">${c.label}</button>`).join('')}</div>
+      <p class="w-live" aria-live="polite">Two ways to link two actions. Pick one to see what travels on it.</p>`;
+    const s = svg('0 0 360 190', 'Top: the action Take off linked to the action Go to next point by a dashed control flow. Bottom: the action Take photo has an output pin Photo, linked by a solid object flow to the input pin Photo of the action Detect sheep.');
+    root.querySelector('.flw-art').appendChild(s);
+    const act = (g, x, y, name) => {
+      el('rect', { x, y, width: 112, height: 44, rx: 16, class: 's-box' }, g);
+      txt(g, x + 56, y + 26, name, 's-name', 'middle');
+    };
+    /* control flow */
+    const C = el('g', { class: 'row' }, s);
+    txt(C, 12, 14, 'Control flow', 's-sub');
+    act(C, 12, 24, 'Take off');
+    act(C, 236, 24, 'Go to next point');
+    arrow(C, [[124, 46], [234, 46]]).querySelector('.s-line').classList.add('s-dash');
+    const tok = el('circle', { r: 6, cx: 124, cy: 46, class: 's-token', opacity: 0 }, C);
+    /* object flow */
+    const O = el('g', { class: 'row' }, s);
+    txt(O, 12, 112, 'Object flow', 's-sub');
+    act(O, 12, 122, 'Take photo');
+    act(O, 236, 122, 'Detect sheep');
+    el('rect', { x: 124, y: 138, width: 12, height: 12, class: 's-box pin' }, O);
+    el('rect', { x: 224, y: 138, width: 12, height: 12, class: 's-box pin' }, O);
+    txt(O, 130, 166, 'Photo', 's-sub', 'middle');
+    txt(O, 230, 166, 'Photo', 's-sub', 'middle');
+    arrow(O, [[136, 144], [222, 144]]);
+    const data = el('g', { class: 'data', opacity: 0 }, O);
+    el('rect', { x: -9, y: -7, width: 18, height: 14, rx: 2, class: 'doc' }, data);
+    el('path', { d: 'M-5,-2 H5 M-5,2 H3', class: 's-line' }, data);
+    const live = root.querySelector('.w-live');
+    const lf = life();
+    pressGroup(Array.from(root.querySelectorAll('.chip')), (b) => {
+      const c = CHOICES.find((x) => x.id === b.dataset.id);
+      const ctl = c.id === 'ctl';
+      lf.end();
+      C.classList.toggle('on', ctl); C.classList.toggle('off', !ctl);
+      O.classList.toggle('on', !ctl); O.classList.toggle('off', ctl);
+      live.innerHTML = c.text;
+      tok.setAttribute('opacity', 0); data.setAttribute('opacity', 0);
+      const run = () => {
+        if (ctl) { tok.setAttribute('opacity', 1); lf.tween(900, (k) => tok.setAttribute('cx', 124 + 108 * k), () => lf.wait(run, 700)); }
+        else { data.setAttribute('opacity', 1); lf.tween(900, (k) => move(data, 130 + 100 * k, 144), () => lf.wait(run, 700)); }
+      };
+      run();
     });
     return lf.end;
   };
@@ -1200,6 +1525,266 @@
   /* ───────── crud ───────── */
   W.crud = function (root) {
     root.innerHTML = '<div class="crud">' + [['C', 'Create'], ['R', 'Read'], ['U', 'Update'], ['D', 'Delete']].map((x) => `<div><i>${x[0]}</i><b>${x[1]}</b></div>`).join('') + '</div>';
+  };
+
+  /* ───────── levels of the method: steps as small animated diagrams ─────────
+     { widget: "phaseSteps", opts: { done: false, steps: [{ pic, title, text, off }] } }
+     One tile per step, in a row, lit one after the other. Each picture takes the colour of its level
+     (operational, functional or physical), so a chain across levels reads orange, blue, yellow.
+     done: true (a wrap-up) ticks the steps one by one. off: "…" greys a step that is out of the seminar. */
+  const LEVEL = { op: 'var(--ph-op)', fn: 'var(--ph-fn)', ph: 'var(--ph-ph)' };
+  function lbl(s, x, y, t) { return txt(s, x, y, t, 'pf-lbl', 'middle'); }
+  // A token that runs along a route while its tile is lit: returns run(t) for the widget loop.
+  function runner(s, d, period) {
+    const route = el('path', { d, class: 'pf-route' }, s);
+    const tok = el('circle', { r: 3.6, class: 'pf-token', opacity: 0 }, s);
+    return (t) => {
+      const k = (t % period) / period;
+      const p = route.getPointAtLength(route.getTotalLength() * Math.min(1, k / 0.8));
+      tok.setAttribute('cx', p.x.toFixed(1));
+      tok.setAttribute('cy', p.y.toFixed(1));
+      tok.setAttribute('opacity', k < 0.9 ? 1 : 0);
+    };
+  }
+  function check(s, x, y) {
+    const g = el('g', { class: 'pf-check a-pop', style: '--d:1.1s' }, s);
+    el('circle', { cx: x, cy: y, r: 7.5 }, g);
+    el('path', { d: `M${x - 3.5},${y} l2.5,2.6 l4.6,-5` }, g);
+    return g;
+  }
+  function stick(s, x, y) {
+    const g = el('g', { class: 'pf-actor' }, s);
+    el('circle', { cx: x, cy: y, r: 5 }, g);
+    el('path', { d: `M${x},${y + 5} v17 M${x - 8},${y + 11} h16 M${x},${y + 22} l-7,12 M${x},${y + 22} l7,12` }, g);
+    return g;
+  }
+  const PICS = {
+    need: { lv: 'op', draw(s) {
+      stick(s, 18, 22);
+      const b = el('g', { class: 'a-pop' }, s);
+      el('rect', { x: 28, y: 6, width: 22, height: 15, rx: 6, class: 'pf-hot' }, b);
+      txt(b, 39, 17.5, '!', 'pf-mark', 'middle');
+      arrow(s, [[52, 40], [72, 40]], 'pf-msg a-draw');
+      el('path', { d: 'M78,12 h22 l8,8 v44 h-30 z', class: 's-box' }, s);
+      lbl(s, 91, 26, 'shall');
+      [34, 42, 50, 58].forEach((y, i) => el('path', { d: `M83,${y} h${i === 3 ? 12 : 20}`, class: 'pf-doc a-in', style: `--d:${0.5 + i * 0.15}s` }, s));
+    } },
+    context: { lv: 'op', draw(s) {
+      el('rect', { x: 4, y: 6, width: 30, height: 16, rx: 3, class: 's-box' }, s); lbl(s, 19, 17, 'Operator');
+      el('rect', { x: 4, y: 54, width: 30, height: 16, rx: 3, class: 's-box' }, s); lbl(s, 19, 65, 'GNSS');
+      el('rect', { x: 86, y: 30, width: 30, height: 16, rx: 3, class: 's-box' }, s); lbl(s, 101, 41, 'Station');
+      ['M34,16 L46,30', 'M34,60 L46,46', 'M86,38 H76'].forEach((d) => el('path', { d, class: 'pf-flow' }, s));
+      el('rect', { x: 44, y: 26, width: 32, height: 24, rx: 4, class: 'pf-hot a-pop' }, s);
+      move(drone(s, 0.62), 60, 38);
+      return runner(s, 'M34,16 L50,34 H86', 2.4);
+    } },
+    usecase: { lv: 'op', draw(s) {
+      stick(s, 16, 16);
+      el('path', { d: 'M26,36 L46,36', class: 'pf-line a-draw', style: '--d:.5s' }, s);
+      el('ellipse', { cx: 80, cy: 36, rx: 33, ry: 16, class: 'pf-hot a-pop' }, s);
+      lbl(s, 80, 34, 'Parameter');
+      lbl(s, 80, 43, 'Mission');
+    } },
+    scenario: { lv: 'op', draw(s) {
+      [20, 60, 100].forEach((x, i) => {
+        el('rect', { x: x - 17, y: 3, width: 34, height: 11, rx: 2, class: 's-box' }, s);
+        lbl(s, x, 11.5, ['Operator', 'Station', 'UAV'][i]);
+        el('path', { d: `M${x},14 V74`, class: 's-line s-dash' }, s);
+      });
+      arrow(s, [[20, 26], [58, 26]], 'pf-msg a-msg').setAttribute('style', '--d:.2s');
+      arrow(s, [[60, 38], [98, 38]], 'pf-msg a-msg').setAttribute('style', '--d:.7s');
+      arrow(s, [[100, 50], [62, 50]], 'pf-msg a-msg').setAttribute('style', '--d:1.2s');
+      arrow(s, [[60, 64], [22, 64]], 'pf-bad a-msg').setAttribute('style', '--d:1.7s');
+    } },
+    states: { lv: 'fn', draw(s) {
+      el('circle', { cx: 5, cy: 37, r: 3, class: 's-dot' }, s);
+      [12, 47, 82].forEach((x, i) => {
+        if (i) arrow(s, [[x - 9, 37], [x - 1, 37]], 'pf-arrow');
+        el('rect', { x, y: 27, width: 28, height: 20, rx: 7, class: 'pf-st', style: `--i:${i}` }, s);
+        lbl(s, x + 14, 40, ['Off', 'Config', 'Ready'][i]);
+      });
+    } },
+    functions: { lv: 'fn', draw(s) {
+      [[10, 8], [30, 29], [50, 50]].forEach((p, i) => {
+        const g = el('g', { class: 'a-pop', style: `--d:${0.2 + i * 0.35}s` }, s);
+        el('rect', { x: p[0], y: p[1], width: 58, height: 18, rx: 9, class: 'pf-hot' }, g);
+        lbl(g, p[0] + 29, p[1] + 12, 'function ' + (i + 1));
+      });
+    } },
+    logic: { lv: 'fn', draw(s) {
+      el('circle', { cx: 7, cy: 38, r: 3.5, class: 's-dot' }, s);
+      el('path', { d: 'M10,38 H18 M44,38 H51 M58,31 V20 H72 M58,45 V56 H72 M98,20 H108 V33 M98,56 H108 V43', class: 's-line' }, s);
+      el('rect', { x: 18, y: 29, width: 26, height: 18, rx: 7, class: 'pf-hot' }, s);
+      el('path', { d: 'M58,31 L65,38 L58,45 L51,38 Z', class: 's-box' }, s);
+      el('rect', { x: 72, y: 12, width: 26, height: 16, rx: 7, class: 'pf-hot' }, s);
+      el('rect', { x: 72, y: 48, width: 26, height: 16, rx: 7, class: 'pf-hot' }, s);
+      el('circle', { cx: 108, cy: 38, r: 5, class: 's-box' }, s);
+      el('circle', { cx: 108, cy: 38, r: 2.6, class: 's-dot' }, s);
+      return runner(s, 'M7,38 H58 V20 H108 V38', 2.6);
+    } },
+    consistency: { lv: 'fn', draw(s) {
+      [10, 36].forEach((x) => {
+        el('rect', { x: x - 8, y: 14, width: 16, height: 8, rx: 2, class: 's-box' }, s);
+        el('path', { d: `M${x},22 V66`, class: 's-line s-dash' }, s);
+      });
+      arrow(s, [[10, 40], [34, 40]], 'pf-arrow');
+      el('rect', { x: 84, y: 18, width: 30, height: 14, rx: 6, class: 'pf-st', style: '--i:0' }, s);
+      el('rect', { x: 84, y: 48, width: 30, height: 14, rx: 6, class: 'pf-st', style: '--i:1' }, s);
+      arrow(s, [[99, 32], [99, 46]], 'pf-arrow');
+      arrow(s, [[48, 40], [76, 40]], 'pf-msg a-draw');
+      arrow(s, [[74, 47], [48, 47]], 'pf-msg a-draw').setAttribute('style', '--d:.5s');
+      check(s, 62, 22);
+    } },
+    simulate: { lv: 'fn', draw(s) {
+      el('circle', { cx: 15, cy: 38, r: 11, class: 'pf-hot' }, s);
+      el('path', { d: 'M11.5,32 L21,38 L11.5,44 Z', class: 'pf-fill' }, s);
+      [34, 62, 90].forEach((x, i) => {
+        if (i) arrow(s, [[x - 6, 38], [x - 1, 38]], 'pf-arrow');
+        el('rect', { x, y: 30, width: 22, height: 16, rx: 6, class: 'pf-st', style: `--i:${i}` }, s);
+      });
+      check(s, 104, 16);
+    } },
+    breakdown: { lv: 'ph', draw(s) {
+      el('rect', { x: 40, y: 4, width: 40, height: 18, rx: 2, class: 'pf-hot' }, s); lbl(s, 60, 16, 'UAV');
+      el('path', { d: 'M60,32 V36 M22,36 H98 M22,36 V52 M60,36 V52 M98,36 V52', class: 'pf-line a-draw' }, s);
+      el('path', { d: 'M60,22 l-3.5,5 l3.5,5 l3.5,-5 z', class: 'pf-fill' }, s);
+      [[4, 'Nav'], [42, 'Comms'], [80, 'Power']].forEach((c, i) => {
+        const g = el('g', { class: 'a-pop', style: `--d:${0.6 + i * 0.25}s` }, s);
+        el('rect', { x: c[0], y: 52, width: 36, height: 18, rx: 2, class: 's-box' }, g);
+        lbl(g, c[0] + 18, 64, c[1]);
+      });
+    } },
+    architecture: { lv: 'ph', draw(s) {
+      el('path', { d: 'M40,19 H80 M23,30 V59 H43 M97,30 V59 H77', class: 's-line' }, s);
+      [[6, 8, 'Nav'], [80, 8, 'Comms'], [43, 48, 'Power']].forEach((b) => {
+        el('rect', { x: b[0], y: b[1], width: 34, height: 22, rx: 2, class: 'pf-hot' }, s);
+        lbl(s, b[0] + 17, b[1] + 14, b[2]);
+      });
+      [[38, 17], [78, 17], [21, 28], [41, 57], [95, 28], [75, 57]].forEach((p) => el('rect', { x: p[0], y: p[1], width: 4, height: 4, class: 's-box' }, s));
+      const a = runner(s, 'M40,19 H80', 1.6);
+      const b = runner(s, 'M97,30 V59 H77', 2.2);
+      return (t) => { a(t); b(t + 0.8); };
+    } },
+    alloc: { lv: 'ph', draw(s) {
+      el('rect', { x: 18, y: 36, width: 84, height: 34, rx: 3, class: 'pf-hot' }, s);
+      lbl(s, 60, 65, 'Subsystem');
+      const g = el('g', { class: 'pf-drop' }, s);
+      el('rect', { x: 34, y: 41, width: 52, height: 14, rx: 7, class: 'pf-fn' }, g);
+      lbl(g, 60, 51, 'function');
+    } }
+  };
+
+  W.phaseSteps = function (root, opts, api) {
+    const steps = opts.steps || [];
+    const L = life();
+    root.className = 'psteps-w' + (opts.done ? ' done' : '');
+    root.style.setProperty('--n', steps.length);
+    const list = document.createElement('ol');
+    list.className = 'psteps';
+    const runs = [];
+    steps.forEach((st, i) => {
+      const pic = PICS[st.pic] || PICS.need;
+      const li = document.createElement('li');
+      li.className = 'pstep' + (st.off ? ' off' : '');
+      li.style.setProperty('--pc', LEVEL[pic.lv]);
+      li.innerHTML = `<button type="button" class="pstep-pic" aria-label="${api.esc(st.title)}"></button>
+        <div class="pstep-txt"><span class="pstep-n">${i + 1}</span><b>${api.inline(st.title)}</b>${st.off ? `<em class="pstep-off">${api.esc(st.off)}</em>` : ''}<span class="pstep-d">${api.inline(st.text || '')}</span></div>`;
+      const s = svg('0 0 120 76', st.title);
+      s.setAttribute('aria-hidden', 'true');
+      runs.push(pic.draw(s) || null);
+      const box = li.firstElementChild;
+      box.appendChild(s);
+      if (opts.done) box.insertAdjacentHTML('beforeend', '<i class="pstep-ok" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></i>');
+      list.appendChild(li);
+    });
+    const live = document.createElement('p');
+    live.className = 'psteps-live';
+    root.append(list, live);
+    const items = Array.from(list.children);
+
+    let at = -1;
+    let t = 0;
+    const DWELL = 3.4;
+    function light(i) {
+      if (at >= 0) items[at].classList.remove('on');
+      at = i;
+      t = 0;
+      void items[at].offsetWidth; // restart the CSS animations of the picture
+      items[at].classList.add('on');
+      const st = steps[at];
+      live.innerHTML = `<b>${at + 1} · ${api.inline(st.title)}</b> ${api.inline(st.text || '')}`;
+    }
+    items.forEach((li, i) => li.firstElementChild.addEventListener('click', () => light(i)));
+
+    if (reduced()) {
+      if (opts.done) items.forEach((li) => li.classList.add('ok'));
+      live.innerHTML = steps.map((st, i) => `<b>${i + 1} · ${api.inline(st.title)}</b> ${api.inline(st.text || '')}`).join('<br>');
+      return () => L.end();
+    }
+    if (opts.done) items.forEach((li, i) => L.wait(() => li.classList.add('ok'), 500 + i * 380));
+    L.wait(() => {
+      light(0);
+      L.loop((dt) => {
+        t += dt;
+        const run = runs[at];
+        if (run) run(t);
+        if (t > DWELL) light((at + 1) % items.length);
+      });
+    }, opts.done ? 500 + items.length * 380 : 350);
+    return () => L.end();
+  };
+
+  /* ───────── physical level: who carries out a function? ───────── */
+  W.allocChoice = function (root) {
+    const L = life();
+    root.className = 'w alloc-choice';
+    const s = svg('0 0 360 168', 'A function goes to a question: can an existing subsystem carry it out? Yes: allocate it. No: a new or changed subsystem, bought, designed or updated, then allocate it. If the function spans several subsystems, go back and refine it.');
+    el('rect', { x: 6, y: 66, width: 74, height: 26, rx: 13, class: 'ac-fn' }, s);
+    txt(s, 43, 83, 'Function', 's-name', 'middle');
+    const go = arrow(s, [[80, 79], [102, 79]], 'ac-a');
+    el('rect', { x: 104, y: 56, width: 106, height: 46, rx: 8, class: 's-box' }, s);
+    txt(s, 157, 75, ['Can a subsystem', 'carry it out?'], 's-name', 'middle', 13);
+    const yes = arrow(s, [[210, 64], [244, 32]], 'ac-a');
+    txt(s, 218, 40, 'yes', 's-lbl', 'middle');
+    const no = arrow(s, [[210, 82], [244, 82]], 'ac-a');
+    txt(s, 227, 76, 'no', 's-lbl', 'middle');
+    el('rect', { x: 246, y: 12, width: 106, height: 34, rx: 8, class: 'ac-ph' }, s);
+    txt(s, 299, 33, 'Allocate it', 's-name', 'middle');
+    el('rect', { x: 246, y: 62, width: 106, height: 42, rx: 8, class: 's-box' }, s);
+    txt(s, 299, 79, 'New subsystem', 's-name', 'middle');
+    txt(s, 299, 94, 'buy · design · update', 's-sub', 'middle');
+    const up = arrow(s, [[299, 62], [299, 48]], 'ac-a');
+    const back = arrow(s, [[157, 102], [157, 140], [43, 140], [43, 94]], 'ac-back');
+    txt(s, 52, 158, 'Spans several subsystems? Refine the function.', 'ac-back-t');
+    root.appendChild(s);
+    if (reduced()) return () => L.end();
+
+    const paths = [
+      { d: 'M43,79 H157 L244,32 H299', hl: [go, yes] },
+      { d: 'M43,79 H157 L246,82 H299 V30', hl: [go, no, up] },
+      { d: 'M43,79 H157 V140 H43 V92', hl: [go, back] }
+    ];
+    const route = el('path', { d: '', class: 'pf-route' }, s);
+    const tok = el('circle', { r: 5, class: 'ac-tok' }, s);
+    let i = 0;
+    let t = 0;
+    const PERIOD = 2.8;
+    const set = () => {
+      route.setAttribute('d', paths[i].d);
+      s.querySelectorAll('.hl').forEach((x) => x.classList.remove('hl'));
+      paths[i].hl.forEach((x) => x.classList.add('hl'));
+    };
+    set();
+    L.loop((dt) => {
+      t += dt;
+      if (t > PERIOD) { t = 0; i = (i + 1) % paths.length; set(); }
+      const k = Math.min(1, t / (PERIOD * 0.75));
+      const p = route.getPointAtLength(route.getTotalLength() * ease(k));
+      tok.setAttribute('cx', p.x.toFixed(1));
+      tok.setAttribute('cy', p.y.toFixed(1));
+      tok.setAttribute('opacity', t < PERIOD * 0.92 ? 1 : 0);
+    });
+    return () => L.end();
   };
 
   /* ───────── recap ───────── */

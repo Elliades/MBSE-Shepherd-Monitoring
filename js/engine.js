@@ -45,9 +45,11 @@
     /* model element types */
     package: '<path d="M3 8h18v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M3 8V5a1 1 0 0 1 1-1h6l2 4"/>',
     block: '<rect x="3.5" y="5" width="17" height="14" rx="1.5"/><path d="M3.5 10h17"/>',
+    iface: '<rect x="3" y="5" width="15" height="14" rx="1.5"/><path d="M3 10h15"/><rect x="15.5" y="12" width="5" height="5" fill="currentColor"/>',
     usecase: '<ellipse cx="12" cy="12" rx="9" ry="5.5"/>',
     actor: '<circle cx="12" cy="5.5" r="2.5"/><path d="M12 8v7M7 11h10M12 15l-4 5.5M12 15l4 5.5"/>',
     activity: '<rect x="3.5" y="6.5" width="17" height="11" rx="5.5"/>',
+    state: '<rect x="3.5" y="6.5" width="17" height="11" rx="3"/><path d="M3.5 10.5h17"/>',
     signal: '<path d="M4 6h12l4.5 6-4.5 6H4z"/>',
     ucd: '<rect x="3" y="4" width="18" height="16" rx="1.5"/><ellipse cx="13.5" cy="12" rx="5" ry="3"/><path d="M6 10v4"/>',
     ibd: '<rect x="3" y="4" width="18" height="16" rx="1.5"/><rect x="6" y="9" width="4.5" height="6"/><rect x="13.5" y="9" width="4.5" height="6"/><path d="M10.5 12h3"/>',
@@ -55,7 +57,11 @@
     ad: '<rect x="3" y="4" width="18" height="16" rx="1.5"/><rect x="6" y="9.5" width="5" height="5" rx="2"/><rect x="13.5" y="9.5" width="5" height="5" rx="2"/><path d="M11 12h2.5"/>',
     stm: '<rect x="3" y="4" width="18" height="16" rx="1.5"/><circle cx="7.5" cy="12" r="1.3" fill="currentColor"/><rect x="11.5" y="9" width="7" height="6" rx="2.5"/><path d="M9 12h2.5"/>',
     bdd: '<rect x="3" y="4" width="18" height="16" rx="1.5"/><rect x="9.5" y="7" width="5" height="3.5"/><rect x="5.5" y="14" width="5" height="3.5"/><rect x="13.5" y="14" width="5" height="3.5"/><path d="M12 10.5v1.8M8 14v-1.7h8V14"/>',
-    matrix: '<rect x="3" y="4" width="18" height="16" rx="1.5"/><path d="M3 9.5h18M3 14.5h18M9 4v16M15 4v16"/>'
+    matrix: '<rect x="3" y="4" width="18" height="16" rx="1.5"/><path d="M3 9.5h18M3 14.5h18M9 4v16M15 4v16"/>',
+    /* mission illustrations (cards) */
+    moon: '<path d="M20.5 14.2A8.5 8.5 0 1 1 9.8 3.5a6.8 6.8 0 0 0 10.7 10.7z"/><path d="M18.5 2.8v3.4M16.8 4.5h3.4"/>',
+    binoculars: '<path d="M4.5 11.5L5.5 4.5H9l.6 7M19.5 11.5L18.5 4.5H15l-.6 7M9.3 9h5.4"/><circle cx="6.5" cy="15.5" r="4"/><circle cx="17.5" cy="15.5" r="4"/>',
+    bell: '<path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/><path d="M3.2 8.5a9 9 0 0 1 2.3-5.8M20.8 8.5a9 9 0 0 0-2.3-5.8"/>'
   };
   function ic(name, cls) {
     return `<svg viewBox="0 0 24 24" ${STROKE} aria-hidden="true"${cls ? ` class="${cls}"` : ''}>${ICONS[name] || ICONS.info}</svg>`;
@@ -70,7 +76,7 @@
   const TYPE_LABEL = {
     package: 'package', block: 'block', ucd: 'use case diagram', ibd: 'internal block diagram',
     sd: 'sequence diagram', ad: 'activity diagram', stm: 'state machine', bdd: 'block definition diagram', matrix: 'allocation matrix',
-    usecase: 'use case', actor: 'actor', activity: 'activity', signal: 'signal'
+    usecase: 'use case', actor: 'actor', activity: 'activity', state: 'state', signal: 'signal', iface: 'interface block'
   };
   const PH = {
     screenshot: { tag: 'Screenshot to add', icon: 'image' },
@@ -83,6 +89,10 @@
   /* ───────── course index ───────── */
   const scenes = COURSE.scenes;
   const chapters = COURSE.chapters;
+  /* The three levels of the method. A chapter with phase: "op" | "fn" | "ph" takes the colour of its level. */
+  const PHASES = COURSE.phases || [];
+  const phById = {};
+  PHASES.forEach((p) => { phById[p.id] = p; });
   const byId = {};
   const chById = {};
   const QUESTIONS = [];
@@ -227,19 +237,18 @@
     const L = LINKS[key];
     let h = '';
     if (L.note) h += `<p class="path-note">${esc(L.note)}</p>`;
-    if (L.made) h += '<p class="path-note"><strong>You create this element</strong> during the exercise: it is not in the model yet.</p>';
+    if (L.made) h += '<p class="path-note"><strong>You create this element</strong> during the exercise. Once it exists, the button below finds it in Cameo by its name, so type the name exactly as written.</p>';
     h += '<div class="btn-row">';
-    if (L.id) {
-      h += `<button type="button" class="btn small" data-cameo-open="${esc(key)}">${ic("open")}Open in Cameo</button>`;
-    }
+    /* An element with an id is opened by its id. One without (the ones you create) is looked up by its name. */
+    h += `<button type="button" class="btn small" data-cameo-open="${esc(key)}">${ic("open")}${L.id ? 'Open in Cameo' : 'Find in Cameo'}</button>`;
     if (L.url) {
       h += `<a class="btn small" href="${esc(L.url)}">${ic('open')}Open in Cameo</a>`;
       h += `<button type="button" class="btn ghost small" data-copy="${esc(L.url)}">${ic('chain')}Copy link</button>`;
     }
     h += `<button type="button" class="btn ghost small" data-copy="${esc(L.path.join(' / '))}">${ic('copy')}Copy path</button></div>`;
-    if (L.id) h += `<p class="path-note cameo-status" data-cameo-status>${esc(cameoHint())}</p>`;
+    h += `<p class="path-note cameo-status" data-cameo-status>${esc(cameoHint())}</p>`;
     if (L.url && CFG.linkHelp) h += `<p class="path-note">${esc(CFG.linkHelp)}</p>`;
-    if (!L.url && !L.id && !L.made) h += `<span class="unset-note author-only">Link not set. Add its url in content/model-links.js, entry "${esc(key)}".</span>`;
+    if (!L.url && !L.id && !L.made) h += `<span class="unset-note author-only">No id yet: the button finds it by its name. Add its id in content/model-links.js, entry "${esc(key)}".</span>`;
     return h;
   }
   /* ───────── connection to Cameo (js/bridge.js) ───────── */
@@ -261,11 +270,25 @@
   function openCameo() {
     if (B && window.CameoDialog) window.CameoDialog.open(openOverlay);
   }
+  /* What Cameo gets for an element without id: its name and type, plus where it should be. The last item of
+     path is the element itself; kinds is the type of each item (same length as path). */
+  function nameSpec(L) {
+    const kinds = L.kinds || L.path.map((_, i) => (i === L.path.length - 1 ? L.type : 'package'));
+    return { name: L.path[L.path.length - 1], type: L.type, path: L.path.slice(), kinds, qualifiedName: L.path.join('::') };
+  }
+  const FIND_ERROR = {
+    'not-found': (L) => `Cameo cannot find “${L.path[L.path.length - 1]}”. Is it created, and is it named exactly like this?`,
+    ambiguous: (L) => `Several elements in Cameo are named “${L.path[L.path.length - 1]}”. Look in: ${L.path.slice(0, -1).join(' / ')}.`
+  };
   function openInCameo(key, btn) {
     const L = LINKS[key];
     if (!B || B.state().status !== "connected") { openCameo(); return; }
     btn.disabled = true;
-    B.open(L.id, L.type).then(() => toast("Shown in Cameo"), () => toast("Cameo could not show it")).then(() => { btn.disabled = false; });
+    const done = L.id ? B.open(L.id, L.type) : B.openByName(nameSpec(L));
+    done.then(
+      () => toast("Shown in Cameo"),
+      (err) => (!L.id && FIND_ERROR[err && err.message] ? toast(FIND_ERROR[err.message](L), 8000, 'bad') : toast("Cameo could not show it", 6000, 'bad'))
+    ).then(() => { btn.disabled = false; });
   }
 
   function openLink(key) {
@@ -438,7 +461,20 @@
       return `<div class="copyfield"><span class="mono-label">${esc(d.label)}</span><code>${esc(d.file)}</code><a class="btn small" href="${esc(encodeURI(d.src))}" download="${esc(d.file)}">${ic('download')}Download${d.size ? ` · ${esc(d.size)}` : ''}</a></div>`;
     }
     if (b.cards) {
-      return '<div class="cards">' + b.cards.map((c) => `<div class="card">${c.n ? `<span class="card-n">${esc(c.n)}</span>` : ''}<span class="card-title">${inline(c.title)}</span><p>${inline(c.text)}</p></div>`).join('') + '</div>';
+      return '<div class="cards">' + b.cards.map((c) => {
+        const num = c.n ? `<span class="card-n">${esc(c.n)}</span>` : '';
+        const head = c.icon ? `<div class="card-top">${num}<span class="card-ico">${ic(c.icon)}</span></div>` : num;
+        return `<div class="card${c.tone ? ` tone-${esc(c.tone)}` : ''}">${head}<span class="card-title">${inline(c.title)}</span><p>${inline(c.text)}</p></div>`;
+      }).join('') + '</div>';
+    }
+    // The three levels of the method in one line, the current one lit: { phases: "op" }
+    if (b.phases) {
+      const at = PHASES.findIndex((p) => p.id === b.phases);
+      return '<ol class="phases">' + PHASES.map((p, i) => `<li data-phase="${esc(p.id)}" class="${i < at ? 'past' : i === at ? 'now' : 'next'}"${i === at ? ' aria-current="step"' : ''}><span class="phases-n">${i < at ? ic('check') : i + 1}</span><span class="phases-t"><b>${esc(p.title)}</b><b class="phases-short" aria-hidden="true">${esc(p.short || p.title)}</b><em>${esc(p.q)}</em></span></li>`).join('') + '</ol>';
+    }
+    // Small pictures, each with a label under it: { icons: [{ src, alt, label }] }
+    if (b.icons) {
+      return '<ul class="icon-row">' + b.icons.map((x) => `<li><img src="${esc(x.src)}" alt="${esc(x.alt || '')}"><span>${inline(x.label || '')}</span></li>`).join('') + '</ul>';
     }
     if (b.widget) return `<div data-widget="${esc(b.widget)}" data-opts="${esc(JSON.stringify(b.opts || {}))}"></div>`;
     if (b.question) return questionHTML(b.question);
@@ -484,8 +520,12 @@
         h += `<div class="callout tone-warn"><span class="callout-ico">${ic('alert')}</span><div><strong class="callout-title">${qt} is still empty</strong><p>Name the functions there and they will show up in this checklist.</p><button type="button" class="btn ghost small" data-goto="${esc(f.scene)}" style="margin-top:.5rem">${ic('pencil')}Go to ${qt}</button></div></div>`;
       }
       h += '<ol class="steps">' + Array.from({ length: n }).map((_, i) => {
-        const name = (items[i] || '').trim();
-        return stepHTML(stepId(scene, path, i), i + 1, name ? `Create the activity <<${name.replace(/[<>]/g, '')}>>.` : `Create the activity for ${f.itemLabel.toLowerCase()} ${i + 1}.`);
+        const name = (items[i] || '').trim().replace(/[<>]/g, '');
+        /* The student names these functions, so the guide cannot know them: the link is made here, from the answer. */
+        const where = f.under && LINKS[f.under];
+        const dyn = name && where ? `${f.q}-${i}` : '';
+        if (dyn) LINKS[dyn] = { name, type: 'activity', path: where.path.concat(name), made: true };
+        return stepHTML(stepId(scene, path, i), i + 1, name ? `Create the activity <<${name}>>.${dyn ? ` [[${dyn}|Find it in Cameo]]` : ''}` : `Create the activity for ${f.itemLabel.toLowerCase()} ${i + 1}.`);
       }).join('') + '</ol>';
       return `<div style="display:grid;gap:.8rem">${h}</div>`;
     }
@@ -497,12 +537,15 @@
   let mounted = [];
   let shown = null;
 
+  function phaseOf(scene) { return phById[chById[scene.ch].phase] || null; }
+
   function sceneHTML(scene) {
     const k = KINDS[scene.kind] || KINDS.read;
     const done = sceneStatus(scene) === 'done' && stepIds(scene).length;
     const head = scene.bare ? '' : `<header class="scene-head">
         <div class="stamp-row">
           <span class="kind kind-${scene.kind}">${ic(k.icon)}${k.label}</span>
+          ${scene.mark && phaseOf(scene) ? `<span class="phase-chip">${esc(phaseOf(scene).title)} · ${scene.mark === 'intro' ? 'Start' : 'Wrap-up'}</span>` : ''}
           ${scene.ref && !/^Question/.test(scene.ref) ? `<span class="ref" title="Section of the handout">§ ${esc(scene.ref)}</span>` : ''}
           ${scene.pts != null ? `<span class="pts${scene.bonus ? ' bonus' : ''}" title="Points of this question">${esc(ptsLabel(scene))}</span>` : ''}
           <span class="done-stamp"${done ? '' : ' hidden'}>Done</span>
@@ -570,7 +613,7 @@
   /* ───────── chrome: crumb, route, dock ───────── */
   const routeEl = $('#route');
   function buildRoute() {
-    routeEl.innerHTML = chapters.map((c) => `<span class="leg" style="--n:${c.scenes.length}" data-ch="${c.id}" title="${esc(c.code + ' · ' + c.title)}"><i></i><b>${esc(c.code)}</b></span>`).join('') +
+    routeEl.innerHTML = chapters.map((c) => `<span class="leg" style="--n:${c.scenes.length}" data-ch="${c.id}"${c.phase ? ` data-phase="${esc(c.phase)}"` : ''} title="${esc(c.code + ' · ' + c.title + (phById[c.phase] ? ' (' + phById[c.phase].title + ')' : ''))}"><i></i><b>${esc(c.code)}</b></span>`).join('') +
       '<span class="route-drone" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="8.5" y="8.5" width="7" height="7" rx="1.5" fill="currentColor"/><g fill="var(--surface)" stroke="currentColor" stroke-width="1.8"><circle class="rotor" cx="6.5" cy="6.5" r="3.4"/><circle class="rotor" cx="17.5" cy="6.5" r="3.4"/><circle class="rotor" cx="6.5" cy="17.5" r="3.4"/><circle class="rotor" cx="17.5" cy="17.5" r="3.4"/></g></svg></span>';
   }
   function placeDrone() {
@@ -587,6 +630,9 @@
     const scene = shown;
     const ch = chById[scene.ch];
     const pos = ch.scenes.indexOf(scene);
+    /* The whole page takes the colour of the level the student is in. */
+    if (phById[ch.phase]) document.body.dataset.phase = ch.phase;
+    else delete document.body.dataset.phase;
     $('#crumb-code').textContent = ch.code;
     $('#crumb-title').textContent = ch.title;
     $('#crumb-count').textContent = (pos + 1) + ' / ' + ch.scenes.length;
@@ -685,7 +731,7 @@
     let h = '<div class="toc">';
     chapters.forEach((c) => {
       const done = c.scenes.filter((s) => sceneStatus(s) === 'done').length;
-      h += `<div class="toc-ch"><div class="toc-ch-head"><span class="crumb-code">${esc(c.code)}</span><b>${esc(c.title)}</b><span>${done}/${c.scenes.length}</span></div><ul class="toc-list">`;
+      h += `<div class="toc-ch"${c.phase ? ` data-phase="${esc(c.phase)}"` : ''}><div class="toc-ch-head"><span class="crumb-code">${esc(c.code)}</span><b>${esc(c.title)}</b><span>${done}/${c.scenes.length}</span></div><ul class="toc-list">`;
       c.scenes.forEach((s) => {
         h += `<li><button type="button" class="toc-item" data-goto="${s.id}"${s === shown ? ' aria-current="true"' : ''}><span class="dot ${sceneStatus(s)}"></span><span>${esc(s.title)}</span><span class="toc-kind">${KINDS[s.kind].label}</span></button></li>`;
       });
@@ -739,11 +785,15 @@
   /* ───────── feedback helpers ───────── */
   const toastEl = $('#toast');
   let toastTimer = 0;
-  function toast(msg) {
+  /* tone 'bad' = an error: red, wraps, stays longer, announced at once to screen readers */
+  function toast(msg, ms, tone) {
+    const bad = tone === 'bad';
     toastEl.textContent = msg;
+    toastEl.classList.toggle('bad', bad);
+    toastEl.setAttribute('role', bad ? 'alert' : 'status');
     toastEl.classList.add('show');
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => toastEl.classList.remove('show'), 1800);
+    toastTimer = setTimeout(() => toastEl.classList.remove('show'), ms || (bad ? 6000 : 1800));
   }
   function copyText(text, el) {
     const ok = () => {
@@ -760,7 +810,7 @@
       let done = false;
       try { done = document.execCommand('copy'); } catch (e) { done = false; }
       ta.remove();
-      if (done) ok(); else toast('Select the text and copy it by hand');
+      if (done) ok(); else toast('Select the text and copy it by hand', 6000, 'bad');
     };
     if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(ok, fallback);
     else fallback();

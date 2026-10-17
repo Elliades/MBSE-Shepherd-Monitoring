@@ -7,6 +7,8 @@
    window.Bridge.connect(code)    join the room of that code
    window.Bridge.disconnect()     leave and forget the code
    window.Bridge.open(id, type)   show the element in Cameo (a Promise)
+   window.Bridge.openByName(spec) same, for an element that has no id yet: Cameo finds it by its name.
+                                  Rejects with Error('not-found') | Error('ambiguous') | another message
    window.Bridge.onChange(fn)     called with the state on every change
    window.Bridge.setRelay(addr)   use another relay address ('' = back to the default): { ok, error }
    window.Bridge.onFrame(fn)      called with what Cameo sends on its own, for the simulation panel:
@@ -207,12 +209,21 @@
     return DIAGRAMS.has(type) ? call('diagram', 'open', arg).catch(select) : select();
   }
 
+  /* An element the student creates has no UUID in the guide: Cameo looks it up by its name.
+     spec = { name, type, path, kinds, qualifiedName } (see "Links by name" in README.md). */
+  function showByName(spec) {
+    const arg = [spec];
+    const select = () => call('browser', 'selectByName', arg);
+    return DIAGRAMS.has(spec.type) ? call('diagram', 'openByName', arg).catch(select) : select();
+  }
+
   window.Bridge = {
     state,
     connect,
     setRelay,
     disconnect: () => disconnect(false),
     open: show,
+    openByName: showByName,
     onChange: (fn) => listeners.push(fn),
     onFrame: (fn) => frameListeners.push(fn),
     start() {

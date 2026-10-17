@@ -14,19 +14,29 @@
    Blocks: p, h, steps, list, figure, video, placeholder, callout, quote, path, copy, download,
    cards, widget, question, reveal, tip, faq, notes, answers, tabs, fromAnswer.
    A tip is an optional toggle around p, list and copy blocks; its steps are not counted for "Done".
-   A placeholder marks something missing; its to-do list is only shown in author mode. */
+   A placeholder marks something missing; its to-do list is only shown in author mode.
+
+   Levels of the method: a chapter with phase: "op" | "fn" | "ph" takes the colour of its level
+   (top band, crumb, route). A scene with mark: "intro" | "outro" opens or closes a level, and
+   the block { phases: "op" } shows the three levels with the current one lit. */
 window.COURSE = {
+  phases: [
+    { id: "op", title: "Operational analysis", short: "Operational", q: "What is expected of the system?" },
+    { id: "fn", title: "Functional architecture", short: "Functional", q: "How does it do it?" },
+    { id: "ph", title: "Physical architecture", short: "Physical", q: "Who does what?" }
+  ],
+
   chapters: [
     { id: "brief", code: "0", title: "Briefing", blurb: "What you are about to do, and with what." },
     { id: "setup", code: "1", title: "Set up Cameo", blurb: "Start the tool, load the model, learn three reflexes." },
     { id: "discover", code: "2", title: "Discover the model", blurb: "Find your way through the three levels." },
-    { id: "mission", code: "3", title: "The mission", blurb: "What the drone is for." },
-    { id: "A", code: "A", title: "Sequence diagram", blurb: "Turn a use case into a scenario." },
-    { id: "B", code: "B", title: "Functions", blurb: "From the scenario to activities." },
-    { id: "C", code: "C", title: "State machine", blurb: "States, transitions, signals, simulation." },
-    { id: "D", code: "D", title: "Load Flight Plan", blurb: "Define a function with an activity diagram." },
-    { id: "E", code: "E", title: "Allocation", blurb: "Give each function to a subsystem." },
-    { id: "end", code: "✓", title: "Debrief", blurb: "FAQ and your answer sheet." }
+    { id: "mission", code: "3", title: "The mission", blurb: "What the drone is for, and how the flight plan reaches it.", phase: "op" },
+    { id: "A", code: "A", title: "Sequence diagram", blurb: "Turn a use case into a scenario.", phase: "op" },
+    { id: "B", code: "B", title: "Functions", blurb: "From the scenario to activities.", phase: "fn" },
+    { id: "C", code: "C", title: "State machine", blurb: "States, transitions, signals, simulation.", phase: "fn" },
+    { id: "D", code: "D", title: "Load Flight Plan", blurb: "Define a function with an activity diagram.", phase: "fn" },
+    { id: "E", code: "E", title: "Allocation", blurb: "Give each function to a subsystem.", phase: "ph" },
+    { id: "end", code: "✓", title: "Debrief", blurb: "Your answer sheet." }
   ],
 
   scenes: [
@@ -183,7 +193,7 @@ window.COURSE = {
       title: "Install the OMF-ISAE plugin",
       lead: "The exercise needs the OMF-ISAE plugin. Install it from the plugin manager.",
       blocks: [
-        { download: { label: "Plugin to install", file: "com.samares-engineering.omf.plugin_1.0.0.zip", src: "assets/plugins/com.samares-engineering.omf.plugin_1.0.0.zip", size: "21 MB" } },
+        { download: { label: "Plugin to install", file: "com.elliades.isae.mbseShepherd_1.0.5.zip", src: "assets/plugins/com.elliades.isae.mbseShepherd_1.0.5.zip", size: "18 MB" } },
         {
           steps: [
             "In Cameo, choose {{Help > Resource & Plugin Manager}}, then click {{Import}}.",
@@ -203,7 +213,7 @@ window.COURSE = {
       title: "Load the model",
       lead: "The model comes as one archive file. Cameo opens it as it is.",
       blocks: [
-        { download: { label: "File to open", file: "UAV_BE_Note_2024 _V2_Exercice Student.mdzip", src: "assets/models/UAV_BE_Note_2024 _V2_Exercice Student.mdzip", size: "841 KB" } },
+        { download: { label: "File to open", file: "UAV_BE_2026 _V2_Exercice Student.mdzip", src: "assets/models/UAV_BE_2026 _V2_Exercice Student.mdzip", size: "841 KB" } },
         {
           steps: [
             "Download the model with the button above.",
@@ -327,10 +337,199 @@ window.COURSE = {
 
     /* ───────────────────────── 3 · The mission ───────────────────────── */
     {
+      id: "op-intro", ch: "mission", kind: "read", mark: "intro",
+      title: "First, what is expected of the system",
+      lead: "A stakeholder has a need. Before any function or any part, we formalize it: we set the scope of our system and what it is expected to do.",
+      blocks: [
+        { phases: "op" },
+        {
+          widget: "phaseSteps", opts: {
+            steps: [
+              { pic: "need", title: "Requirement", text: "The need of the stakeholder is written as requirements.", off: "Not in this seminar" },
+              { pic: "context", title: "Context", text: "Update the operational context: what does our system exchange with the external actors and systems?" },
+              { pic: "usecase", title: "Use case", text: "Add the new use case, linked to the actors and systems it involves." },
+              { pic: "scenario", title: "Scenarios", text: "Describe how it unfolds: the nominal scenario, and the dysfunctional ones." }
+            ]
+          }
+        }
+      ]
+    },
+    {
       id: "mission-brief", ch: "mission", kind: "try",
       title: "The mission",
       lead: "Now that you have looked at the model, here is what the system is for.",
       blocks: [{ widget: "mission" }]
+    },
+    {
+      id: "m-fp-port", ch: "mission", kind: "read",
+      title: "The flight plan needs its own way in",
+      lead: "The mission starts with a requirement: **the operator shall transmit the flight plan to the ground station**. In the operational context, which connection would it go through?",
+      blocks: [
+        { path: "op-context" },
+        { p: "In [[op-context]], the operator is already connected to the ground station. That connection carries the buttons the operator presses, such as *Start/Stop mission*." },
+        {
+          reveal: {
+            label: "Is it the same connection?",
+            text: "Probably not. Pressing a button sends a command; a flight plan is a file of waypoints, loaded from a USB stick, a cable or a network. Each kind of exchange gets its own point of connection: a **port**."
+          }
+        },
+        { p: "Six words describe a connection in an internal block diagram. Tap each one to see it on the drawing." },
+        { widget: "portAnatomy" },
+        {
+          callout: {
+            tone: "note", title: "A port is a point of connection",
+            text: "Think of a USB port, a button or a power socket: a place on the border of a part where something goes in or out."
+          }
+        }
+      ]
+    },
+    {
+      id: "m-interface-block", ch: "mission", kind: "do",
+      title: "Create the interface block",
+      lead: "A port alone says nothing about what goes through it. The **interface block** is the contract between two ports: what they exchange, of which type, and in which direction.",
+      blocks: [
+        { widget: "sketch", opts: { kind: "iface" } },
+        { path: "if-pkg" },
+        {
+          steps: [
+            "In the Model Browser, find the package [[if-pkg]].",
+            "Right-click on it, then {{Create Element}}. Type **int** to filter the list, and choose {{Interface Block}}.",
+            "Name it <<IF_FlightPlan>>."
+          ]
+        },
+        {
+          callout: {
+            tone: "tip", title: "One contract, many ports",
+            text: "Two ports or more can be typed by the same interface block. Write the contract once, and reuse it on every port that exchanges a flight plan."
+          }
+        }
+      ]
+    },
+    {
+      id: "m-flow-property", ch: "mission", kind: "do",
+      title: "Say what flows, and which way",
+      lead: "Inside the interface block, a **flow property** names one thing that goes through the port. Its type says what it is; its direction says which way it goes.",
+      blocks: [
+        { widget: "sketch", opts: { kind: "flow" } },
+        { path: "if-flightplan" },
+        {
+          steps: [
+            "Right-click on [[if-flightplan]], then {{Create Element > Flow Property}}. Name it <<flightPlan>>.",
+            {
+              t: "Type it with the signal [[sig-flightplan]], the same signal you will use everywhere in this exercise.",
+              note: "Three ways, pick one. Rename the flow property <<flightPlan : FlightPlan>> and press **Ctrl+Space** to auto-complete the type. Or drag the signal **FlightPlan** from the Model Browser onto the flow property. Or open its {{Specification}} and pick the signal in {{Type}}."
+            },
+            {
+              t: "Set its direction to **out**. Cameo creates every flow property as **inout**.",
+              note: "Edit the label and replace **inout** by **out**, or open the {{Specification}} and choose **out** in {{Direction}}."
+            }
+          ]
+        },
+        {
+          tip: {
+            label: "Can't find \"FlightPlan\"?",
+            blocks: [
+              { p: "Cameo filters the list of types and may hide the signal. In the selection list, untick {{Apply Filter}}: **FlightPlan** appears." }
+            ]
+          }
+        },
+        {
+          callout: {
+            tone: "note", title: "Why out, and not inout?",
+            text: "Inout would say the flight plan goes both ways, and it does not. Write the contract from the side that sends: **out**. The side that receives is handled by its port, in the next scene."
+          }
+        },
+        {
+          callout: {
+            tone: "tip", title: "What can type a flow property",
+            text: "A signal, a unit of measure, or a type of your own. Typing it with the signal FlightPlan keeps the flight plan one single element across the whole model."
+          }
+        }
+      ]
+    },
+    {
+      id: "m-ports", ch: "mission", kind: "do",
+      title: "One port on each side",
+      lead: "The operator and the ground station both get a port typed by IF_FlightPlan. The port that receives is **conjugated**: same contract, directions reversed.",
+      blocks: [
+        { widget: "sketch", opts: { kind: "ports" } },
+        { path: "op-context" },
+        {
+          steps: [
+            "Open the diagram [[op-context]].",
+            {
+              t: "From the diagram palette, choose {{Port}} and click on the border of **uAV operator**. Type the new port with [[if-flightplan]].",
+              note: "Rename the port <<fp : IF_FlightPlan>> and press **Ctrl+Space** to auto-complete, or drag **IF_FlightPlan** from the Model Browser onto the port."
+            },
+            "Look at the port: it shows an **out** arrow. It comes from the direction of the flow property in the interface.",
+            "Add a port in the same way on the border of **groundStation**, typed by the same [[if-flightplan]]. Its arrow is **out** too, since the interface says so.",
+            "Right-click on the port of the ground station, then {{Is Conjugated}}. Its type becomes **~IF_FlightPlan** and the arrow turns **in**: the ground station is ready to receive a flight plan."
+          ]
+        },
+        {
+          callout: {
+            tone: "note", title: "The tilde ~",
+            text: "Read **~IF_FlightPlan** as \"IF_FlightPlan, conjugated\". On this port, every **out** of the contract becomes an **in**, and every **in** becomes an **out**."
+          }
+        }
+      ]
+    },
+    {
+      id: "m-connector", ch: "mission", kind: "do",
+      title: "Connect the two ports",
+      lead: "A **connector** links the two ports in this context. The flight plan now has a way from the operator to the ground station.",
+      blocks: [
+        {
+          steps: [
+            {
+              t: "Click on the port of the operator. In the small toolbar that appears next to it, click {{Connector}}.",
+              fig: {
+                src: "assets/img/port-connector-manipulator.png", w: 226, h: 178,
+                alt: "In Cameo, the port fp : IF_FlightPlan of the operator is selected. A small vertical toolbar next to it shows the Connector button, with its tooltip.",
+                caption: "The Connector button, next to the selected port."
+              }
+            },
+            "Click on the port of the ground station to finish the connector.",
+            "Another way: choose {{Connector}} in the diagram palette, then draw it from one port to the other."
+          ]
+        }
+      ]
+    },
+    {
+      id: "m-item-flow-why", ch: "mission", kind: "try",
+      title: "What really travels on the connector",
+      lead: "The interface says what a port *can* exchange. An **item flow** ((item-flow)) says what *really* travels on one connector.",
+      blocks: [
+        { widget: "itemFlow" },
+        { p: "You already met item flows in [[op-context]]: the port of the drone is typed by *IF_Operator_Command_On_Drone*, and the item flow on its connector says which command really goes through: *Operator_Action_on_Start_Stop_Button*." }
+      ]
+    },
+    {
+      id: "m-item-flow", ch: "mission", kind: "do",
+      title: "Optional: add the item flow",
+      lead: "The connector works without it. The item flow makes the diagram say what goes from the operator to the ground station: the flight plan.",
+      blocks: [
+        { widget: "sketch", opts: { kind: "item" } },
+        {
+          steps: [
+            "In the Model Browser, find the signal [[sig-flightplan]].",
+            "Drag and drop it onto the connector between the operator and the ground station. An item flow ((item-flow)) named **FlightPlan** appears on the connector.",
+            "Check its direction: the arrow must point to the ground station. If it points the other way, right-click on the item flow, then {{Inverse Item Flows}}."
+          ]
+        },
+        {
+          callout: {
+            tone: "note", title: "A plugin command",
+            text: "Inverting an item flow is not a standard Cameo command: the OMF-ISAE plugin you installed at the start adds it."
+          }
+        },
+        {
+          callout: {
+            tone: "warn", title: "Item flows come last",
+            text: "Item flows are hard to update once they exist. Set the ports, their types and their directions first, then add the item flows."
+          }
+        }
+      ]
     },
 
     /* ───────────────────────── A · Sequence diagram ───────────────────────── */
@@ -507,7 +706,45 @@ window.COURSE = {
       ]
     },
 
+    {
+      id: "op-outro", ch: "A", kind: "read", mark: "outro",
+      title: "What the operator expects is now in the model",
+      lead: "We have defined what the operator expects, and the exchanges needed to set up the flight plan.",
+      blocks: [
+        { phases: "op" },
+        {
+          widget: "phaseSteps", opts: {
+            done: true,
+            steps: [
+              { pic: "context", title: "Context", text: "The operator sends the flight plan through the base station." },
+              { pic: "usecase", title: "Use case", text: "*Parameter Mission* is linked to the actors it involves." },
+              { pic: "scenario", title: "Scenario", text: "The nominal scenario shows, message by message, how the flight plan reaches the drone." }
+            ]
+          }
+        },
+        { p: "We know *what* is expected. The next level answers *how* the drone does it." }
+      ]
+    },
+
     /* ───────────────────────── B · Functions ───────────────────────── */
+    {
+      id: "fn-intro", ch: "B", kind: "read", mark: "intro",
+      title: "Now, how the system does it",
+      lead: "We know what is expected. Now we look at how to do it: which functions does the drone need?",
+      blocks: [
+        { phases: "fn" },
+        {
+          widget: "phaseSteps", opts: {
+            steps: [
+              { pic: "states", title: "Mission steps", text: "Define the steps of the mission for our system." },
+              { pic: "functions", title: "Functions", text: "Define the functions needed to carry them out." },
+              { pic: "logic", title: "Logic", text: "Define in which order, and on which condition, the functions run." },
+              { pic: "consistency", title: "Consistency", text: "Check it all against the mission steps and the operational context." }
+            ]
+          }
+        }
+      ]
+    },
     {
       id: "b-functions", ch: "B", kind: "read", ref: "B",
       title: "A scenario reveals functions",
@@ -574,7 +811,7 @@ window.COURSE = {
         {
           steps: [
             "Right-click on the package **Deployment**, then {{Create element > Package}}. Name it <<Parameter Mission>>.",
-            "Drag the activity <<Parameter Mission>> into this package.",
+            "Drag the activity [[fa-parameter-mission-act]] into this package.",
             "Create one package per service, and move each function into the package of its service."
           ]
         },
@@ -603,7 +840,7 @@ window.COURSE = {
       lead: "Still in the Containment Tree, create one activity per function in the \"Parameter Mission\" sub-package: the functions you identified in Question 2.",
       blocks: [
         { path: "fa-parameter-mission" },
-        { fromAnswer: { q: "q2", itemLabel: "Function", scene: "b-q2" } }
+        { fromAnswer: { q: "q2", itemLabel: "Function", scene: "b-q2", under: "fa-parameter-mission" } }
       ]
     },
 
@@ -686,7 +923,7 @@ window.COURSE = {
         { h: "From Unconfigured to Configured" },
         {
           steps: [
-            "Left-click on the *Unconfigured* state, then click the Transition button ((transition)) on its smart manipulator toolbar and drag it to the *Configured* state."
+            "Left-click on the *Unconfigured* state, then click the Transition button ((transition)) on its smart manipulator toolbar and drag it to the [[soi-configured]] state."
           ]
         },
         {
@@ -721,14 +958,14 @@ window.COURSE = {
         { h: "From Configured back to Unconfigured" },
         {
           steps: [
-            "Select the shape of the *Configured* state, click the Transition button ((transition)), then right-click on the *Unconfigured* state.",
+            "Select the shape of the [[soi-configured]] state, click the Transition button ((transition)), then right-click on the *Unconfigured* state.",
             "Select the [[sig-check-failed]] signal and drag it onto the transition between *Configured* and *Unconfigured*."
           ]
         },
         { h: "From Configured to Ready for Mission" },
         {
           steps: [
-            "Select the shape of the *Configured* state, click the Transition button ((transition)), then right-click on the *Ready for Mission* state.",
+            "Select the shape of the [[soi-configured]] state, click the Transition button ((transition)), then right-click on the *Ready for Mission* state.",
             "Select the [[sig-ready]] signal and drag it onto the transition between *Configured* and *Ready for Mission*."
           ],
           start: 3
@@ -746,7 +983,7 @@ window.COURSE = {
           steps: [
             "In the Model Browser, expand [[fa-deployment]].",
             {
-              t: "Select the **Load Flight Plan** activity, drag it onto the *Configured* state and select {{Do Activity}}.",
+              t: "Select the [[fn-load-flight-plan|Load Flight Plan]] activity, drag it onto the [[soi-configured]] state and select {{Do Activity}}.",
               fig: { src: "assets/img/menu-do-activity.png", w: 172, h: 117, alt: "Small menu that opens on the Configured state with three choices: Entry, Do Activity (highlighted) and Exit.", size: "xs" }
             }
           ]
@@ -836,16 +1073,10 @@ window.COURSE = {
               t: "Inside the state machine diagram, double-click on the **do / Load Flight Plan** label of the *Configured* state. The Activity Diagram of this function appears.",
               fig: { src: "assets/img/ad-load-flight-plan-initial.png", w: 320, h: 225, alt: "Activity diagram Load Flight Plan with an initial node, one action Load Flight Plan and a final node.", size: "sm" }
             },
-            "To see the cross-diagram simulation, open both diagrams, State Machine and Activity Diagram, in different tabs.",
+            "To see both diagrams at once, open them in two tabs: keep the State Machine diagram open in its tab, then switch to the tab of the Activity Diagram *Load Flight Plan* that you just opened. Use the tabs above the diagram to switch from one to the other.",
             "Start the simulation again, with steps 2 to 4 of the previous exercise.",
             "Send triggers until you reach the *Configured* state. The Activity Diagram is simulated too: a red token appears in it when the state machine arrives in this state."
           ]
-        },
-        {
-          placeholder: {
-            kind: "gif", title: "The red token appearing in the activity diagram",
-            todo: ["Record both tabs side by side while the state machine enters Configured (10 s)"]
-          }
         }
       ]
     },
@@ -859,7 +1090,7 @@ window.COURSE = {
         {
           quote: {
             label: "Specification",
-            text: "If the flight plan loading succeeds, we shall send a \"Ready for mission\" signal, which will allow to leave the \"Configured\" state for the \"Ready for mission\" state. In parallel, we also want to notify the Control Operator, as described in the \"Parameter Mission\" scenario."
+            text: "If the flight plan loading succeeds, we shall send a \"Ready for mission\" signal, which will allow to leave the \"Configured\" state for the \"Ready for mission\" state."
           }
         },
         {
@@ -888,7 +1119,7 @@ window.COURSE = {
         { path: "fn-load-flight-plan" },
         {
           steps: [
-            "In the Model Browser, right-click on the **Load Flight Plan** function, in the package ((package)) *Parameter Mission*.",
+            "In the Model Browser, right-click on the [[fn-load-flight-plan|Load Flight Plan]] function, in the package ((package)) *Parameter Mission*.",
             "Click on {{Create Diagram}}, then choose {{Activity Diagram}}. If a window opens asking to display the parameters, click on {{Ok}}.",
             {
               t: "Drag and drop the functions related to \"Load Flight Plan\" inside the Activity Diagram, anywhere. You created them in B.1.",
@@ -896,7 +1127,66 @@ window.COURSE = {
             }
           ]
         },
-        { p: "The next three scenes are your toolbox to connect these functions." }
+        { p: "The next four scenes are your toolbox to connect these functions." }
+      ]
+    },
+    {
+      id: "d-flows", ch: "D", kind: "try", ref: "D",
+      title: "Toolbox: control flow or object flow",
+      lead: "Two kinds of arrows link the actions of an activity diagram. They do not carry the same thing.",
+      blocks: [
+        { widget: "flows" },
+        {
+          cards: [
+            { n: "C", title: "Control flow", text: "Says **when** the next action may start. It carries a token, no data. From action to action, drawn dashed." },
+            { n: "O", title: "Object flow", text: "Says **what** the next action receives. It carries a functional data, such as **FlightPlan**. From pin to pin, drawn solid." }
+          ]
+        },
+        {
+          callout: {
+            tone: "note", title: "When does an action start?",
+            text: "An action starts when a token has arrived on **each** incoming control flow **and** on **each** input pin. An input pin that never receives its data blocks the action. You will see it during the simulation."
+          }
+        }
+      ]
+    },
+    {
+      id: "d-draw-flows", ch: "D", kind: "do", ref: "D",
+      title: "Draw the control flows and object flows",
+      lead: "Both tools are in the palette, on the left of the activity diagram, in the flows group.",
+      blocks: [
+        { h: "A control flow" },
+        {
+          steps: [
+            "In the palette, click on {{Control Flow}}.",
+            "Click on the first action, then on the action that comes next. The arrow is drawn dashed.",
+            "Start from the initial node ● and end on the final node ◉ in the same way."
+          ]
+        },
+        { h: "An object flow" },
+        {
+          steps: [
+            {
+              t: "Make sure each action has its pins: the small squares on its border.",
+              note: "A call to a function shows one pin per parameter of the function. If the pins are hidden, right-click on the action and choose {{Display}}, then {{Display Pins}}. To add a missing one, use {{Input Pin}} or {{Output Pin}} in the palette and click on the action."
+            },
+            "Give each pin its type: drag and drop the functional data, for example [[sig-flightplan|FlightPlan]] from [[fd-deployment]], on the pin. You can also set its {{Type}} in its specification.",
+            "In the palette, click on {{Object Flow}}.",
+            "Click on the **output pin** of the action that produces the data, then on the **input pin** of the action that uses it."
+          ]
+        },
+        {
+          callout: {
+            tone: "tip", title: "Data that enters the function",
+            text: "The parameters of Load Flight Plan appear as rectangles on the border of the diagram frame. An object flow can start from one of them and end on the input pin of the first action that needs it."
+          }
+        },
+        {
+          callout: {
+            tone: "warn", title: "Same type at both ends",
+            text: "The two pins at the ends of an object flow must have the same type: the data that leaves one action is the data that arrives at the next. If the simulation stops on an action, check the type of its pins first."
+          }
+        }
       ]
     },
     {
@@ -917,11 +1207,12 @@ window.COURSE = {
             caption: "A send signal action in Cameo."
           }
         },
+        { p: "For now, Load Flight Plan needs two of these signals, one for each outcome of the check:" },
         {
-          placeholder: {
-            kind: "gif", title: "Dropping a signal in an activity diagram",
-            todo: ["Record a signal dragged from the Model Browser into the activity diagram, showing the Send Signal Action being created (6 s)"]
-          }
+          cards: [
+            { n: "1", title: "Ready for mission", text: "When the loading succeeds, drag and drop the signal **Ready for mission** on the diagram, after the action, and send it." },
+            { n: "2", title: "FlightPlan Check Failed", text: "When the loading fails, drag and drop the signal **FlightPlan Check Failed** on the diagram, on the other branch, and send it." }
+          ]
         }
       ]
     },
@@ -947,38 +1238,102 @@ window.COURSE = {
       ]
     },
     {
-      id: "d-fork", ch: "D", kind: "try", ref: "D",
-      title: "Toolbox: do things in parallel",
-      lead: "To represent parallelism, use a fork node. It splits a flow into multiple concurrent flows.",
+      id: "d-orchestrate", ch: "D", kind: "do", ref: "D",
+      title: "Your turn: orchestrate the functions",
+      lead: "Connect the functions of Load Flight Plan in the right order, so that the activity diagram covers the sunny day and the rainy day.",
       blocks: [
-        { widget: "fork" },
+        { path: "fa-parameter-mission" },
+        { p: "Orchestrate these functions of the *Parameter Mission* package, which you created in B.1:" },
         {
-          figure: {
-            src: "assets/img/fork-example.png", w: 471, h: 277, size: "sm",
-            alt: "Fork node in Cameo: one flow enters a thick horizontal bar and three flows leave it towards get safe area starting point, get flight plan and get current position.",
-            caption: "The same example in Cameo."
-          }
-        }
-      ]
-    },
-    {
-      id: "d-rainy", ch: "D", kind: "do", ref: "D",
-      title: "Your turn: sunny day and rainy day",
-      lead: "Connect your functions so that the activity diagram covers both scenarios.",
-      blocks: [
+          list: [
+            "**Read FlightPlan**",
+            "**Check FlightPlan**",
+            "**Send Mission Ready**"
+          ]
+        },
         {
           quote: {
             label: "[RD 1] Flight plan out of range",
             text: "If the flight plan loading fails, the system needs to send a \"FlightPlan Check Failed\"."
           }
         },
+        {
+          callout: {
+            tone: "tip", title: "Where to send \"Ready for mission\"",
+            text: "The {{Send Signal Action}} **Ready for mission** can go inside the activity diagram of **Send Mission Ready**. You can also use it instead of the Send Mission Ready action, directly in Load Flight Plan."
+          }
+        },
         { h: "Check your diagram against the specification" },
         {
           steps: [
-            "When the loading succeeds, the signal **Ready for mission** is sent.",
-            "In parallel, the operator is notified.",
-            "When the loading fails, the signal **FlightPlan Check Failed** is sent."
+            "When the check succeeds, the signal **Ready for mission** is sent.",
+            "When the check fails, the signal **FlightPlan Check Failed** is sent."
           ]
+        },
+        { call: "When your activity diagram is finished, call the teacher to check it." }
+      ]
+    },
+    {
+      id: "d-orchestrate-solution", ch: "D", kind: "read", ref: "D",
+      title: "The solution",
+      lead: "Once the teacher has checked your diagram, open the solution and compare.",
+      blocks: [
+        {
+          solution: {
+            label: "Open the solution",
+            blocks: [
+              { widget: "lfpSolution" }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      id: "d-notify", ch: "D", kind: "do", ref: "D",
+      title: "Also notify the ground station",
+      lead: "The ground station would also like to know that the flight plan is correct.",
+      blocks: [
+        {
+          quote: {
+            label: "New requirement",
+            text: "If the flight plan is correct, the system shall also send a \"FlightPlan Correct\" signal to the ground station, at the same time as the \"Ready for mission\" signal."
+          }
+        },
+        {
+          steps: [
+            "Add a {{Send Signal Action}} **FlightPlan Correct** to your activity diagram, on the success branch.",
+            "It must be sent at the same time as **Ready for mission**: neither signal waits for the other. The next scene shows how to draw this."
+          ]
+        }
+      ]
+    },
+    {
+      id: "d-fork", ch: "D", kind: "try", ref: "D",
+      title: "Toolbox: do things in parallel",
+      lead: "To represent parallelism, use a fork node. It splits a flow into multiple concurrent flows.",
+      blocks: [
+        { widget: "fork" },
+        {
+          callout: {
+            tone: "warn", title: "Join before the end",
+            text: "An activity final node ◉ stops the whole activity as soon as one token reaches it. Bring the parallel flows back together with a {{Join}} node (the same bar) before the final node."
+          }
+        },
+        { p: "Now put a fork on the success branch of your diagram, so that **Ready for mission** and **FlightPlan Correct** are sent at the same time." }
+      ]
+    },
+    {
+      id: "d-final-solution", ch: "D", kind: "read", ref: "D",
+      title: "The final solution",
+      lead: "Compare your diagram with the complete Load Flight Plan.",
+      blocks: [
+        {
+          solution: {
+            label: "Open the solution",
+            blocks: [
+              { widget: "lfpSolution", opts: { notify: true } }
+            ]
+          }
         }
       ]
     },
@@ -1017,7 +1372,7 @@ window.COURSE = {
               t: "Use the {{Trigger}} drop-down list to switch from state to state.",
               fig: { src: "assets/img/sim-trigger-small.png", w: 229, h: 178, alt: "Trigger drop-down list with FlightPlan highlighted.", size: "xs" }
             },
-            "Verify that after entering the *Configured* state, your activity diagram is triggered.",
+            "Verify that after entering the [[soi-configured]] state, your activity diagram is triggered.",
             "Verify that if the flight plan is OK, the state machine goes automatically to *Ready for Mission*."
           ]
         },
@@ -1062,7 +1417,47 @@ window.COURSE = {
       ]
     },
 
+    {
+      id: "fn-outro", ch: "D", kind: "read", mark: "outro",
+      title: "The mission is extended, and it holds together",
+      lead: "The functions that load the flight plan are defined. The mission has been extended, and it stays consistent with the operational level.",
+      blocks: [
+        { phases: "fn" },
+        {
+          widget: "phaseSteps", opts: {
+            done: true,
+            steps: [
+              { pic: "functions", title: "Functions", text: "The functions that load the flight plan are defined." },
+              { pic: "states", title: "Mission", text: "The mission is extended with its new steps." },
+              { pic: "consistency", title: "Consistency", text: "It stays consistent with the operational level." },
+              { pic: "simulate", title: "Validation", text: "Simulating it already shows that our system meets the need, before any part is chosen: an early validation." }
+            ]
+          }
+        },
+        { p: "We know *how* the drone does it. The next level answers *who* inside the drone does what." }
+      ]
+    },
+
     /* ───────────────────────── E · Allocation ───────────────────────── */
+    {
+      id: "ph-intro", ch: "E", kind: "read", mark: "intro",
+      title: "Then, who does what",
+      lead: "We have functions, the services they provide, and a behaviour we have validated. Now: which part of the drone carries out each function?",
+      blocks: [
+        { phases: "ph" },
+        {
+          widget: "phaseSteps", opts: {
+            steps: [
+              { pic: "breakdown", title: "Breakdown", text: "Split the system into subsystems. Do we have them all, or do we need new ones?" },
+              { pic: "architecture", title: "Architecture", text: "Connect them: how do the functional flows travel over the physical interfaces?" },
+              { pic: "alloc", title: "Allocation", text: "Give each function to the subsystem that carries it out." }
+            ]
+          }
+        },
+        { p: "For each function, the same question:" },
+        { widget: "allocChoice" }
+      ]
+    },
     {
       id: "e-views", ch: "E", kind: "read", ref: "E",
       title: "Two views of the same model",
@@ -1103,7 +1498,7 @@ window.COURSE = {
         {
           steps: [
             "Open the allocation matrix available under [[alloc-pkg]].",
-            "Complete the **Function Allocation** matrix so that the 3 functions created previously are each allocated to a subsystem."
+            "Complete the **Function Allocation** matrix so that **only the functions you created yourself** in chapter B are each allocated to a subsystem: the functions you named in Question 2 and the activity <<Parameter Mission>>. Do not allocate the functions that were already in the model."
           ]
         },
         {
@@ -1127,18 +1522,78 @@ window.COURSE = {
       blocks: [
         { widget: "crud" },
         {
-          p: "The impact analysis tells us which elements are impacted when we create, read, update or delete model elements. With it we can verify and validate that the model still represents the correct system."
+          p: "The impact analysis tells us which elements are impacted when we create, read, update or delete model elements (**CRUD**). With it we can verify and validate that the model still represents the correct system."
+        },
+        {
+          p: "It works because the model is a **chain of links**: the use cases and requirements (operational), the functions (functional) and the subsystems that carry them out (physical). The allocation you just made is the link between the last two."
+        },
+        {
+          tabs: [
+            {
+              label: "A requirement changes", sub: "follow the chain downwards",
+              blocks: [
+                {
+                  p: "A requirement is **created** or **updated**, for example the drone must now fly for 40 minutes instead of 30. Before touching anything, follow the links to see what it reaches:"
+                },
+                {
+                  cards: [
+                    { n: "1", title: "Operational", text: "Which use cases and scenarios depend on this requirement?" },
+                    { n: "2", title: "Functional", text: "Which functions of the activity diagrams realise it?" },
+                    { n: "3", title: "Physical", text: "Which subsystems carry out these functions, through the allocation?" }
+                  ]
+                },
+                {
+                  p: "The result is the **list of everything to review**: nothing is forgotten, and nothing unrelated is reopened. The same walk applies to a **delete**: we see what loses its reason to exist."
+                }
+              ]
+            },
+            {
+              label: "A system fails", sub: "follow the chain upwards",
+              blocks: [
+                {
+                  p: "The same links can be read in the other direction for a **safety analysis**. We suppose that a subsystem is out of order, for example the WiFi system, and we ask:"
+                },
+                {
+                  cards: [
+                    { n: "1", title: "Physical", text: "Which subsystem is lost?" },
+                    { n: "2", title: "Functional", text: "Which functions were allocated to it? These functions are **dead**." },
+                    { n: "3", title: "Operational", text: "Which scenarios, use cases and requirements can no longer be satisfied?" }
+                  ]
+                },
+                {
+                  callout: {
+                    tone: "note",
+                    title: "What you get",
+                    text: "The consequences of a failure, and the subsystems whose loss is the most serious, are read in the model instead of being guessed."
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      id: "ph-outro", ch: "E", kind: "read", mark: "outro",
+      title: "Each new function has its subsystem",
+      lead: "The functions you created are allocated to the subsystems of the drone. The chain is complete, from the need of the operator down to the parts that meet it.",
+      blocks: [
+        { phases: "ph" },
+        {
+          widget: "phaseSteps", opts: {
+            done: true,
+            steps: [
+              { pic: "usecase", title: "What", text: "What the operator expects: the use case and its scenario." },
+              { pic: "functions", title: "How", text: "How the drone does it: its functions." },
+              { pic: "alloc", title: "Who", text: "Who inside the drone does it: the subsystems." }
+            ]
+          }
         }
       ]
     },
 
     /* ───────────────────────── Debrief ───────────────────────── */
-    {
-      id: "faq", ch: "end", kind: "read",
-      title: "Frequently asked questions",
-      lead: "Four questions that come back every year.",
-      blocks: [{ faq: true }]
-    },
     {
       id: "finish", ch: "end", kind: "answer",
       title: "Mission ready to start",
@@ -1187,8 +1642,12 @@ window.COURSE = {
     { scene: "c-run", text: "C.2 starts with “click the Run button in the toolbar above”, then step 2 says “Click on simulate, then … Run”. Both were merged into one step. Check the wording against the tool." },
     { scene: "b-add-function", text: "Spelling: the functional architecture package is “Deployment” in the text, while the Functional Data package is “Deployement” in the screenshot. Check both in the model." },
     { scene: "e-allocate", text: "Chapter E speaks of “the 3 functions created previously”, while Question 2 asks for 4 new functions (plus “Parameter Mission”). Confirm the number." },
-    { scene: "d-spec", text: "The specification says “notify the Control Operator”; everywhere else the actor is “Mission Operator”." },
+    { scene: "d-spec", text: "The handout's specification ends with “In parallel, we also want to notify the Control Operator”. The guide drops that sentence here and brings the parallel part in later (d-notify): the drone sends a “FlightPlan Correct” signal to the ground station at the same time as “Ready for mission”. Check that the signal FlightPlan Correct exists in Functional Data / Deployement." },
+    { scene: "d-orchestrate", text: "Function names Read FlightPlan, Check FlightPlan and Send Mission Ready are written from the teacher's shorthand (read FP, check FP, send mission ready). Check them against the model and the expected answer to Question 2." },
     { scene: "faq", text: "The FAQ referred to “Figure 3” and to sections “3.A / 3.B”, which no longer exist in the handout. The questions were reworded with chapter names. “1.C Physical Flows” is kept as written: check where that package really is." },
-    { scene: "mission-brief", text: "The mission picture was redrawn as an animation. The original image is kept in assets/img/mission-original.png." }
+    { scene: "mission-brief", text: "The mission picture was redrawn as an animation. The original image is kept in assets/img/mission-original.png." },
+    { scene: "m-interface-block", text: "Package of the interface block: written “D- Physical Interface” in the request, “D - Physical Interfaces” in an earlier screenshot. The guide places it under 1 - Operational Analysis (id _18_5_1_150503da_1505402151080_135734_22144). Check name and parent in the model, then fix “if-pkg” in content/model-links.js." },
+    { scene: "m-ports", text: "Palette button to add a port: the guide says {{Port}}. Check the exact label in the IBD palette (Port, Proxy Port, Full Port) and whether the model's ports are proxy ports." },
+    { scene: "m-item-flow", text: "Exact label of the OMF-ISAE plugin command that reverses an item flow: the guide says {{Inverse Item Flows}}. Check it in the right-click menu." }
   ]
 };
