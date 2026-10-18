@@ -12,7 +12,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-# The newest plugin archive next to this script (1.0.9 today, 1.0.10 later: no edit needed).
+# The newest plugin archive next to this script (1.1.0 today: no edit needed for the next version).
 $Archive = Get-ChildItem -LiteralPath $PSScriptRoot -Filter 'com.elliades.isae.mbseShepherd_*.zip' |
   Sort-Object Name | Select-Object -Last 1
 if (-not $Archive) {

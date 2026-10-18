@@ -198,7 +198,7 @@ window.COURSE = {
             {
               label: "Standard", sub: "Cameo's plugin manager",
               blocks: [
-                { download: { label: "Plugin to install", file: "com.elliades.isae.mbseShepherd_1.0.9.zip", src: "assets/plugins/com.elliades.isae.mbseShepherd_1.0.9.zip", size: "18 MB" } },
+                { download: { label: "Plugin to install", file: "com.elliades.isae.mbseShepherd_1.1.0.zip", src: "assets/plugins/com.elliades.isae.mbseShepherd_1.1.0.zip", size: "18 MB" } },
                 {
                   steps: [
                     "In Cameo, choose {{Help > Resource & Plugin Manager}}, then click {{Import}}.",
@@ -216,7 +216,7 @@ window.COURSE = {
             {
               label: "No admin rights", sub: "a script, no installer",
               blocks: [
-                { download: { label: "Plugin archive", file: "com.elliades.isae.mbseShepherd_1.0.9.zip", src: "assets/plugins/com.elliades.isae.mbseShepherd_1.0.9.zip", size: "18 MB" } },
+                { download: { label: "Plugin archive", file: "com.elliades.isae.mbseShepherd_1.1.0.zip", src: "assets/plugins/com.elliades.isae.mbseShepherd_1.1.0.zip", size: "18 MB" } },
                 { download: { label: "Install script", file: "install-plugin.ps1", src: "assets/plugins/install-plugin.ps1", size: "2 KB" } },
                 {
                   steps: [
