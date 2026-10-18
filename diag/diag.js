@@ -82,7 +82,7 @@
     const b = r.body;
     const skew = b.now - (t0 + r.ms / 2);
     /* The site's own Caddy adds "Via: 1.1 Caddy": only another entry means a proxy on the way. */
-    const otherVia = String(b.via || '').split(',').map((v) => v.trim()).filter((v) => v && !/^1\.1 Caddy$/i.test(v));
+    const otherVia = String(b.via || '').split(',').map((v) => v.trim()).filter((v) => v && !/^\d(\.\d)? Caddy$/i.test(v));
     b.via = otherVia.join(', ') || null;
     const proxy = b.via || b.hops > 1 || b.forwarded;
     return {
@@ -225,16 +225,20 @@
           }
         };
       }
+      /* 4 bursts of 10, as a simulation does: few timers, so a tab in the background (whose timers the
+         browser slows to one a second) still sends them all in time. */
       async function publish() {
-        for (let i = 0; i < 40 && !done; i += 1) {
-          plugin.send(JSON.stringify({ signal: 'diag', id: String(i), t: Date.now() }));
-          d.sent += 1;
-          await sleep(50);
+        for (let burst = 0; burst < 4 && !done; burst += 1) {
+          for (let i = 0; i < 10; i += 1) {
+            plugin.send(JSON.stringify({ signal: 'diag', id: `${burst}-${i}`, t: Date.now() }));
+            d.sent += 1;
+          }
+          await sleep(500);
         }
         await sleep(4000);
         if (!done && d.received < 40) { backAt = performance.now(); try { viewer.send(JSON.stringify({ signal: 'diag-back', id: 'b1' })); } catch (e) { /* closed */ } }
       }
-      setTimeout(() => finish('timeout'), 16000);
+      setTimeout(() => finish('timeout'), 20000);
     });
   }
 
