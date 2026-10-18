@@ -81,6 +81,9 @@
     if (!r.ok || !r.body) return { verdict: 'fail', text: `HTTP ${r.status} ${r.text}` };
     const b = r.body;
     const skew = b.now - (t0 + r.ms / 2);
+    /* The site's own Caddy adds "Via: 1.1 Caddy": only another entry means a proxy on the way. */
+    const otherVia = String(b.via || '').split(',').map((v) => v.trim()).filter((v) => v && !/^1\.1 Caddy$/i.test(v));
+    b.via = otherVia.join(', ') || null;
     const proxy = b.via || b.hops > 1 || b.forwarded;
     return {
       verdict: proxy ? 'warn' : 'ok',
