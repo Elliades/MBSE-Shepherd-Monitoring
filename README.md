@@ -111,7 +111,7 @@ the online relay*, *Also trust the certificates of Windows*). Tools to find out 
 | `/diag/` | Network check of a browser (PC or phone): WebSocket, SSE, long requests, the Cameo link over HTTP and WebSocket. Sends a report. |
 | Cameo > ISAE > *Relay network check* | The same from the Java of Cameo, on every proxy route found; *Apply the recommendation*. |
 | `/diag/reports.html` | Every report, one line per device. |
-| `/bridge/` | Browser bridge: Cameo in *Local* mode, this page in Edge on the same PC carries it to the online relay with the browser's proxy and login. |
+| `/bridge/` | Browser bridge: Cameo in *Local* mode, this page in Edge on the same PC carries it to the online relay with the browser's proxy and login. Plugin 1.0.9 opens it filled in and started (*Open the browser bridge* in the pairing window); `?code=| `/bridge/` | Browser bridge: Cameo in *Local* mode, this page in Edge on the same PC carries it to the online relay with the browser's proxy and login. |start=1| `/bridge/` | Browser bridge: Cameo in *Local* mode, this page in Edge on the same PC carries it to the online relay with the browser's proxy and login. |transport=auto|ws|http`. The phone scans its QR code. This is what works at ISAE: only the browser may leave the PCs. |
 
 The options compared and the test procedure on site: [docs/connectivite-isae.md](docs/connectivite-isae.md).
 To reproduce such a proxy at home: `node scripts/dev-server.mjs 5181 --silent-ws` (site + relay, the

@@ -100,24 +100,45 @@
 
   // ── The online relay (we are the plugin there) ──────────────────────────
 
+  /* Auto: WebSocket, and HTTP requests for the rest of the session once it failed to open twice or
+     opened without bringing anything in (a proxy holding the frames). */
+  let viaHttp = false;
+  let wsFails = 0;
   function openOnline() {
     if (!running) return;
-    const http = $('transport').value === 'http';
+    const mode = $('transport').value;
+    const http = mode === 'http' || (mode === 'auto' && viaHttp);
     const url = `${ONLINE}/v1/plugin${onlineCode ? `?code=${onlineCode}` : ''}`;
     show('online', 'run', `Joining ${ONLINE} over ${http ? 'HTTP requests' : 'WebSocket'} …`);
     let ws;
     try { ws = http ? new window.RelayHttpSocket(url) : new WebSocket(url); } catch (e) { return retryOnline(e.message); }
     online = ws;
+    let opened = false;
+    let greeted = false;
+    const goHttp = (why) => {
+      if (viaHttp || mode !== 'auto') return false;
+      viaHttp = true;
+      log(`${why}: using HTTP requests`);
+      return true;
+    };
+    ws.onopen = () => {
+      opened = true;
+      if (!http) setTimeout(() => { if (online === ws && !greeted && goHttp('the WebSocket opened but nothing came through')) { online = null; ws.close(); openOnline(); } }, 6000);
+    };
     ws.onmessage = (event) => {
       let f;
       try { f = JSON.parse(event.data); } catch (e) { return; }
       if (f.type === 'info') {
         if (f.event === 'hello') {
+          greeted = true;
+          if (!http) wsFails = 0;
           onlineCode = f.code;
           try { localStorage.setItem(ONLINE_CODE_KEY, onlineCode); } catch (e) { /* not kept */ }
           $('online-code').textContent = onlineCode.split('').join(' ');
           const guide = `${location.origin}/?code=${onlineCode}`;
-          $('guide-link').innerHTML = `On the phone: open <a href="${guide}" target="_blank" rel="noopener">${guide}</a> or type the code in the guide.`;
+          $('guide-link').innerHTML = `On the phone: scan the code, open <a href="${guide}" target="_blank" rel="noopener">${guide}</a>, or type the 6 letters in the guide.`;
+          drawQr(guide);
+          document.title = `● Bridge ${onlineCode}`;
           show('online', 'ok', `Online as ${onlineCode} (${http ? 'HTTP requests' : 'WebSocket'}).`);
           log(`online code ${onlineCode}${f.reused ? ' (same as before)' : ''}`);
           if (lastState) send(online, lastState);
@@ -145,6 +166,7 @@
       online = null;
       if (event.code === 4409) { show('online', 'fail', 'Another bridge or Cameo took this online code.'); return stop(); }
       if (event.code === 4400) { onlineCode = ''; }
+      if (!http && !opened && ++wsFails >= 2 && goHttp('the WebSocket could not connect twice')) { openOnline(); return; }
       retryOnline(`closed ${event.code} ${event.reason || ''}`);
     };
   }
@@ -154,6 +176,24 @@
     log(`online relay: ${why}`);
     clearTimeout(timers.online);
     timers.online = setTimeout(openOnline, 3000);
+  }
+
+  /* The guide's address with the online code, as a QR code the phone scans (js/vendor/qrcode.js, MIT). */
+  function drawQr(text) {
+    const box = $('qr');
+    if (!window.qrcode) return;
+    const qr = window.qrcode(0, 'M');
+    qr.addData(text);
+    qr.make();
+    box.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 2, scalable: true });
+    box.hidden = false;
+  }
+
+  /* A page holding a Web Lock is not frozen by the browser when its tab is in the background. */
+  let releaseLock = null;
+  function holdLock() {
+    if (!navigator.locks || releaseLock) return;
+    navigator.locks.request('mbse-shepherd-bridge', () => new Promise((resolve) => { releaseLock = resolve; })).catch(() => {});
   }
 
   // ── Start, stop ─────────────────────────────────────────────────────────
@@ -166,6 +206,7 @@
     $('start').disabled = true;
     $('stop').disabled = false;
     log(`bridge ${LOCAL} (${localCode}) ⇄ ${ONLINE}`);
+    holdLock();
     openLocal();
     openOnline();
   }
@@ -179,11 +220,16 @@
     try { o && o.close(); } catch (e) { /* closed */ }
     $('start').disabled = false;
     $('stop').disabled = true;
+    if (releaseLock) { releaseLock(); releaseLock = null; }
+    document.title = 'Cameo browser bridge';
     log('stopped');
   }
 
+  /* Opened by Cameo (Open the browser bridge): ?code=<local code>&start=1[&transport=auto|ws|http]. */
   try { onlineCode = localStorage.getItem(ONLINE_CODE_KEY) || ''; } catch (e) { /* no storage */ }
   if (params.get('code')) $('local-code').value = params.get('code');
+  if (['auto', 'ws', 'http'].includes(params.get('transport'))) $('transport').value = params.get('transport');
+  if (params.get('start') === '1' && params.get('code')) setTimeout(start, 0);
   $('setup').addEventListener('submit', (e) => { e.preventDefault(); start(); });
   $('stop').addEventListener('click', stop);
   window.addEventListener('beforeunload', () => { if (running) stop(); });

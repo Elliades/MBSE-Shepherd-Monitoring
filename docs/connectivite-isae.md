@@ -18,6 +18,16 @@ classiques passent**, et Java n'utilise pas le proxy de Windows. Il reste à vé
 ci-dessous) : si le proxy demande une authentification (407, que Java ne sait pas fournir) ; s'il
 coupe les requêtes longues ; ce que voit le téléphone sur le Wi-Fi de l'ISAE et en 4G.
 
+## Résultat des tests sur place (18 octobre 2026, PC PCB07-5005-01)
+
+- Téléphone et Edge sur le PC : **tout passe** (HTTPS, WebSocket, SSE, requête de 20 s, lien Cameo en
+  HTTP et en WebSocket). Le premier test à la console (« OPEN » sans message) était trompeur.
+- Java (Cameo) et PowerShell : **TCP 443 et 80 vers le serveur expirent** (`Test-NetConnection` :
+  `TcpTestSucceeded : False`, ping OK). Aucun proxy Windows. Le PC ne laisse sortir que le navigateur.
+- Le pont navigateur (S5) **fonctionne**. C'est la solution retenue tant que la DSI n'ouvre pas la sortie
+  pour Cameo (S10). Le plugin 1.0.9 l'ouvre en un clic : Cameo en *This computer* (ou *Auto*, qui y
+  bascule seul), puis *Open the browser bridge* ; le téléphone scanne le QR code de la page.
+
 ## Les solutions
 
 | # | Solution | Ce qu'il faut | Pour | Contre | État |

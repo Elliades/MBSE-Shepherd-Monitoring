@@ -12,6 +12,9 @@
   .counters { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; font-size: .9rem; }
   .counters div { background: var(--bg); border-radius: 8px; padding: 8px; }
   .counters strong { display: block; font-size: 1.2rem; }
+  /* White behind the code in both themes: phones read dark-on-light best. */
+  .qr { background: #fff; border-radius: 8px; padding: 8px; width: max-content; margin: 8px 0; }
+  .qr svg { display: block; width: 180px; height: 180px; }
 </style>
 </head>
 <body>
@@ -28,15 +31,16 @@
     </label>
     <label>Link to the online relay
       <select id="transport">
-        <option value="http">HTTP requests (goes through school proxies)</option>
+        <option value="auto">Auto (WebSocket, else HTTP requests)</option>
         <option value="ws">WebSocket</option>
+        <option value="http">HTTP requests (goes through school proxies)</option>
       </select>
     </label>
     <div class="row">
       <button type="submit" class="btn primary" id="start">Start the bridge</button>
       <button type="button" class="btn" id="stop" disabled>Stop</button>
     </div>
-    <p class="hint">In Cameo: menu ISAE &gt; Relay pairing code, choose <em>This computer</em>. Keep this tab open during the session.</p>
+    <p class="hint">In Cameo: menu ISAE &gt; Relay pairing code, choose <em>This computer</em>, then <em>Open the browser bridge</em> (it fills this page in and starts it). Keep this tab open during the session.</p>
   </form>
 
   <section class="codes">
@@ -48,6 +52,7 @@
       <h2>Online code, for the phone</h2>
       <p class="big" id="online-code">– – – – – –</p>
       <div class="state"><span class="chip" id="online-chip">off</span><span class="hint" id="online-text">Not started.</span></div>
+      <div class="qr" id="qr" hidden></div>
       <p class="hint" id="guide-link"></p>
     </div>
   </section>
@@ -68,6 +73,7 @@
   </section>
 </main>
 <script src="../js/relay-http.js"></script>
+<script src="../js/vendor/qrcode.js"></script>
 <script src="bridge.js"></script>
 </body>
 </html>

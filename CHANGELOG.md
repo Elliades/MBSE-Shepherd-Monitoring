@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- **Cameo plugin 1.0.9: one click to the browser bridge.** At ISAE, the PCs let only the browser out (Java
+  and PowerShell time out on port 443). In *Local* mode the pairing window shows *Open the browser bridge*:
+  it opens `/bridge/` with the code filled in, started, link on Auto. When Auto mode falls back to the
+  relay inside Cameo, the notification says so. The bridge page shows a QR code of the guide for the
+  phone, keeps its online code across restarts, and holds a Web Lock so the browser does not freeze it.
+
 - **School networks.** The relay also works over plain HTTP requests (long poll + posts, at most 10
   posts/s; `relay/PROTOCOL-HTTP.md`) for proxies that let `https` through but hold WebSocket frames.
   The guide switches to it on its own (Cameo dialog > Relay > *Link to the relay*, or `?transport=http`).
