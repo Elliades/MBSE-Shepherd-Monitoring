@@ -21,6 +21,7 @@
   const KEY = 'mbse-shepherd:bridge-code';
   const RELAY_KEY = 'mbse-shepherd:relay';
   const STEPS = [500, 1000, 2000, 4000, 8000, 15000];
+  const LOCAL_RELAY = 'ws://127.0.0.1:8787';
   const DIAGRAMS = new Set(['ucd', 'ibd', 'sd', 'ad', 'stm', 'bdd', 'req']);
 
   let socket = null;
@@ -32,6 +33,8 @@
   let attempt = 0;
   let timer = null;
   let lastSeq = 0;
+  let onLocal = false;
+  let probing = false;
   let reqCounter = 0;
   const waiting = new Map();
   const listeners = [];
@@ -41,7 +44,7 @@
   /* "auto": the relay that is served next to the guide (/relay/), or the one of this computer when the
      guide itself runs on this computer. */
   function autoRelay() {
-    if (isLocalHost(location.hostname)) return 'ws://127.0.0.1:8787';
+    if (isLocalHost(location.hostname)) return LOCAL_RELAY;
     return `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/relay`;
   }
   function toBase(text) {
@@ -53,8 +56,11 @@
   function storedRelay() {
     try { return localStorage.getItem(RELAY_KEY) || ''; } catch (e) { return ''; }
   }
-  /* The address of the page (?relay=) wins, then the one typed in the Cameo dialog, then content/config.js. */
-  function relayBase() { return toBase(forcedRelay() || storedRelay() || CFG.relayUrl); }
+  /* The address of the page (?relay=) wins, then the one typed in the Cameo dialog, then content/config.js.
+     On "auto", a code that the online relay does not know is tried on the relay of this computer (the Cameo
+     "Local" mode): onLocal says that this is where we are now. */
+  function relayBase() { return onLocal ? LOCAL_RELAY : toBase(forcedRelay() || storedRelay() || CFG.relayUrl); }
+  function isAuto() { return !forcedRelay() && !storedRelay() && String(CFG.relayUrl || '').trim() === 'auto'; }
   function normalize(text) {
     const c = String(text || '').replace(/[\s-]/g, '').toUpperCase();
     return /^[A-Z]{6}$/.test(c) ? c : '';
@@ -66,7 +72,7 @@
     listeners.forEach((fn) => { try { fn(state()); } catch (e) { /* a listener must not break the others */ } });
   }
   function state() {
-    return { status, code, tried, error, problem, relay: relayBase(), relayDefault: toBase(CFG.relayUrl), relayCustom: !!storedRelay(), relayForced: !!forcedRelay() };
+    return { status, code, tried, error, problem, relay: relayBase(), relayDefault: toBase(CFG.relayUrl), relayCustom: !!storedRelay(), relayForced: !!forcedRelay(), relayLocal: onLocal };
   }
   function emit(frame) {
     frameListeners.forEach((fn) => { try { fn(frame); } catch (e) { /* a listener must not break the others */ } });
@@ -90,7 +96,7 @@
     let openedAt = 0;
     try { ws = new WebSocket(`${base}/v1/room/${code}${lastSeq ? `?lastSeq=${lastSeq}` : ''}`); } catch (e) { return retry(`Cannot open ${base}.`); }
     socket = ws;
-    ws.onopen = () => { openedAt = Date.now(); };
+    ws.onopen = () => { openedAt = Date.now(); probing = false; };
     ws.onmessage = (event) => {
       let frame;
       try { frame = JSON.parse(event.data); } catch (e) { return; }
@@ -131,7 +137,17 @@
       if (socket !== ws) return;
       socket = null;
       failWaiting('connection-lost');
-      if (event.code === 4400 || event.code === 4404) { code = ''; forget(); return set('off', 'This relay does not know that code. Check the code shown in Cameo, and that Cameo uses the same relay.', 'code'); }
+      if (event.code === 4400 || event.code === 4404) {
+        /* Not on the online relay: Cameo may be in Local mode, so look on this computer before giving up. */
+        if (isAuto() && !onLocal && autoRelay() !== LOCAL_RELAY) { onLocal = true; probing = true; lastSeq = 0; attempt = 0; return open(); }
+        return giveUp('This relay does not know that code. Check the code shown in Cameo, and that Cameo uses the same relay.');
+      }
+      /* The relay of this computer does not answer: either no Cameo in Local mode here, or the browser forbids it. */
+      if (probing && !openedAt) {
+        return giveUp(location.protocol === 'https:'
+          ? 'No relay answers for that code. If Cameo is in Local mode, this browser may block a secure page from reaching this computer (Safari does): use Chrome or Firefox, or open the guide on this computer.'
+          : 'The online relay does not know that code, and no relay runs on this computer. Check the code shown in Cameo.');
+      }
       if (event.code === 4410) { code = ''; forget(); return set('off', 'The session ended. Get a new code from Cameo.', 'code'); }
       /* Start the waiting over only after a connection that held; one that drops at once must not retry at once. */
       if (openedAt && Date.now() - openedAt > 30000) attempt = 0;
@@ -145,6 +161,7 @@
     set('waiting', `${why || 'Connection lost.'} Retrying...`, 'relay');
     timer = setTimeout(open, base * (0.8 + Math.random() * 0.4));
   }
+  function giveUp(message) { code = ''; onLocal = false; probing = false; forget(); set('off', message, 'code'); }
   function forget() { try { localStorage.removeItem(KEY); } catch (e) { /* nothing stored */ } }
 
   function connect(text) {
@@ -153,6 +170,8 @@
     disconnect(true);
     code = c;
     tried = c;
+    onLocal = false;
+    probing = false;
     lastSeq = 0;
     attempt = 0;
     try { localStorage.setItem(KEY, c); } catch (e) { /* private mode */ }
@@ -166,6 +185,8 @@
     if (ws) ws.close();
     failWaiting('disconnected');
     code = '';
+    onLocal = false;
+    probing = false;
     forget();
     if (!keepError) set('off');
   }
@@ -184,6 +205,8 @@
       socket = null;
       if (ws) ws.close();
       failWaiting('relay-changed');
+      onLocal = false;
+      probing = false;
       lastSeq = 0;
       attempt = 0;
       open();

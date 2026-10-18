@@ -69,14 +69,29 @@ the **same** relay:
 - **Guide:** the **Cameo** button opens a dialog with the pairing code, the state of the link (and why
   it fails) and the relay address; the address can be changed there and is kept in the browser. The
   default is `relayUrl` in `content/config.js`. `"auto"` (default) means `wss://<site>/relay` when the
-  guide is online, and `ws://127.0.0.1:8787` when it runs on your computer. `?relay=wss://host/path`
-  overrides it for one visit.
-- **Cameo:** Options > Environment > *Relay bridge* > **Relay address**. Online it is
-  `wss://shepherd.chaos-art.fr/relay`; the default `ws://127.0.0.1:8787` is a relay on the same computer
-  as Cameo. Then **OMF > Relay pairing code** shows the code to type in the guide.
+  guide is online (`ws://<site>/relay` on a plain `http` page), and `ws://127.0.0.1:8787` when it runs on
+  your computer. With `"auto"`, a code that the online relay does not know is then tried on
+  `ws://127.0.0.1:8787` (Cameo in *Local* mode): the student only types the code.
+  `?relay=wss://host/path` overrides it for one visit and turns that fallback off.
+- **Cameo:** OMF > Relay pairing code has three modes. **Auto** (default) uses the online relay
+  `wss://shepherd.chaos-art.fr/relay` and, if it cannot be reached 3 times in a row, the relay inside Cameo
+  (`ws://127.0.0.1:8787`). **Online** and **This computer** force one of them. The address is also in
+  Options > Environment > *Relay bridge*. If the secure connection is refused by the Java of Cameo
+  (certificate not trusted, TLS-inspecting proxy), the plugin tries `ws://` on the same host after two
+  failures (option *Fall back to ws://*; the pairing window warns that the link is not encrypted).
+  The code is shown in the same window.
 - **Deploy:** `docker compose up` starts the guide (`web`) and the relay (`relay`); nginx forwards
   `/relay/` to the relay, so there is one address and one `https` (a secure page cannot open a plain
-  `ws://` socket to another machine).
+  `ws://` socket to another machine). TLS is ended in front of nginx (the Caddy proxy of the server).
+  For the `ws://` fallback of the plugin, that proxy must also serve `http://<site>/relay/*` without
+  redirecting to https.
+
+| Guide page | Cameo | Link |
+|---|---|---|
+| `https://` online | Auto / Online | `wss://<site>/relay` |
+| `https://` online | This computer | `ws://127.0.0.1:8787` (Chrome and Firefox; Safari blocks it) |
+| `http://localhost` | any | `ws://127.0.0.1:8787` |
+| `http://<lan host>` | Auto / Online | `ws://<host>/relay` |
 
 If the Cameo button keeps saying "Cannot reach the relay at ...", the address in the message is the one
 the guide is trying: it is not the relay Cameo is connected to.

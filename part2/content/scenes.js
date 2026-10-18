@@ -32,7 +32,7 @@ window.COURSE = {
     { id: "T4", code: "T4", title: "Functional architecture", blurb: "Functions, state machine, activities, simulation.", phase: "fn" },
     { id: "T5", code: "T5", title: "Physical architecture", blurb: "Subsystems for the new functions.", phase: "ph" },
     { id: "T6", code: "T6", title: "Allocation", blurb: "Give each new function to a subsystem.", phase: "ph" },
-    { id: "end", code: "✓", title: "Hand in", blurb: "Show your model, FAQ, your answers." }
+    { id: "end", code: "✓", title: "Hand in", blurb: "Show your model, your answers." }
   ],
 
   scenes: [
@@ -748,12 +748,6 @@ window.COURSE = {
       ]
     },
     {
-      id: "faq", ch: "end", kind: "read",
-      title: "Frequently asked questions",
-      lead: "About the model and the tool, not about the answers.",
-      blocks: [{ faq: true }]
-    },
-    {
       id: "finish", ch: "end", kind: "answer",
       title: "Seminar complete",
       lead: "Your written answers, and the questions you went through.",
@@ -761,33 +755,6 @@ window.COURSE = {
         { widget: "marks" },
         { answers: true }
       ]
-    }
-  ],
-
-  faq: [
-    {
-      q: "The package numbers are not the same as in Part 1.",
-      a: "The number of a package (for example 1.A) may change between the models of Part 1 and of the marked seminar. Its name is always the same, for example **Use Cases and Scenarios**: look for the name."
-    },
-    {
-      q: "Where do the new signals go?",
-      a: "New physical signals go in the package **B - Functional Data** of **2 - Functional Analysis** (Question 1.1)."
-    },
-    {
-      q: "Can I put a signal on a message to self?",
-      a: "No. Signals describe an exchange, so they only go on messages between two lifelines. A message to self represents a behavior: it has no signal."
-    },
-    {
-      q: "A new port appeared when I connected two parts. Is that normal?",
-      a: "Yes. When you connect an existing port to a target part, Cameo (MagicDraw) automatically creates on the target a conjugated port typed by the same interface."
-    },
-    {
-      q: "What is the difference between a functional flow and a physical flow?",
-      a: "The functional flow is the business concept and focuses on the goal (stop signal, energy, insecticide product). The physical flow is the solution chosen to achieve it (a 5 mV electrical signal, a 240 V supply…).\n\nFrom a functional point of view, the Flight Plan is a list of positions, but we know neither the format, nor the encoding, nor theoretically the means of communication.\n\nThe physical flow is characterized data: we are talking about a 12 V, 100 mA supply at a given frequency, or a signal transmitted by UDP frame every 500 ms."
-    },
-    {
-      q: "How to insert a breakpoint for the simulation?",
-      a: "Right-click on the function in the diagram, then {{Simulation > Add Breakpoint}}."
     }
   ],
 

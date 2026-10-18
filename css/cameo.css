@@ -1,4 +1,4 @@
-/* ───────── "Connect to Cameo" dialog (js/cameo-dialog.js) ───────── */
+﻿/* ───────── "Connect to Cameo" dialog (js/cameo-dialog.js) ───────── */
 .cd { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.1rem; }
 
 .cd-status {
@@ -69,3 +69,7 @@
 .cd-relay-body .cd-note { margin: 0; }
 
 @media (prefers-reduced-motion: reduce) { .cd-status[data-tone="warn"] .cd-dot { animation: none; } }
+
+.cd-local { display: block; margin: 0.4rem 0 0.4rem auto; background: none; border: 0; padding: 0.1rem 0.2rem; font: inherit; font-size: 0.8rem; color: var(--ink-2); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.cd-local:hover { color: var(--ink); }
+.cd-local:disabled { opacity: 0.4; cursor: default; }

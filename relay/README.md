@@ -10,6 +10,9 @@ starts the guide and its relay together. Copy it again from the monitoring proje
 In the compose stack the relay has no port of its own: nginx forwards `/relay/` to it (see
 `nginx/default.conf`), so the guide and the relay share one address, and one `https`.
 
+The relay itself speaks plain `ws`. TLS (`wss`) is ended in front of it, by nginx in the stack and by the
+Caddy proxy of the server; nothing to configure here.
+
 Run it alone, to try things by hand:
 
 ```bash

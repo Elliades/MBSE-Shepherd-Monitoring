@@ -5,3 +5,6 @@ README.md
 docker-compose.yml
 Dockerfile
 .dockerignore
+# Corrections of the exercises stay off the public site (graded seminar).
+**/*orrection*
+**/*.bak

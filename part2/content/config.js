@@ -25,8 +25,9 @@ window.COURSE_CONFIG = {
   simPreview: false,
 
   /* Address of the relay that links this guide to the Cameo of the student (wss://host).
-     "auto" = the relay served next to the guide (wss://<this site>/relay), or ws://127.0.0.1:8787 when
-     the guide runs on this computer. Same relay, same pairing code as Part 1. */
+     "auto" = the relay served next to the guide (wss://<this site>/relay), then the relay inside Cameo
+     (ws://127.0.0.1:8787) for a code the online one does not know; on this computer, ws://127.0.0.1:8787.
+     Same relay, same pairing code as Part 1. */
   relayUrl: "auto",
 
   /* Shown in the model-link sheet under the "Open in Cameo" button. */

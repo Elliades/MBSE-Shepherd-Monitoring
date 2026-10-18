@@ -15,8 +15,9 @@ window.COURSE_CONFIG = {
   storageKey: "mbse-shepherd:part1:v1",
 
   /* Address of the relay that links this guide to the Cameo of the student (wss://host).
-     "auto" = the relay served next to the guide (wss://<this site>/relay), or ws://127.0.0.1:8787 when
-     the guide runs on this computer. Empty = the Cameo button cannot connect.
+     "auto" = the relay served next to the guide (wss://<this site>/relay, ws:// on a plain http page), then
+     the relay inside Cameo (ws://127.0.0.1:8787) for a code the online one does not know; on this
+     computer, ws://127.0.0.1:8787. Empty = the Cameo button cannot connect.
      Can be forced with ?relay=wss://host. Cameo must be set to the same relay. */
   relayUrl: "auto",
 

@@ -770,7 +770,7 @@ body:not(.author) .ph, body:not(.author) .author-only { display: none; }
 .ans .empty { color: var(--ink-3); font-style: italic; }
 .ans .why { color: var(--ink-2); }
 
-/* ───────── reveal, faq, tabs ───────── */
+/* ───────── reveal, tabs ───────── */
 .reveal { max-width: 40rem; }
 .reveal-body { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.4s var(--ease); }
 .reveal-body > div { overflow: hidden; }
@@ -780,19 +780,6 @@ body:not(.author) .ph, body:not(.author) .author-only { display: none; }
 .reveal-body .tip-body p { margin: 0; padding: 0; background: none; }
 .tip-toggle .tip-body .copyfield { background: var(--surface); }
 
-.faq { display: grid; gap: 0.5rem; max-width: 44rem; }
-.faq-item { border: 1.5px solid var(--line); border-radius: 10px; background: var(--surface); overflow: hidden; }
-.faq-q {
-  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0.8rem; align-items: center; width: 100%;
-  padding: 0.9rem 1rem; border: 0; background: transparent; text-align: left; font-weight: 700; line-height: 1.35;
-}
-.faq-q svg { width: 1.3rem; height: 1.3rem; transition: transform 0.3s var(--ease); color: var(--sky); }
-.faq-item.open .faq-q svg { transform: rotate(45deg); }
-.faq-a { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.4s var(--ease); }
-.faq-a > div { overflow: hidden; }
-.faq-item.open .faq-a { grid-template-rows: 1fr; }
-.faq-a p { margin: 0 1rem 0.8rem; color: var(--ink-2); }
-.faq-a p:last-child { margin-bottom: 1.1rem; }
 
 .tabs { display: grid; gap: 0.8rem; }
 .tablist { display: flex; flex-wrap: wrap; gap: 0.5rem; }
@@ -1354,3 +1341,8 @@ body:not(.author) .ph, body:not(.author) .author-only { display: none; }
 #cameo-btn .dot { width: .6rem; height: .6rem; border-radius: 50%; background: var(--ink-3); flex: none; }
 #cameo-btn[data-status="connected"] .dot { background: #2e9d57; }
 #cameo-btn[data-status="connecting"] .dot, #cameo-btn[data-status="waiting"] .dot { background: #d4a017; }
+
+/* theme button: show the icon of the theme you would switch to */
+#theme-btn .i-sun { display: none; }
+#theme-btn[data-theme="dark"] .i-sun { display: block; }
+#theme-btn[data-theme="dark"] .i-moon { display: none; }

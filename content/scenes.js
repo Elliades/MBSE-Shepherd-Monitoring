@@ -12,7 +12,7 @@
    from the handout), "try" (interactive, in the browser).
 
    Blocks: p, h, steps, list, figure, video, placeholder, callout, quote, path, copy, download,
-   cards, widget, question, reveal, tip, faq, notes, answers, tabs, fromAnswer.
+   cards, widget, question, reveal, tip, notes, answers, tabs, fromAnswer.
    A tip is an optional toggle around p, list and copy blocks; its steps are not counted for "Done".
    A placeholder marks something missing; its to-do list is only shown in author mode.
 
@@ -193,7 +193,7 @@ window.COURSE = {
       title: "Install the OMF-ISAE plugin",
       lead: "The exercise needs the OMF-ISAE plugin. Install it from the plugin manager.",
       blocks: [
-        { download: { label: "Plugin to install", file: "com.elliades.isae.mbseShepherd_1.0.6.zip", src: "assets/plugins/com.elliades.isae.mbseShepherd_1.0.6.zip", size: "18 MB" } },
+        { download: { label: "Plugin to install", file: "com.elliades.isae.mbseShepherd_1.0.7.zip", src: "assets/plugins/com.elliades.isae.mbseShepherd_1.0.7.zip", size: "18 MB" } },
         {
           steps: [
             "In Cameo, choose {{Help > Resource & Plugin Manager}}, then click {{Import}}.",
@@ -1611,32 +1611,13 @@ window.COURSE = {
     }
   ],
 
-  faq: [
-    {
-      q: "In the sequence diagram exercise, how do you use the messages to name functions?",
-      a: "In this seminar we do not exploit the traceability between the messages in the Sequence Diagram and the names of the functions in the Activity Diagram. It is up to the user to maintain consistency between these elements."
-    },
-    {
-      q: "The state machine exercise uses FlightPlan (2.B Functional Data) and the sequence diagram exercise used Wifi_FlightPlan (1.C Physical Flows). What is the difference?",
-      a: "The functional flow is the business concept and focuses on the goal (stop signal, energy, insecticide product). The physical flow is the solution chosen to achieve it (electric current 5 mV, electric current 240 V…).\n\nFrom a functional point of view, the Flight Plan is a list of positions, but we know neither the format, nor the encoding, nor theoretically the means of communication.\n\nThe physical flow is characterized data: we are talking about a 12 volt, 100 mA voltage with a given frequency, or a signal transmitted by UDP frame every 500 ms."
-    },
-    {
-      q: "How to insert a breakpoint for the simulation?",
-      a: "Right-click on the function in the diagram, then {{Simulation > Add Breakpoint}}."
-    },
-    {
-      q: "Is the context diagram a SysML diagram?",
-      a: "The *block diagram* is used to represent the operational context of the system. We then speak of a *context diagram*, which uses the SysML notation.\n\nA block diagram can be used to outline architecture in a context diagram, to structure functions, or to describe a design. In the 3 cases we use a SysML diagram without creating, syntactically speaking, a deviation from SysML, which remains a notation."
-    }
-  ],
-
   /* Things noticed while converting the Word handout. Shown on the Authoring to-do board. */
   authorNotes: [
     { scene: "nine-diagrams", text: "The handout announces 4 diagrams (use case, sequence, activity, internal block), but chapter C is built on a State Machine diagram. The tile is tagged “also in chapter C”. Confirm the wording." },
     { scene: "a-use-cases", text: "Package letter of “Use Cases and Scenarios”: the handout says “A –” twice and “C –” once, and “1-A-Actors”. The guide uses “C - Use Cases and Scenarios”, which matches the screenshot (the package sits right before “D - Physical Interfaces”). Confirm, then fix it once in content/model-links.js." },
     { scene: "load-model", text: "File names: the handout writes “.mzip” and “UAV*.mpdzip”. The guide uses .mdzip everywhere. Check the exact names on LMS." },
     { scene: "a-create-sd", text: "Name of the sequence diagram: the steps ask for “[SD1] Loading Flight Plan success”, while the figure and Question 2 say “[SD 1] Loading the flight plan”. Pick one." },
-    { scene: "a-messages", text: "The handout says “drag and drop the physical signals present in 2 – Functional Analysis / B – Functional Data”, and the FAQ says this exercise used Wifi_FlightPlan (1.C Physical Flows). The figure also uses two notification signals from the “Patrolling” package. The guide says “signals from Functional Data / Deployement”. Confirm which signals students must use." },
+    { scene: "a-messages", text: "The handout says “drag and drop the physical signals present in 2 – Functional Analysis / B – Functional Data”, and the exercise used Wifi_FlightPlan (1.C Physical Flows). The figure also uses two notification signals from the “Patrolling” package. The guide says “signals from Functional Data / Deployement”. Confirm which signals students must use." },
     { scene: "c-goal", text: "The goal line of C.1 lists the signal “Flight plan check successful”; the steps use “FlightPlan Check Failed”. The guide follows the steps." },
     { scene: "c-state", text: "C.1 says “right-click” to drop the new state and to end a transition on its target state. Confirm it is not a plain click." },
     { scene: "c-run", text: "C.2 starts with “click the Run button in the toolbar above”, then step 2 says “Click on simulate, then … Run”. Both were merged into one step. Check the wording against the tool." },
@@ -1644,7 +1625,6 @@ window.COURSE = {
     { scene: "e-allocate", text: "Chapter E speaks of “the 3 functions created previously”, while Question 2 asks for 4 new functions (plus “Parameter Mission”). Confirm the number." },
     { scene: "d-spec", text: "The handout's specification ends with “In parallel, we also want to notify the Control Operator”. The guide drops that sentence here and brings the parallel part in later (d-notify): the drone sends a “FlightPlan Correct” signal to the ground station at the same time as “Ready for mission”. Check that the signal FlightPlan Correct exists in Functional Data / Deployement." },
     { scene: "d-orchestrate", text: "Function names Read FlightPlan, Check FlightPlan and Send Mission Ready are written from the teacher's shorthand (read FP, check FP, send mission ready). Check them against the model and the expected answer to Question 2." },
-    { scene: "faq", text: "The FAQ referred to “Figure 3” and to sections “3.A / 3.B”, which no longer exist in the handout. The questions were reworded with chapter names. “1.C Physical Flows” is kept as written: check where that package really is." },
     { scene: "mission-brief", text: "The mission picture was redrawn as an animation. The original image is kept in assets/img/mission-original.png." },
     { scene: "m-interface-block", text: "Package of the interface block: written “D- Physical Interface” in the request, “D - Physical Interfaces” in an earlier screenshot. The guide places it under 1 - Operational Analysis (id _18_5_1_150503da_1505402151080_135734_22144). Check name and parent in the model, then fix “if-pkg” in content/model-links.js." },
     { scene: "m-ports", text: "Palette button to add a port: the guide says {{Port}}. Check the exact label in the IBD palette (Port, Proxy Port, Full Port) and whether the model's ports are proxy ports." },

@@ -15,6 +15,7 @@
   let root = null;
   let pairKey = '';
   let relayTouched = false;
+  const LOCAL_RELAY = 'ws://127.0.0.1:8787';
 
   /* The headline and the sentence under it, from the state of the link. */
   function describe(st) {
@@ -47,6 +48,7 @@
     return `<div class="cd">
       <div class="cd-status" id="cd-status" role="status" aria-live="polite"><i class="cd-dot"></i><div><strong></strong><p></p></div></div>
       <div id="cd-pair"></div>
+      <button type="button" class="cd-local" data-cd-local aria-pressed="false"></button>
       <details class="cd-relay" id="cd-relay">
         <summary><span>Relay</span><code id="cd-relay-now"></code></summary>
         <div class="cd-relay-body">
@@ -94,6 +96,12 @@
     }
 
     const details = root.querySelector('#cd-relay');
+    const lb = root.querySelector('[data-cd-local]');
+    const isLocal = st.relay === LOCAL_RELAY;
+    lb.setAttribute('aria-pressed', String(isLocal));
+    lb.disabled = st.relayForced;
+    lb.textContent = isLocal ? 'Switch to default' : 'Switch to local';
+    lb.title = isLocal ? (st.relayDefault ? `Use ${st.relayDefault}` : 'Use the default relay') : `Use ${LOCAL_RELAY}`;
     root.querySelector('#cd-relay-now').textContent = st.relay || 'not set';
     root.querySelector('#cd-relay-copy').textContent = st.relay || '';
     root.querySelector('#cd-copy-btn').dataset.copy = st.relay || '';
@@ -104,7 +112,8 @@
     root.querySelector('[data-cd-default]').hidden = !st.relayCustom || st.relayForced;
     root.querySelector('#cd-relay-note').textContent = st.relayForced
       ? 'Set by the address of this page (?relay=). Remove it from the address bar to change it here.'
-      : (st.relayCustom ? 'Kept in this browser.' : `Empty = the default${st.relayDefault ? ` (${st.relayDefault})` : ''}.`);
+      : (st.relayLocal ? 'Your code was not on the online relay: using the one inside your Cameo (Local mode).'
+        : (st.relayCustom ? 'Kept in this browser.' : `Empty = the default${st.relayDefault ? ` (${st.relayDefault})` : ''}.`));
     if (!relayTouched && (st.problem === 'relay' || st.problem === 'config' || st.problem === 'cameo')) details.open = true;
   }
 
@@ -137,6 +146,7 @@
         });
         el.addEventListener('click', (e) => {
           if (e.target.closest('[data-cd-default]')) { B.setRelay(''); el.querySelector('#cd-relay-input').value = ''; refresh(); }
+          if (e.target.closest('[data-cd-local]')) { B.setRelay(B.state().relay === LOCAL_RELAY && B.state().relayCustom ? '' : LOCAL_RELAY); refresh(); }
         });
         el.querySelector('#cd-relay').addEventListener('toggle', () => { relayTouched = true; });
         refresh(B.state());

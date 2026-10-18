@@ -419,13 +419,6 @@
     return L.join('\n');
   }
 
-  function faqHTML() {
-    return '<div class="faq">' + COURSE.faq.map((f, i) =>
-      `<div class="faq-item"><button type="button" class="faq-q" aria-expanded="false" aria-controls="faq-a${i}"><span>${inline(f.q)}</span>${ic('plus')}</button>
-       <div class="faq-a" id="faq-a${i}"><div>${f.a.split('\n\n').map((p) => `<p>${inline(p)}</p>`).join('')}</div></div></div>`
-    ).join('') + '</div>';
-  }
-
   function renderBlock(b, scene, path) {
     if (b.p) return `<p class="b-p">${inline(b.p)}</p>`;
     if (b.h) return `<h2 class="b-h">${inline(b.h)}</h2>`;
@@ -496,7 +489,6 @@
     if (b.solution) {
       return `<div class="reveal solution"><button type="button" class="solution-cover" data-reveal aria-expanded="false">${ic('eyeoff', 'eye-closed')}${ic('eye', 'eye-open')}<span class="when-closed">${esc(b.solution.label)}</span><span class="when-open">Hide the solution</span></button><div class="reveal-body"><div>${(b.solution.blocks || []).map((x, xi) => renderBlock(x, scene, path + '.solution.' + xi)).join('')}</div></div></div>`;
     }
-    if (b.faq) return faqHTML();
     if (b.notes) {
       const v = getPath(S.answers, 'notes.' + b.notes.id) || '';
       return `<div class="notes field"><label for="notes-${b.notes.id}">${esc(b.notes.label)}</label><textarea id="notes-${b.notes.id}" data-ans="notes.${b.notes.id}" placeholder="${esc(b.notes.hint || '')}" style="min-height:9rem">${esc(v)}</textarea><span class="saved" aria-hidden="true">Saved on this device</span></div>`;
@@ -754,9 +746,6 @@
     const cur = $('[aria-current="true"]', el);
     if (cur) cur.scrollIntoView({ block: 'center' });
   }
-  function openFaq() {
-    openOverlay({ kind: 'dialog', wide: true, label: CFG.part, title: 'Frequently asked questions', body: faqHTML() });
-  }
   function openBoard() {
     const unset = Object.keys(LINKS).filter((k) => !LINKS[k].url && !LINKS[k].made);
     const total = Object.keys(LINKS).filter((k) => !LINKS[k].made).length;
@@ -840,6 +829,13 @@
     if (S.theme) document.documentElement.dataset.theme = S.theme;
     else delete document.documentElement.dataset.theme;
     document.body.classList.toggle('author', !!S.author);
+    const tb = document.getElementById('theme-btn');
+    if (tb) { const dark = effectiveTheme() === 'dark'; tb.setAttribute('aria-pressed', String(dark)); tb.setAttribute('aria-label', dark ? 'Switch to light theme' : 'Switch to dark theme'); tb.dataset.theme = dark ? 'dark' : 'light'; }
+  }
+  function toggleTheme() {
+    S.theme = effectiveTheme() === 'dark' ? 'light' : 'dark';
+    save();
+    applySettings();
   }
 
   /* ───────── events ───────── */
@@ -906,7 +902,7 @@
       else if (a === 'back') step(-1);
       else if (a === 'home') go(scenes[0].id);
       else if (a === 'toc') openToc();
-      else if (a === 'faq') openFaq();
+      else if (a === 'theme') toggleTheme();
       else if (a === 'board') openBoard();
       else if (a === 'print') window.print();
       else if (a === 'copy-answers') copyText(answersText(), act);
@@ -928,13 +924,6 @@
       return;
     }
 
-    const faq = t.closest('.faq-q');
-    if (faq) {
-      const item = faq.parentElement;
-      const open = item.classList.toggle('open');
-      faq.setAttribute('aria-expanded', String(open));
-      return;
-    }
     const rev = t.closest('[data-reveal]');
     if (rev) {
       const open = rev.parentElement.classList.toggle('open');

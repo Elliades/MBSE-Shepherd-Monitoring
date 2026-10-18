@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- **ws and wss.** The guide reaches the relay over `wss://` (online) or `ws://` (this computer, plain
+  `http` pages). With `relayUrl: "auto"`, a code that the online relay does not know is tried on
+  `ws://127.0.0.1:8787`, so a student with Cameo in *Local* mode only types the code. A clear message
+  tells when the browser blocks that local link (Safari from an `https` page).
+- **Cameo plugin (next build).** New *Auto* relay mode (online, then inside Cameo after 3 failures) and a
+  `ws://` fallback when the Java of Cameo refuses the TLS certificate (option *Fall back to ws://*).
+
 ## 1.0.0
 
 First release of **MBSE Shepherd**: two interactive guides for the Cameo Systems Modeler (MagicDraw)
