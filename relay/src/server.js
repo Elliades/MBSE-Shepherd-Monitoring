@@ -13,6 +13,7 @@ const relay = createRelay({
   log: (line) => console.log(`[relay] ${new Date().toISOString()} ${line}`),
   bufferSignals: numberFromEnv('RELAY_BUFFER_SIGNALS', DEFAULTS.bufferSignals),
   roomTtlMs: numberFromEnv('RELAY_ROOM_TTL_HOURS', DEFAULTS.roomTtlMs / 3_600_000) * 3_600_000,
+  diagDir: process.env.DIAG_DIR ?? '',
 })
 
 const host = process.env.HOST ?? '0.0.0.0'

@@ -12,3 +12,9 @@ services:
     build: ./relay
     image: mbse-shepherd-relay:latest
     restart: unless-stopped
+    # The network-check reports (diag/) survive a redeploy.
+    volumes:
+      - relay-data:/data
+
+volumes:
+  relay-data:

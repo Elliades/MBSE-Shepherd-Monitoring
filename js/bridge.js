@@ -2,7 +2,8 @@
    MBSE Shepard monitoring project). The student types the 6-letter code shown by the plugin
    (Cameo menu OMF > Relay pairing code). Then "Open in Cameo" selects the element in Cameo.
 
-   window.Bridge.state()          { status, code, error, problem, relay, relayDefault, relayCustom, relayForced }
+   window.Bridge.state()          { status, code, error, problem, relay, relayDefault, relayCustom, relayForced,
+                                    transport ('ws' | 'http'), transportPref, transportWhy (why it fell back to HTTP) }
                                   problem: '' | 'relay' (unreachable) | 'cameo' (not online) | 'code' | 'config'  status: off | connecting | connected | waiting
    window.Bridge.connect(code)    join the room of that code
    window.Bridge.disconnect()     leave and forget the code
@@ -11,6 +12,7 @@
                                   Rejects with Error('not-found') | Error('ambiguous') | another message
    window.Bridge.onChange(fn)     called with the state on every change
    window.Bridge.setRelay(addr)   use another relay address ('' = back to the default): { ok, error }
+   window.Bridge.setTransport(t)  how to reach the relay: 'auto' (WebSocket, else HTTP), 'ws' or 'http' (js/relay-http.js)
    window.Bridge.onFrame(fn)      called with what Cameo sends on its own, for the simulation panel:
                                   { kind: 'signal', signal, id, seq } a signal of the simulation
                                   { kind: 'state', status, step }     where the simulation is now
@@ -21,6 +23,11 @@
   const KEY = 'mbse-shepherd:bridge-code';
   const RELAY_KEY = 'mbse-shepherd:relay';
   const STEPS = [500, 1000, 2000, 4000, 8000, 15000];
+  const TRANSPORT_KEY = 'mbse-shepherd:transport';
+  /* "auto": a WebSocket that opens but brings nothing in that time, or that fails to open twice, is
+     replaced by the HTTP link (js/relay-http.js) for as long as the page stays open. */
+  const HELLO_TIMEOUT_MS = 6000;
+  const WS_FAILS_BEFORE_HTTP = 2;
   const LOCAL_RELAY = 'ws://127.0.0.1:8787';
   const DIAGRAMS = new Set(['ucd', 'ibd', 'sd', 'ad', 'stm', 'bdd', 'req']);
 
@@ -35,6 +42,10 @@
   let lastSeq = 0;
   let onLocal = false;
   let probing = false;
+  let viaHttp = false;
+  let wsFails = 0;
+  let fellBack = '';
+  let helloTimer = null;
   let reqCounter = 0;
   const waiting = new Map();
   const listeners = [];
@@ -71,8 +82,29 @@
     problem = message ? (kind || '') : '';
     listeners.forEach((fn) => { try { fn(state()); } catch (e) { /* a listener must not break the others */ } });
   }
+  /* How to reach the relay: 'auto' (WebSocket, else HTTP), 'ws' or 'http'. ?transport= wins, then the
+     choice made in the Cameo dialog, then content/config.js (relayTransport). */
+  function transportPref() {
+    let stored = '';
+    try { stored = localStorage.getItem(TRANSPORT_KEY) || ''; } catch (e) { /* no storage */ }
+    const raw = new URLSearchParams(location.search).get('transport') || stored || CFG.relayTransport || 'auto';
+    return ['ws', 'http'].includes(raw) ? raw : 'auto';
+  }
+  /* The relay inside Cameo (port 8787 of this computer) speaks WebSocket only; the Node relay has the HTTP link. */
+  function httpPossible(base) {
+    const u = new URL(base.replace(/^ws/, 'http'));
+    return !!window.RelayHttpSocket && !(isLocalHost(u.hostname) && u.port === '8787');
+  }
+  function usesHttp(base) {
+    const pref = transportPref();
+    return httpPossible(base) && (pref === 'http' || (pref === 'auto' && viaHttp));
+  }
   function state() {
-    return { status, code, tried, error, problem, relay: relayBase(), relayDefault: toBase(CFG.relayUrl), relayCustom: !!storedRelay(), relayForced: !!forcedRelay(), relayLocal: onLocal };
+    const base = relayBase();
+    return {
+      status, code, tried, error, problem, relay: base, relayDefault: toBase(CFG.relayUrl), relayCustom: !!storedRelay(), relayForced: !!forcedRelay(), relayLocal: onLocal,
+      transport: base && usesHttp(base) ? 'http' : 'ws', transportPref: transportPref(), transportWhy: fellBack,
+    };
   }
   function emit(frame) {
     frameListeners.forEach((fn) => { try { fn(frame); } catch (e) { /* a listener must not break the others */ } });
@@ -94,15 +126,29 @@
     set('connecting');
     let ws;
     let openedAt = 0;
-    try { ws = new WebSocket(`${base}/v1/room/${code}${lastSeq ? `?lastSeq=${lastSeq}` : ''}`); } catch (e) { return retry(`Cannot open ${base}.`); }
+    const http = usesHttp(base);
+    const url = `${base}/v1/room/${code}${lastSeq ? `?lastSeq=${lastSeq}` : ''}`;
+    try { ws = http ? new window.RelayHttpSocket(url) : new WebSocket(url); } catch (e) { return retry(`Cannot open ${base}.`); }
     socket = ws;
-    ws.onopen = () => { openedAt = Date.now(); probing = false; };
+    let greeted = false;
+    ws.onopen = () => {
+      openedAt = Date.now();
+      probing = false;
+      /* A proxy may accept the WebSocket and then hold every frame: nothing ever comes in. */
+      if (!http && transportPref() === 'auto' && httpPossible(base)) {
+        clearTimeout(helloTimer);
+        helloTimer = setTimeout(() => { if (socket === ws && !greeted) fallBackToHttp('The WebSocket opened but nothing came through it (a proxy?)'); }, HELLO_TIMEOUT_MS);
+      }
+    };
     ws.onmessage = (event) => {
       let frame;
       try { frame = JSON.parse(event.data); } catch (e) { return; }
       if (socket !== ws) return;
       if (frame.type === 'info') {
         if (frame.event === 'hello') {
+          greeted = true;
+          clearTimeout(helloTimer);
+          if (!http) wsFails = 0;
           set(frame.pluginOnline ? 'connected' : 'waiting', frame.pluginOnline ? '' : 'Cameo is not connected to the relay yet.', 'cameo');
           emit({ kind: 'hello', resumed: lastSeq > 0 });
         }
@@ -149,6 +195,10 @@
           : 'The online relay does not know that code, and no relay runs on this computer. Check the code shown in Cameo.');
       }
       if (event.code === 4410) { code = ''; forget(); return set('off', 'The session ended. Get a new code from Cameo.', 'code'); }
+      /* A WebSocket that never opens, twice in a row: try the same relay over plain HTTP requests. */
+      if (!http && !openedAt && transportPref() === 'auto' && httpPossible(base) && ++wsFails >= WS_FAILS_BEFORE_HTTP) {
+        return fallBackToHttp(`The WebSocket could not connect (${event.code || 'no code'})`);
+      }
       /* Start the waiting over only after a connection that held; one that drops at once must not retry at once. */
       if (openedAt && Date.now() - openedAt > 30000) attempt = 0;
       retry(openedAt ? 'The connection to the relay was lost.' : `Cannot reach the relay at ${base}.`);
@@ -160,6 +210,37 @@
     attempt += 1;
     set('waiting', `${why || 'Connection lost.'} Retrying...`, 'relay');
     timer = setTimeout(open, base * (0.8 + Math.random() * 0.4));
+  }
+  function fallBackToHttp(why) {
+    const ws = socket;
+    socket = null;
+    clearTimeout(helloTimer);
+    if (ws) ws.close();
+    failWaiting('connection-lost');
+    viaHttp = true;
+    fellBack = why;
+    attempt = 0;
+    open();
+  }
+  /* 'auto' | 'ws' | 'http', kept in this browser ('' = back to the default). Reconnects when a code is set. */
+  function setTransport(pref) {
+    try {
+      if (pref && pref !== 'auto') localStorage.setItem(TRANSPORT_KEY, pref); else localStorage.removeItem(TRANSPORT_KEY);
+    } catch (e) { /* not kept */ }
+    viaHttp = false;
+    wsFails = 0;
+    fellBack = '';
+    if (code) {
+      const ws = socket;
+      socket = null;
+      clearTimeout(helloTimer);
+      if (ws) ws.close();
+      failWaiting('relay-changed');
+      attempt = 0;
+      open();
+    } else {
+      set(status, error, problem);
+    }
   }
   function giveUp(message) { code = ''; onLocal = false; probing = false; forget(); set('off', message, 'code'); }
   function forget() { try { localStorage.removeItem(KEY); } catch (e) { /* nothing stored */ } }
@@ -244,6 +325,7 @@
     state,
     connect,
     setRelay,
+    setTransport,
     disconnect: () => disconnect(false),
     open: show,
     openByName: showByName,

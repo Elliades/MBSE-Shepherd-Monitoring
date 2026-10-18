@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cameo browser bridge</title>
+<link rel="stylesheet" href="../diag/diag.css">
+<style>
+  .codes { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+  .big { font: 700 2.2rem/1.1 ui-monospace, Consolas, monospace; letter-spacing: .15em; margin: 4px 0; }
+  .state { display: flex; gap: 8px; align-items: center; }
+  .counters { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; font-size: .9rem; }
+  .counters div { background: var(--bg); border-radius: 8px; padding: 8px; }
+  .counters strong { display: block; font-size: 1.2rem; }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header>
+    <p class="eyebrow">MBSE Shepherd</p>
+    <h1>Cameo browser bridge</h1>
+    <p class="lead">For a school PC whose network blocks Cameo but lets this browser through. Cameo runs its relay in <strong>Local</strong> mode; this page, open on the same PC, carries it to the online relay with the browser's own proxy and certificates. The guide on the phone then uses the <strong>online code</strong> below.</p>
+  </header>
+
+  <form class="card setup" id="setup">
+    <label>Code shown by Cameo (Local mode)
+      <input id="local-code" placeholder="ABCDEF" maxlength="9" autocomplete="off" autocapitalize="characters" spellcheck="false">
+    </label>
+    <label>Link to the online relay
+      <select id="transport">
+        <option value="http">HTTP requests (goes through school proxies)</option>
+        <option value="ws">WebSocket</option>
+      </select>
+    </label>
+    <div class="row">
+      <button type="submit" class="btn primary" id="start">Start the bridge</button>
+      <button type="button" class="btn" id="stop" disabled>Stop</button>
+    </div>
+    <p class="hint">In Cameo: menu ISAE &gt; Relay pairing code, choose <em>This computer</em>. Keep this tab open during the session.</p>
+  </form>
+
+  <section class="codes">
+    <div class="card">
+      <h2>Cameo on this PC</h2>
+      <div class="state"><span class="chip" id="local-chip">off</span><span class="hint" id="local-text">Not started.</span></div>
+    </div>
+    <div class="card">
+      <h2>Online code, for the phone</h2>
+      <p class="big" id="online-code">– – – – – –</p>
+      <div class="state"><span class="chip" id="online-chip">off</span><span class="hint" id="online-text">Not started.</span></div>
+      <p class="hint" id="guide-link"></p>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Traffic</h2>
+    <div class="counters">
+      <div>Cameo → phone<strong id="n-down">0</strong><span class="hint">signals and states</span></div>
+      <div>Phone → Cameo<strong id="n-up">0</strong><span class="hint">signals and calls</span></div>
+      <div>Guides online<strong id="n-viewers">0</strong></div>
+      <div>Posts / polls<strong id="n-http">0 / 0</strong></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Log</h2>
+    <pre class="log" id="log"></pre>
+  </section>
+</main>
+<script src="../js/relay-http.js"></script>
+<script src="bridge.js"></script>
+</body>
+</html>

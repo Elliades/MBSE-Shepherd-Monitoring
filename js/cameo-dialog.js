@@ -70,6 +70,18 @@
             </div>
             <p class="cd-note">In Cameo: <span class="cd-menu">Options &gt; Environment &gt; Relay bridge &gt; Relay address</span>. That option stays in Cameo; this is only the value to put there.</p>
           </div>
+          <div class="cd-field">
+            <label for="cd-transport">Link to the relay</label>
+            <div class="cd-row">
+              <select id="cd-transport" class="cd-text" data-cd-transport>
+                <option value="auto">Auto (WebSocket, else HTTP)</option>
+                <option value="ws">WebSocket only</option>
+                <option value="http">HTTP requests only</option>
+              </select>
+              <a class="btn ghost small" href="/diag/" target="_blank" rel="noopener">Network check</a>
+            </div>
+            <p class="cd-note" id="cd-transport-note"></p>
+          </div>
         </div>
       </details>
     </div>`;
@@ -114,6 +126,13 @@
       ? 'Set by the address of this page (?relay=). Remove it from the address bar to change it here.'
       : (st.relayLocal ? 'Your code was not on the online relay: using the one inside your Cameo (Local mode).'
         : (st.relayCustom ? 'Kept in this browser.' : `Empty = the default${st.relayDefault ? ` (${st.relayDefault})` : ''}.`));
+    const transport = root.querySelector('[data-cd-transport]');
+    if (document.activeElement !== transport) transport.value = st.transportPref || 'auto';
+    root.querySelector('#cd-transport-note').textContent = isLocal
+      ? 'The relay inside Cameo is reached by WebSocket.'
+      : (st.transport === 'http'
+        ? `Using HTTP requests${st.transportWhy ? `: ${st.transportWhy}.` : '.'} Slower, but it goes through school proxies.`
+        : 'Using a WebSocket. If it stays on Connecting, run the network check.');
     if (!relayTouched && (st.problem === 'relay' || st.problem === 'config' || st.problem === 'cameo')) details.open = true;
   }
 
@@ -147,6 +166,9 @@
         el.addEventListener('click', (e) => {
           if (e.target.closest('[data-cd-default]')) { B.setRelay(''); el.querySelector('#cd-relay-input').value = ''; refresh(); }
           if (e.target.closest('[data-cd-local]')) { B.setRelay(B.state().relay === LOCAL_RELAY && B.state().relayCustom ? '' : LOCAL_RELAY); refresh(); }
+        });
+        el.addEventListener('change', (e) => {
+          if (e.target.matches('[data-cd-transport]')) { B.setTransport(e.target.value); refresh(); }
         });
         el.querySelector('#cd-relay').addEventListener('toggle', () => { relayTouched = true; });
         refresh(B.state());

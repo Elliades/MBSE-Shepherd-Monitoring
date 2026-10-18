@@ -96,6 +96,28 @@ the **same** relay:
 If the Cameo button keeps saying "Cannot reach the relay at ...", the address in the message is the one
 the guide is trying: it is not the relay Cameo is connected to.
 
+### School networks (WebSocket blocked)
+
+Some proxies let `https` requests through but hold WebSocket frames (seen at ISAE: the socket opens,
+nothing arrives). The relay then also speaks **plain HTTP requests**: one long poll for what comes in,
+posts for what goes out, at most 10 a second (`relay/PROTOCOL-HTTP.md`). The guide
+(`js/relay-http.js`, `relayTransport: "auto"` in `content/config.js`) and the plugin (1.0.8, option
+*Relay transport*: Auto) switch to it on their own when the WebSocket fails twice or stays silent; the
+plugin also goes through the Windows proxy and trusts the Windows certificates (options *Proxy to reach
+the online relay*, *Also trust the certificates of Windows*). Tools to find out what passes where:
+
+| Page | What for |
+| --- | --- |
+| `/diag/` | Network check of a browser (PC or phone): WebSocket, SSE, long requests, the Cameo link over HTTP and WebSocket. Sends a report. |
+| Cameo > ISAE > *Relay network check* | The same from the Java of Cameo, on every proxy route found; *Apply the recommendation*. |
+| `/diag/reports.html` | Every report, one line per device. |
+| `/bridge/` | Browser bridge: Cameo in *Local* mode, this page in Edge on the same PC carries it to the online relay with the browser's proxy and login. |
+
+The options compared and the test procedure on site: [docs/connectivite-isae.md](docs/connectivite-isae.md).
+To reproduce such a proxy at home: `node scripts/dev-server.mjs 5181 --silent-ws` (site + relay, the
+WebSocket opens and stays silent); `node scripts/dev-server.mjs` serves site and relay on one port, as
+online.
+
 ## Links by name (elements the student creates)
 
 An element the student creates (`made: true` in `content/model-links.js`) has no UUID when the guide is

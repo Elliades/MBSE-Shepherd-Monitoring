@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- **School networks.** The relay also works over plain HTTP requests (long poll + posts, at most 10
+  posts/s; `relay/PROTOCOL-HTTP.md`) for proxies that let `https` through but hold WebSocket frames.
+  The guide switches to it on its own (Cameo dialog > Relay > *Link to the relay*, or `?transport=http`).
+- **Network check.** `/diag/` tests what a browser's network lets through and sends a report;
+  `/diag/reports.html` lists the reports of browsers and of Cameo. `/bridge/`: a page that carries a
+  Cameo in *Local* mode to the online relay through the browser. Reports are kept in the relay volume.
+- **Cameo plugin 1.0.8.** HTTP transport (Auto: after two failed or one silent WebSocket), Windows proxy
+  and certificates, menu ISAE > *Relay network check* with *Apply the recommendation*.
+- Corrections of the exercises (`*orrection*`) are no longer copied into the site image.
+
 - **ws and wss.** The guide reaches the relay over `wss://` (online) or `ws://` (this computer, plain
   `http` pages). With `relayUrl: "auto"`, a code that the online relay does not know is tried on
   `ws://127.0.0.1:8787`, so a student with Cameo in *Local* mode only types the code. A clear message

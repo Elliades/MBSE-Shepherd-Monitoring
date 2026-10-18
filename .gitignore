@@ -1,2 +1,4 @@
 api/health.json
 instructor-only/
+node_modules/
+relay/.data/

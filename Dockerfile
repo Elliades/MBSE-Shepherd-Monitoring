@@ -8,6 +8,8 @@ COPY css /usr/share/nginx/html/css
 COPY js /usr/share/nginx/html/js
 COPY assets /usr/share/nginx/html/assets
 COPY part2 /usr/share/nginx/html/part2
+COPY diag /usr/share/nginx/html/diag
+COPY bridge /usr/share/nginx/html/bridge
 COPY api/health.json /usr/share/nginx/html/api/health.json
 EXPOSE 80
 HEALTHCHECK --interval=15s --timeout=5s --retries=3 \

@@ -4,6 +4,8 @@ COPY package.json package-lock.json ./
 RUN npm ci --omit=dev
 COPY src ./src
 ENV HOST=0.0.0.0 PORT=8787
+RUN mkdir -p /data && chown node:node /data
+ENV DIAG_DIR=/data
 USER node
 EXPOSE 8787
 HEALTHCHECK --interval=15s --timeout=5s --retries=3 \

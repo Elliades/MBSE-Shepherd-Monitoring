@@ -30,6 +30,10 @@ window.COURSE_CONFIG = {
      Same relay, same pairing code as Part 1. */
   relayUrl: "auto",
 
+  /* How the guide reaches the relay: "auto" = WebSocket, and plain HTTP requests (js/relay-http.js) when a
+     proxy blocks WebSocket frames; "ws" or "http" to force one. Can be forced with ?transport=http. */
+  relayTransport: "auto",
+
   /* Shown in the model-link sheet under the "Open in Cameo" button. */
   linkHelp: "Nothing happens? Copy the link and open it from Cameo.",
 

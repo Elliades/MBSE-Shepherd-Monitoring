@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Network check</title>
+<link rel="stylesheet" href="diag.css">
+</head>
+<body>
+<main class="wrap">
+  <header>
+    <p class="eyebrow">MBSE Shepherd</p>
+    <h1>Network check</h1>
+    <p class="lead">Tests which ways of reaching the relay this device and its network let through: WebSocket, server-sent events, long HTTP requests, plain requests. Run it on the school PC and on the phone, then compare the <a href="reports.html">reports</a>. Cameo blocked but this browser passes? Try the <a href="../bridge/">browser bridge</a>.</p>
+  </header>
+
+  <form class="card setup" id="setup">
+    <label>Where is this device? <span class="hint">(shown in the report)</span>
+      <input id="label" name="label" placeholder="ISAE PC, Edge / Phone on 4G / Phone on school Wi-Fi" maxlength="80" autocomplete="off">
+    </label>
+    <label>Pairing code of a Cameo <span class="hint">(optional: also tests that room)</span>
+      <input id="code" name="code" placeholder="ABCDEF" maxlength="9" autocomplete="off" autocapitalize="characters" spellcheck="false">
+    </label>
+    <label class="check"><input type="checkbox" id="send" checked> Send the report to the relay when done</label>
+    <div class="row">
+      <button type="submit" class="btn primary" id="run">Run the tests</button>
+      <span class="hint" id="eta">About 30 seconds.</span>
+    </div>
+    <p class="hint">Relay tested: <code id="relay-url"></code></p>
+  </form>
+
+  <section class="card verdict" id="verdict" hidden>
+    <h2 id="verdict-title"></h2>
+    <p id="verdict-text"></p>
+    <p class="hint" id="report-status"></p>
+  </section>
+
+  <section class="card">
+    <h2>Results</h2>
+    <ol class="tests" id="tests"></ol>
+  </section>
+
+  <section class="card">
+    <div class="row between">
+      <h2>Log</h2>
+      <div class="row">
+        <button type="button" class="btn small" id="copy">Copy the report</button>
+        <a class="btn small" href="reports.html">All reports</a>
+      </div>
+    </div>
+    <pre class="log" id="log"></pre>
+  </section>
+</main>
+<script src="../js/relay-http.js"></script>
+<script src="diag.js"></script>
+</body>
+</html>

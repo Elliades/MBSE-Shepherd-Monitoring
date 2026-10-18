@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Network reports</title>
+<link rel="stylesheet" href="diag.css">
+</head>
+<body>
+<main class="wrap wide">
+  <header>
+    <p class="eyebrow">MBSE Shepherd · Network check</p>
+    <h1>Reports</h1>
+    <p class="lead">Every network check sent to the relay: from browsers (<a href="./">this page</a>) and from Cameo (menu ISAE &gt; Relay network check). One line per run, the verdict of each test; click a line for everything.</p>
+  </header>
+  <section class="card">
+    <div class="row between">
+      <div class="row">
+        <label class="check"><input type="radio" name="kind" value="" checked> All</label>
+        <label class="check"><input type="radio" name="kind" value="browser"> Browsers</label>
+        <label class="check"><input type="radio" name="kind" value="plugin"> Cameo</label>
+      </div>
+      <button type="button" class="btn small" id="reload">Reload</button>
+    </div>
+  </section>
+  <section class="card">
+    <h2>Which way passes, per device</h2>
+    <div class="scroll"><table id="matrix"></table></div>
+  </section>
+  <section class="card" id="list"></section>
+</main>
+<script>
+(function () {
+  'use strict';
+  const RELAY = (new URLSearchParams(location.search).get('relay') || `${location.origin}/relay`).replace(/\/+$/, '');
+  const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  /* The columns of the matrix: the main ways through, browser and plugin ids side by side. */
+  const COLUMNS = [
+    ['relay', 'HTTPS'], ['ws', 'WebSocket'], ['sse', 'SSE'], ['longpoll', 'Long request'], ['post', 'POST'],
+    ['http-link', 'Link HTTP'], ['ws-link', 'Link WS'], ['local', 'Local relay'], ['room', 'Room'],
+  ];
+  let reports = [];
+
+  function chip(v) { return v ? `<span class="chip ${esc(v)}">${esc(v)}</span>` : ''; }
+  /* A plugin report has one result per route (direct, system proxy...): the best verdict per test. */
+  function verdictOf(report, id) {
+    const rank = { ok: 3, warn: 2, fail: 1, skip: 0 };
+    let best = null;
+    for (const r of report.results || []) {
+      const base = String(r.id || '').split('@')[0];
+      if (base !== id) continue;
+      if (!best || rank[r.verdict] > rank[best]) best = r.verdict;
+    }
+    return best;
+  }
+
+  function render() {
+    const kind = document.querySelector('input[name="kind"]:checked').value;
+    const shown = reports.filter((r) => !kind || r.kind === kind);
+    document.getElementById('matrix').innerHTML =
+      `<tr><th>When</th><th>Device</th><th>From</th>${COLUMNS.map(([, t]) => `<th>${t}</th>`).join('')}<th>Conclusion</th></tr>` +
+      shown.map((r) => `<tr>
+        <td>${esc(new Date(r.receivedAt).toLocaleString())}</td>
+        <td><strong>${esc(r.label)}</strong><br><span class="hint">${esc(r.kind)}${r.version ? ` ${esc(r.version)}` : ''}</span></td>
+        <td>${esc(r.seenBy?.ip)}${r.seenBy?.via ? `<br><span class="hint">via ${esc(r.seenBy.via)}</span>` : ''}</td>
+        ${COLUMNS.map(([id]) => `<td>${chip(verdictOf(r, id))}</td>`).join('')}
+        <td>${esc(r.conclusion?.title)}</td></tr>`).join('');
+    document.getElementById('list').innerHTML = `<h2>Details (${shown.length})</h2>` + shown.map((r) => `
+      <details><summary><strong>${esc(r.label)}</strong> · ${esc(r.kind)} · ${esc(new Date(r.receivedAt).toLocaleString())} · ${esc(r.conclusion?.title)}</summary>
+        <div class="scroll"><table>${(r.results || []).map((x) => `<tr><td>${chip(x.verdict)}</td><td><strong>${esc(x.name)}</strong><br><span class="hint">${esc(x.id)}</span></td><td>${esc(x.text)}</td></tr>`).join('')}</table></div>
+        <pre>${esc(JSON.stringify({ ...r, results: undefined, log: undefined }, null, 2))}</pre>
+        <pre>${esc((r.log || []).join('\n'))}</pre>
+      </details>`).join('');
+  }
+
+  async function load() {
+    try {
+      const res = await fetch(`${RELAY}/v1/diag/reports?limit=500`, { cache: 'no-store' });
+      reports = (await res.json()).reports || [];
+    } catch (e) {
+      document.getElementById('list').textContent = `Cannot load the reports: ${e.message}`;
+      return;
+    }
+    render();
+  }
+  document.querySelectorAll('input[name="kind"]').forEach((el) => el.addEventListener('change', render));
+  document.getElementById('reload').addEventListener('click', load);
+  load();
+})();
+</script>
+</body>
+</html>
