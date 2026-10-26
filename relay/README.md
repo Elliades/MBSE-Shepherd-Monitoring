@@ -20,5 +20,14 @@ cd relay && npm ci && npm start     # ws://127.0.0.1:8787
 ```
 
 Since then it gained, here only: the HTTP transport (`src/http-peer.js`, `PROTOCOL-HTTP.md`) and the
-network check (`src/diag.js`). Bring them back to the monitoring project before copying it here again.
+network check (`src/diag.js`), and the frames a viewer shares with the other viewers (`{"peer":{...}}`, `sharePeer`). Bring them back to the monitoring project before copying it here again.
 `npm test` runs `test/http.test.js`.
+
+## Session timing
+
+`src/track.js` (not in the monitoring project). The guides post `POST /v1/track`
+`{ sentAt, events: [{ t, type: scene|ping|hide|show, code, part, v, fp, index, scene, title, total, done, steps }] }`;
+the events are appended to `$TRACK_DIR/track.jsonl` (default `DIAG_DIR`, `/data` in the image) and folded
+into runs (code + part + day, Europe/Paris). `GET /v1/track/days` and `GET /v1/track/runs?day=&part=`
+feed `monitor/` of the site; with `TRACK_KEY` set they need `?key=`.
+

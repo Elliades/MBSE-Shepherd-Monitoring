@@ -10,10 +10,12 @@ import {
   serializeSignal,
   signalsFrom,
   viewerRequest,
+  viewerPeer,
   viewerSignal,
 } from './frames.js'
 import { createRegistry } from './rooms.js'
 import { createDiag, readBody } from './diag.js'
+import { createTrack } from './track.js'
 import { HttpPeer } from './http-peer.js'
 
 export const PROTOCOL_VERSION = 1
@@ -47,6 +49,10 @@ export const DEFAULTS = {
   httpIdleMs: 40_000,
   /** Where the network-check reports are kept (`reports.jsonl`); memory only when empty. */
   diagDir: '',
+  /** Where the timing of the practical sessions is kept (`track.jsonl`); memory only when empty. */
+  trackDir: '',
+  /** When set, reading the timing needs `?key=` (sending never does). */
+  trackKey: '',
   now: Date.now,
   log: () => {},
 }
@@ -81,6 +87,7 @@ export function createRelay(options = {}) {
   })
   http.on('upgrade', handleUpgrade)
   const diag = createDiag({ dir: config.diagDir || undefined, log: config.log, now: config.now })
+  const track = createTrack({ dir: config.trackDir || undefined, log: config.log, now: config.now, key: config.trackKey || undefined })
 
   /** @type {Map<string, HttpPeer>} the HTTP peers, by session id */
   const sessions = new Map()
@@ -117,6 +124,7 @@ export function createRelay(options = {}) {
       return
     }
     if (diag.handleHttp(req, res, url, reply)) return
+    if (track.handleHttp(req, res, url, reply)) return
     const transport = HTTP_PATH.exec(pathname)
     if (transport) {
       handleTransport(transport[1], req, res, url)
@@ -402,6 +410,11 @@ export function createRelay(options = {}) {
         deliverResponse(room, frame)
         return
       }
+      if (frame.peer !== undefined) {
+        const data = viewerPeer(frame)
+        if (data !== null) broadcast(room.viewers, peerInfo(data), config.slowBytes, (viewer) => dropSlow(room, viewer))
+        return
+      }
       const state = pluginState(frame)
       if (state) {
         room.state = info('state', state)
@@ -515,6 +528,10 @@ export function createRelay(options = {}) {
    * @param {Record<string, unknown>} frame
    */
   function onViewerFrame(room, viewer, frame) {
+    if (frame.peer !== undefined) {
+      sharePeer(room, viewer, frame)
+      return
+    }
     if (typeof frame.req === 'string') {
       forwardRequest(room, viewer, frame)
       return
@@ -531,6 +548,33 @@ export function createRelay(options = {}) {
       return
     }
     room.plugin.send(JSON.stringify(signal))
+  }
+
+  /**
+   * Hands what a browser shares (`{"peer":{...}}`) to the other browsers of the room and to the
+   * plugin, as `{"type":"info","event":"peer","data":{...}}`. The plugin ignores it, unless it is the
+   * browser bridge page, which carries it to the relay inside Cameo (and sends `{"peer"}` back as a
+   * plugin: it goes to every browser). Works with the plugin away. Nothing is kept: a browser that
+   * joins later asks the others again.
+   * @param {import('./rooms.js').Room} room
+   * @param {import('ws').WebSocket} viewer
+   * @param {Record<string, unknown>} frame
+   */
+  function sharePeer(room, viewer, frame) {
+    const data = viewerPeer(frame)
+    if (data === null) {
+      send(viewer, info('dropped', { reason: 'bad-peer' }))
+      return
+    }
+    const text = peerInfo(data)
+    const others = [...room.viewers].filter((other) => other !== viewer)
+    broadcast(others, text, config.slowBytes, (other) => dropSlow(room, other))
+    if (pluginReady(room)) room.plugin.send(text)
+  }
+
+  /** @param {string} data the shared object, already serialized */
+  function peerInfo(data) {
+    return `{"type":"info","event":"peer","data":${data}}`
   }
 
   /**

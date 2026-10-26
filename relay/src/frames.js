@@ -8,6 +8,7 @@ export const MAX_BATCH = 500
 
 export const MAX_REQ_ID_LENGTH = 64
 export const MAX_NAME_LENGTH = 128
+export const MAX_PEER_BYTES = 16384
 
 /**
  * @param {string} text
@@ -73,6 +74,18 @@ export function viewerRequest(frame) {
 }
 
 /**
+ * What a browser shares with the other browsers of its room (`{"peer":{...}}`), as text, or null when
+ * it is not an object or is too big. The relay does not read it.
+ * @param {Record<string, unknown>} frame
+ * @returns {string | null}
+ */
+export function viewerPeer(frame) {
+  if (!isRecord(frame.peer)) return null
+  const text = JSON.stringify(frame.peer)
+  return text.length <= MAX_PEER_BYTES ? text : null
+}
+
+/**
  * The answer of the plugin to a request.
  * @param {Record<string, unknown>} frame
  * @returns {{ res: string, ok: true, result: unknown } | { res: string, ok: false, error: unknown } | null}
@@ -84,15 +97,45 @@ export function pluginResponse(frame) {
     : { res: frame.res, ok: false, error: frame.error ?? 'error' }
 }
 
+export const MAX_DRONES = 16
+export const MAX_DRONE_ID_LENGTH = 64
+
+/**
+ * @typedef {{ id: string, step: string, role?: string, name?: string }} DroneState
+ */
+
 /**
  * The state snapshot the plugin publishes: `{"type":"info","event":"state","status","step"}`.
+ * A simulation with several drones (Part 3) adds `drones: [{ id, step, role?, name? }]`, one per drone
+ * instance, and `master`: "base" or the id of the drone that leads the others. Both are optional and
+ * left out when absent, so a single-drone frame comes out as it went in.
  * @param {Record<string, unknown>} frame
- * @returns {{ status: string, step: string } | null}
+ * @returns {{ status: string, step: string, drones?: DroneState[], master?: string } | null}
  */
 export function pluginState(frame) {
   if (frame.type !== 'info' || frame.event !== 'state') return null
   const { status, step } = frame
-  return isText(status, MAX_NAME_LENGTH) && isText(step, MAX_NAME_LENGTH) ? { status, step } : null
+  if (!isText(status, MAX_NAME_LENGTH) || !isText(step, MAX_NAME_LENGTH)) return null
+  /** @type {{ status: string, step: string, drones?: DroneState[], master?: string }} */
+  const state = { status, step }
+  if (Array.isArray(frame.drones)) {
+    state.drones = frame.drones.slice(0, MAX_DRONES).map(toDrone).filter((d) => d !== null)
+  }
+  if (isText(frame.master, MAX_DRONE_ID_LENGTH)) state.master = frame.master
+  return state
+}
+
+/**
+ * @param {unknown} item
+ * @returns {DroneState | null}
+ */
+function toDrone(item) {
+  if (!isRecord(item) || !isText(item.id, MAX_DRONE_ID_LENGTH) || !isText(item.step, MAX_NAME_LENGTH)) return null
+  /** @type {DroneState} */
+  const drone = { id: item.id, step: item.step }
+  if (isText(item.role, MAX_DRONE_ID_LENGTH)) drone.role = item.role
+  if (isText(item.name, MAX_NAME_LENGTH)) drone.name = item.name
+  return drone
 }
 
 /**

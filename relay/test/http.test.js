@@ -141,3 +141,36 @@ test('diag endpoints and reports', async (t) => {
   const file = await readFile(join(dir, 'reports.jsonl'), 'utf8')
   assert.match(file, /"label":"test"/)
 })
+
+test('a viewer shares with the other viewers of its room and the plugin, not with itself', async (t) => {
+  const { relay, http } = await start()
+  t.after(() => relay.close())
+
+  const plugin = await post(`${http}/v1/http/open`, { role: 'plugin' })
+  const code = frames(plugin.body.frames)[0].code
+  const phone = await post(`${http}/v1/http/open`, { role: 'viewer', code })
+  const laptop = await post(`${http}/v1/http/open`, { role: 'viewer', code })
+  // Drain the hellos and viewer counts.
+  await get(`${http}/v1/http/poll?s=${plugin.body.session}&wait=0`)
+  await get(`${http}/v1/http/poll?s=${phone.body.session}&wait=0`)
+
+  await post(`${http}/v1/http/send?s=${phone.body.session}`, { frames: [JSON.stringify({ peer: { kind: 'answers', q: { q1: 'A' } } })] })
+  const got = await get(`${http}/v1/http/poll?s=${laptop.body.session}&wait=500`)
+  assert.deepEqual(frames(got.body.frames).filter((f) => f.event === 'peer').map((f) => f.data), [{ kind: 'answers', q: { q1: 'A' } }])
+  const self = await get(`${http}/v1/http/poll?s=${phone.body.session}&wait=200`)
+  assert.equal(frames(self.body.frames).filter((f) => f.event === 'peer').length, 0)
+  const toPlugin = await get(`${http}/v1/http/poll?s=${plugin.body.session}&wait=500`)
+  assert.deepEqual(frames(toPlugin.body.frames).filter((f) => f.event === 'peer').map((f) => f.data), [{ kind: 'answers', q: { q1: 'A' } }])
+
+  // What the plugin shares (the browser bridge page) goes to every viewer.
+  await post(`${http}/v1/http/send?s=${plugin.body.session}`, { frames: [JSON.stringify({ peer: { kind: 'x' } })] })
+  for (const v of [phone, laptop]) {
+    const got2 = await get(`${http}/v1/http/poll?s=${v.body.session}&wait=500`)
+    assert.deepEqual(frames(got2.body.frames).filter((f) => f.event === 'peer').map((f) => f.data), [{ kind: 'x' }])
+  }
+
+  // Too big: dropped, and the sender is told.
+  await post(`${http}/v1/http/send?s=${laptop.body.session}`, { frames: [JSON.stringify({ peer: { x: 'y'.repeat(20000) } })] })
+  const big = await get(`${http}/v1/http/poll?s=${laptop.body.session}&wait=500`)
+  assert.ok(frames(big.body.frames).some((f) => f.event === 'dropped' && f.reason === 'bad-peer'))
+})
