@@ -6,69 +6,86 @@
 <title>Cameo browser bridge</title>
 <link rel="stylesheet" href="../diag/diag.css">
 <style>
-  .codes { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
-  .big { font: 700 2.2rem/1.1 ui-monospace, Consolas, monospace; letter-spacing: .15em; margin: 4px 0; }
-  .state { display: flex; gap: 8px; align-items: center; }
-  .counters { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; font-size: .9rem; }
-  .counters div { background: var(--bg); border-radius: 8px; padding: 8px; }
-  .counters strong { display: block; font-size: 1.2rem; }
-  /* White behind the code in both themes: phones read dark-on-light best. */
-  .qr { background: #fff; border-radius: 8px; padding: 8px; width: max-content; margin: 8px 0; }
-  .qr svg { display: block; width: 180px; height: 180px; }
+  body { margin: 0; }
+  .app { max-width: 760px; margin: 0 auto; padding: 6px 10px 24px; display: grid; gap: 6px; }
+  .band { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 8px 12px; }
+  .band b { font-size: 1rem; white-space: nowrap; }
+  .band small { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; color: var(--ink-2); font-size: .75rem; line-height: 1.25; flex: 1 1 240px; }
+  .bridge-state { display: flex; gap: 6px; align-items: center; font-weight: 700; font-size: .85rem; margin-left: auto; white-space: nowrap; }
+  .dot { width: 11px; height: 11px; border-radius: 50%; background: var(--fail); flex: none; }
+  .dot.up { background: var(--ok); box-shadow: 0 0 0 4px var(--ok-bg); }
+  /* Hero: the phone code, sized from the viewport so hero + Cameo row fit on one screen. */
+  .hero { background: var(--card); border: 2px solid var(--accent); border-radius: 16px; padding: 10px 12px 12px; display: grid; gap: 8px; justify-items: center; text-align: center; }
+  .hero h2 { margin: 0; font-size: .8rem; text-transform: uppercase; letter-spacing: .1em; color: var(--accent); }
+  .cells { --h: clamp(44px, 9vh, 72px); display: flex; gap: clamp(3px, 1.2vw, 8px); }
+  .cells span { width: min(calc(var(--h) * .8), 13vw); height: var(--h); display: grid; place-items: center; box-sizing: border-box; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; font: 700 calc(var(--h) * .55)/1 ui-monospace, Consolas, monospace; padding-bottom: .08em; }
+  .qr { background: #fff; border-radius: 10px; padding: 6px; line-height: 0; }
+  .qr svg { width: min(24vh, 50vw, 240px); height: min(24vh, 50vw, 240px); }
+  .hero .hint { margin: 0; font-size: .75rem; }
+  .cameo { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 8px 12px; display: grid; gap: 6px; }
+  .cameo-row { display: flex; gap: 8px; align-items: center; }
+  .cameo-row label { flex: 1; min-width: 0; display: grid; gap: 2px; font-size: .75rem; font-weight: 700; color: var(--ink-2); text-transform: uppercase; letter-spacing: .06em; }
+  .cameo-row input { font: 700 1.1rem ui-monospace, Consolas, monospace; letter-spacing: .2em; text-transform: uppercase; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); width: 100%; box-sizing: border-box; }
+  .cameo .btn { padding: 7px 12px; align-self: end; }
+  .gear { font-size: 1.1rem; line-height: 1; padding: 6px 10px !important; }
+  .gear[aria-expanded="true"] { border-color: var(--accent); color: var(--accent); }
+  .conf { display: grid; gap: 8px; border-top: 1px solid var(--line); padding-top: 8px; }
+  .conf[hidden] { display: none; }
+  .conf select { font: inherit; padding: 6px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); }
+  .counters { display: flex; flex-wrap: wrap; gap: 6px; font-size: .8rem; margin-bottom: 6px; }
+  .counters div { background: var(--bg); border-radius: 8px; padding: 3px 8px; }
+  .counters strong { margin-left: 4px; }
+  .log { max-height: 100px; }
+  .more { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 8px 12px; }
+  .more h2 { margin: 0 0 6px; font-size: .8rem; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-2); }
 </style>
 </head>
 <body>
-<main class="wrap">
-  <header>
-    <p class="eyebrow">MBSE Shepherd</p>
-    <h1>Cameo browser bridge</h1>
-    <p class="lead">For a school PC whose network blocks Cameo but lets this browser through. Cameo runs its relay in <strong>Local</strong> mode; this page, open on the same PC, carries it to the online relay with the browser's own proxy and certificates. The guide on the phone then uses the <strong>online code</strong> below.</p>
-  </header>
+<main class="app">
+  <div class="band">
+    <b>Cameo browser bridge</b>
+    <small>For a PC whose network blocks Cameo but lets this browser through: Cameo (Local mode) goes online through this tab. Keep it open.</small>
+    <div class="bridge-state"><span class="dot" id="bridge-dot"></span><span id="bridge-text">Bridge is down</span></div>
+  </div>
 
-  <form class="card setup" id="setup">
-    <label>Code shown by Cameo (Local mode)
-      <input id="local-code" placeholder="ABCDEF" maxlength="9" autocomplete="off" autocapitalize="characters" spellcheck="false">
-    </label>
-    <label>Link to the online relay
-      <select id="transport">
-        <option value="auto">Auto (WebSocket, else HTTP requests)</option>
-        <option value="ws">WebSocket</option>
-        <option value="http">HTTP requests (goes through school proxies)</option>
-      </select>
-    </label>
-    <div class="row">
-      <button type="submit" class="btn primary" id="start">Start the bridge</button>
+  <section class="hero">
+    <h2>Online code, for the phone</h2>
+    <div class="cells" id="online-code" aria-label="online code"></div>
+    <div class="qr" id="qr" hidden></div>
+    <p class="hint" id="online-text">Not started.</p>
+    <p class="hint" id="guide-link"></p>
+  </section>
+
+  <form class="cameo" id="setup">
+    <div class="cameo-row">
+      <label>Cameo on this PC · its code
+        <input id="local-code" placeholder="ABCDEF" maxlength="9" autocomplete="off" autocapitalize="characters" spellcheck="false">
+      </label>
+      <button type="submit" class="btn primary" id="start">Start</button>
       <button type="button" class="btn" id="stop" disabled>Stop</button>
+      <button type="button" class="btn gear" id="gear" aria-expanded="false" aria-controls="conf" title="Link to the online relay">&#9881;</button>
     </div>
-    <p class="hint">In Cameo: menu ISAE &gt; Relay pairing code, choose <em>This computer</em>, then <em>Open the browser bridge</em> (it fills this page in and starts it). Keep this tab open during the session.</p>
+    <p class="hint" style="margin:0">Cameo: <span id="local-text">not started.</span></p>
+    <div class="conf" id="conf" hidden>
+      <label class="hint">Link to the online relay
+        <select id="transport">
+          <option value="auto">Auto (WebSocket, else HTTP requests)</option>
+          <option value="ws">WebSocket</option>
+          <option value="http">HTTP requests (goes through school proxies)</option>
+        </select>
+      </label>
+      <p class="hint" style="margin:0">In Cameo: menu ISAE &gt; Relay pairing code, <em>This computer</em>, then <em>Open the browser bridge</em>.</p>
+    </div>
   </form>
 
-  <section class="codes">
-    <div class="card">
-      <h2>Cameo on this PC</h2>
-      <div class="state"><span class="chip" id="local-chip">off</span><span class="hint" id="local-text">Not started.</span></div>
-    </div>
-    <div class="card">
-      <h2>Online code, for the phone</h2>
-      <p class="big" id="online-code">– – – – – –</p>
-      <div class="state"><span class="chip" id="online-chip">off</span><span class="hint" id="online-text">Not started.</span></div>
-      <div class="qr" id="qr" hidden></div>
-      <p class="hint" id="guide-link"></p>
-    </div>
-  </section>
-
-  <section class="card">
+  <section class="more">
     <h2>Traffic</h2>
     <div class="counters">
-      <div>Cameo → phone<strong id="n-down">0</strong><span class="hint">signals and states</span></div>
-      <div>Phone → Cameo<strong id="n-up">0</strong><span class="hint">signals and calls</span></div>
-      <div>Guides online<strong id="n-viewers">0</strong></div>
+      <div>Cameo → phone<strong id="n-down">0</strong></div>
+      <div>Phone → Cameo<strong id="n-up">0</strong></div>
+      <div>Guides<strong id="n-viewers">0</strong></div>
       <div>Posts / polls<strong id="n-http">0 / 0</strong></div>
     </div>
-  </section>
-
-  <section class="card">
-    <h2>Log</h2>
     <pre class="log" id="log"></pre>
   </section>
 </main>

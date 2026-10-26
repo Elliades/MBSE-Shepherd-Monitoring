@@ -7,7 +7,7 @@
                                   problem: '' | 'relay' (unreachable) | 'cameo' (not online) | 'code' | 'config'  status: off | connecting | connected | waiting
    window.Bridge.connect(code)    join the room of that code
    window.Bridge.disconnect()     leave and forget the code
-   window.Bridge.open(id, type)   show the element in Cameo (a Promise)
+   window.Bridge.open(id, type, spec)   show the element in Cameo (a Promise)
    window.Bridge.openByName(spec) same, for an element that has no id yet: Cameo finds it by its name.
                                   Rejects with Error('not-found') | Error('ambiguous') | another message
    window.Bridge.onChange(fn)     called with the state on every change
@@ -16,8 +16,11 @@
    window.Bridge.onFrame(fn)      called with what Cameo sends on its own, for the simulation panel:
                                   { kind: 'signal', signal, id, seq } a signal of the simulation
                                   { kind: 'state', status, step }     where the simulation is now
+                                                                      (+ drones: [{ id, step, role, name }], master, with several drones)
                                   { kind: 'hello', resumed }           joined the room (resumed: it replays what was missed)
-                                  { kind: 'resync', reason }           signals were lost: start over */
+                                  { kind: 'resync', reason }           signals were lost: start over
+                                  { kind: 'peer', data }               what another page of the same code shared
+   window.Bridge.sendPeer(data)   share an object with the other pages of the same code (not Cameo): true if sent */
 (function () {
   const CFG = window.COURSE_CONFIG || {};
   const KEY = 'mbse-shepherd:bridge-code';
@@ -154,7 +157,14 @@
         }
         else if (frame.event === 'plugin-online') set('connected');
         else if (frame.event === 'plugin-offline') set('waiting', 'Cameo is not connected to the relay.', 'cameo');
-        else if (frame.event === 'state' && typeof frame.step === 'string') emit({ kind: 'state', status: String(frame.status || ''), step: frame.step });
+        else if (frame.event === 'state' && typeof frame.step === 'string') {
+          const st = { kind: 'state', status: String(frame.status || ''), step: frame.step };
+          /* several drones (Part 3, js/sim-fleet.js): one { id, step, role, name } each, and who leads */
+          if (Array.isArray(frame.drones)) st.drones = frame.drones.filter((d) => d && typeof d.id === 'string' && typeof d.step === 'string');
+          if (typeof frame.master === 'string') st.master = frame.master;
+          emit(st);
+        }
+        else if (frame.event === 'peer' && frame.data && typeof frame.data === 'object') emit({ kind: 'peer', data: frame.data });
         else if (frame.event === 'resync') {
           /* The relay no longer has what we missed. A reset room starts counting again from its own seq. */
           if (frame.reason === 'room-reset') lastSeq = typeof frame.seq === 'number' ? frame.seq : 0;
@@ -306,18 +316,47 @@
       socket.send(JSON.stringify({ req, category, name, args: args || [] }));
     });
   }
-  /* A diagram is opened; anything else is selected in the Model Browser. */
-  function show(id, type) {
+  /* Shared with the other pages paired with the same code (the phone and the computer), not with Cameo.
+     Works while Cameo is away too, as long as the room exists. false when not sent. */
+  function sendPeer(data) {
+    if (!socket || socket.readyState !== 1 || (status !== 'connected' && status !== 'waiting')) return false;
+    try { socket.send(JSON.stringify({ peer: data })); } catch (e) { return false; }
+    return true;
+  }
+  const NOT_REACHED = new Set(['not-connected', 'timeout']);
+  /* Metaclass names Cameo reports (model/getElementsByName), per guide type. */
+  const METACLASS = {
+    package: ['Package'], block: ['Class'], iface: ['Class'], usecase: ['UseCase'], activity: ['Activity'],
+    state: ['State'], signal: ['Signal'], stm: ['StateMachine'], actor: ['Actor'], choice: ['Pseudostate']
+  };
+  /* Last resort for an element selectByName does not find: list the elements with that name, keep the one
+     that fits the type, then select it by id. Rejects with 'not-found' or 'ambiguous'. */
+  function findThenSelect(spec) {
+    return call('model', 'getElementsByName', [{ name: spec.name }]).then((list) => {
+      list = Array.isArray(list) ? list.filter((e) => e && e.id && e.name === spec.name) : [];
+      const kinds = METACLASS[spec.type];
+      const fit = kinds ? list.filter((e) => kinds.indexOf(e.metaclass) >= 0) : list;
+      const pick = fit.length ? fit : (list.length === 1 ? list : []);
+      if (!pick.length) throw new Error('not-found');
+      if (pick.length > 1) throw new Error('ambiguous');
+      return call('browser', 'select', [{ elementId: pick[0].id }]);
+    });
+  }
+  /* A diagram is opened; anything else is selected in the Model Browser.
+     If the id is unknown to the model (it was edited), fall back to the name when spec is given. */
+  function show(id, type, spec) {
     const arg = [{ elementId: id }];
     const select = () => call('browser', 'select', arg);
-    return DIAGRAMS.has(type) ? call('diagram', 'open', arg).catch(select) : select();
+    const byId = DIAGRAMS.has(type) ? call('diagram', 'open', arg).catch(select) : select();
+    return spec ? byId.catch((e) => (e && NOT_REACHED.has(e.message) ? Promise.reject(e) : showByName(spec))) : byId;
   }
 
   /* An element the student creates has no UUID in the guide: Cameo looks it up by its name.
      spec = { name, type, path, kinds, qualifiedName } (see "Links by name" in README.md). */
   function showByName(spec) {
     const arg = [spec];
-    const select = () => call('browser', 'selectByName', arg);
+    const select = () => call('browser', 'selectByName', arg)
+      .catch((e) => (e && (e.message === 'ambiguous' || NOT_REACHED.has(e.message)) ? Promise.reject(e) : findThenSelect(spec)));
     return DIAGRAMS.has(spec.type) ? call('diagram', 'openByName', arg).catch(select) : select();
   }
 
@@ -331,6 +370,7 @@
     openByName: showByName,
     onChange: (fn) => listeners.push(fn),
     onFrame: (fn) => frameListeners.push(fn),
+    sendPeer,
     start() {
       let saved = '';
       try { saved = localStorage.getItem(KEY) || ''; } catch (e) { /* no storage */ }
