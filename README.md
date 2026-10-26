@@ -9,6 +9,9 @@ No build step and no dependency: plain HTML, CSS and JavaScript.
 **Part 2**, the marked seminar (BE Cameo · Part 2 · Marked), is a second guide in `part2/`, served at
 `/part2/` (online: `https://shepherd.chaos-art.fr/part2/`). See [Part 2](#part-2-the-marked-seminar) below.
 
+**Part 3**, a fleet of drones, is a third guide in `part3/`, served at `/part3/`, with its own simulation
+panel. See [Part 3](#part-3-a-fleet-of-drones) below.
+
 ## Run it
 
 - **Quick look:** double-click `index.html`.
@@ -39,6 +42,21 @@ Fonts come from Google Fonts. Without Internet the guide falls back to system fo
 | `css/app.css` | The whole look, light and dark. |
 | `css/sim.css` | The simulation panel and its pasture. |
 | `assets/sim/` | The drone, sheep, bear and base of the pasture. |
+| `promo/` | A promo film of the site (~70 s), played in the browser (see below). Online at `/promo/`, with the demo tool it drives at `/tool/`. |
+
+### The promo film (`promo/`)
+
+`https://shepherd.chaos-art.fr/promo/`, or `http://localhost:5180/promo/` (the relay dev server: it is needed), plays a 1920 × 1080 film built from the
+site's own pieces. Its first part is live: the demo tool (`tool/`) takes a pairing code on the relay, and the
+guide opens in a laptop and a phone with that code, so "Open in Cameo" (relabelled "Open in MBSE tool" in the
+film) really selects the element in the tool's tree, and the simulation run in the tool really moves the drone
+of the guide. Then the method, layer by layer, with the diagrams of `tool/` and the pasture of the simulation
+panel; its functional part plays the Part 2 predator scenario with states only: the predator transitions, their
+signals and the activity diagrams are marked questions of Part 2, so the film never shows them. Space plays or pauses, ← → seek, H hides the controls. `?lang=fr` for French, `?speed=1.2` to go faster,
+`?t=12` to start at 12 s, `?autoplay=0`. For a clean live part, play it from the start (seeking back resets it).
+To make a video file: full screen (F11) on a 1080p screen, then **● Record** (Chrome, saves a `.webm`), or any
+screen recorder (Win+Alt+R, OBS). The pace of each part is `K` at the top of `promo/promo.js`; the live part is
+the `LIVE` list (one click per line, at its time).
 
 ## Simulation panel
 
@@ -95,6 +113,20 @@ the **same** relay:
 
 If the Cameo button keeps saying "Cannot reach the relay at ...", the address in the message is the one
 the guide is trying: it is not the relay Cameo is connected to.
+
+### Answers shared between the phone and the computer
+
+Two pages linked to the same Cameo (the phone and the computer) share what the step on screen holds: the
+answers and notes typed in it, its checkboxes and its validated steps. A change made on one page shows on
+the other at once, over what it had (so one can correct the other). A page that arrives on a step (or
+joins) sends what it has changed there and asks the other for its own; each item keeps the time of its
+last change and the newest wins (`js/engine.js`, "shared with the other pages").
+
+It goes through the relay as a frame `{"peer":{...}}`, handed as `{"type":"info","event":"peer","data":{...}}`
+to the other browsers of the room and to the plugin (which ignores it), at most 16 KB. A `{"peer"}` sent
+by the plugin goes to every browser. Both relays do it: the Node one (`relay/src/relay.js`, `sharePeer`)
+and the one inside Cameo (`LocalRelay.kt` of the plugin, in the version after 1.1.1). In Local mode the browser bridge page
+(`bridge/bridge.js`) carries these frames between the relay inside Cameo and the online code of the phone.
 
 ### School networks (WebSocket blocked)
 
@@ -221,9 +253,31 @@ Placeholders, "no link" tags and the to-do board only show in author mode.
 
 ## What students' browsers keep
 
-Ticks, notes and answers are stored in the browser (`localStorage`), per device. Nothing is sent
-anywhere. Students get their answers out with **Copy my answers** or **Print** on the last scene.
+Ticks, notes and answers are stored in the browser (`localStorage`), per device, and never sent.
+Only the timing below leaves the browser. Students get their answers out with **Copy my answers** or **Print** on the last scene.
 Change `storageKey` in `content/config.js` to start everybody from zero after a big content change.
+
+## Session timing (monitor)
+
+To calibrate the exercise, each guide tells the relay of the site which scene the student is on
+(`js/track.js`): at every scene change, every minute while the guide is visible, and when it is hidden.
+The student is an anonymous 4-letter code drawn by the browser (shown in the Flight plan); no name,
+answer or address is sent. The relay keeps the events in its volume (`/data/track.jsonl`) and folds
+them into one run per code, guide and day (`relay/src/track.js`).
+
+**`/monitor/`** (online: `https://shepherd.chaos-art.fr/monitor/`) shows:
+
+- **Session**: one day. Where everyone is now, the progress of each student over the clock, and a
+  table (scene, furthest scene, start, active time, steps ticked, version). Refreshes every 20 s.
+- **Overall**: every day of one version. Median time on each scene, pacing (time from the start to
+  reach each scene, with the middle half of the class), and the sessions.
+
+Settings in `content/config.js` (and `part2/content/config.js`): `trackPart`, **`tpVersion`** (change
+it when the exercise changes, so its stats are kept apart; a fingerprint of the scenes is also sent),
+`trackUrl` (`"auto"`, or empty to send nothing). On your own machines, open a guide once with
+`?track=0` (`?track=1` to undo), or hide your test codes in the monitor. Active time leaves out
+breaks: a hidden tab, or no news for 5 minutes. To keep the monitor private, set `TRACK_KEY` on the
+relay service and open `/monitor/?key=…`.
 
 ## Part 2: the marked seminar
 
@@ -255,3 +309,46 @@ solution block. Keep it that way when editing it. What it adds:
 
 Open it locally at `http://localhost:5178/part2/` (same server as Part 1). Both guides keep their progress
 under different `storageKey`s; the Cameo pairing code and the relay address are shared.
+
+## Part 3: a fleet of drones
+
+`part3/` is a third guide, same layout as `part2/` (served at `/part3/`). Its content is a first skeleton.
+What is new is its simulation panel: several drones instead of one. It loads `js/sim-fleet-core.js`,
+`js/sim-fleet-scene.js`, `js/sim-fleet.js` and `css/sim-fleet.css` **instead of** `js/sim-core.js`,
+`js/sim-motion.js`, `js/sim-scene.js` and `js/sim.js`. Part 1 and Part 2 do not load the fleet files, and
+the one-drone files were not changed, so they behave as before.
+
+What the panel shows:
+
+- One drone per drone of the fleet, each with a **role** (`fleet.roles` in `part3/content/config.js`:
+  drone shepherd, sheep guard, anti-predator) and its own step.
+- The **master**: the base station (it pilots every drone), one drone (the lead of the swarm), or none.
+  Dashed lines go from the master to the drones it pilots.
+- The use case of Part 3: a drone may **follow the predator out of the field as long as another drone stays
+  on the field**. The panel says which drones keep the field, and turns red when none is left.
+
+A step is turned into what the drone does on screen (patrol, guard, track, counter, pursue, return, ...)
+from the words of its name, so the model can name its states as it likes; `fleet.behaviours` lists the
+exceptions. With `simPreview: true` each drone has a list of its steps and *Play the scenario* plays
+`fleet.scenario`; with `false` the panel only follows Cameo.
+
+### Fleet simulation: what Cameo sends
+
+The state frame of the plugin gains two optional fields (the relay keeps them, `relay/src/frames.js`;
+`relay/test/frames.test.js`):
+
+```json
+{"type":"info","event":"state","status":"running","step":"Patrolling",
+ "drones":[{"id":"D1","step":"Patrolling","role":"shepherd","name":"Shepherd 1"},
+           {"id":"D2","step":"Guarding flock","role":"guard"}],
+ "master":"base"}
+```
+
+`id` and `step` are required, `role` and `name` optional; at most 16 drones; `master` is `"base"` or the
+`id` of a drone. `step` stays: it is what Part 1 and Part 2 read. A frame without `drones` shows one drone
+of `fleet.defaultRole` in Part 3.
+
+Plugin side, still to do: today `PastureSimulationEngine` merges the active states of every object into one
+step; it must keep them per drone instance to fill `drones`. `LocalRelay.kt` (the relay inside Cameo)
+rebuilds the state frame with `status` and `step` only, so it must copy `drones` and `master` too.
+

@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+- **Part 3: a fleet of drones** (`/part3/`, first skeleton). Its simulation panel shows several drones, each
+  with a role (drone shepherd, sheep guard, anti-predator) and its own step, the master (base station or the
+  lead drone of a swarm), and the new use case: a drone follows the predator out of the field only while
+  another one keeps the field. The plugin's state frame may carry `drones` and `master`; the relay passes
+  them on. Part 1 and Part 2 keep their one-drone panel, unchanged.
+
+- **Session timing.** The guides tell the relay which scene each student is on, under an anonymous code
+  shown in the Flight plan, with the version of the exercise (`tpVersion`). `/monitor/` shows a session
+  (where everyone is, progress over the clock) and the overall stats (time per scene, pacing) to
+  calibrate the content. Kept in the relay volume. `?track=0` turns it off on a teacher's machine.
+
 - **Cameo plugin 1.0.9: one click to the browser bridge.** At ISAE, the PCs let only the browser out (Java
   and PowerShell time out on port 443). In *Local* mode the pairing window shows *Open the browser bridge*:
   it opens `/bridge/` with the code filled in, started, link on Auto. When Auto mode falls back to the

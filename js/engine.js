@@ -7,6 +7,10 @@
   const LINKS = window.MODEL_LINKS;
   const COURSE = window.COURSE;
   const WIDGETS = window.WIDGETS || {};
+  /* Teacher view (assets/teacher-<key>/, loaded by ?teacher=<key>): notes per scene, its own colours,
+     its own saved progress, and no timing sent. */
+  const TEACH = window.TEACHER || null;
+  if (TEACH) CFG.storageKey += ':teacher';
 
   const $ = (sel, root) => (root || document).querySelector(sel);
   const $$ = (sel, root) => Array.from((root || document).querySelectorAll(sel));
@@ -125,7 +129,7 @@
   function todoId(sceneId, path, i) { return sceneId + '/' + path + '/t' + i; }
 
   /* ───────── state ───────── */
-  const DEFAULTS = { v: 1, scene: null, last: null, seen: {}, steps: {}, answers: {}, widgets: {}, todos: {}, author: !!CFG.authorMode, theme: null };
+  const DEFAULTS = { v: 1, scene: null, last: null, seen: {}, steps: {}, answers: {}, syncT: {}, widgets: {}, todos: {}, author: !!CFG.authorMode, theme: null };
   let S = loadState();
   function loadState() {
     let s = null;
@@ -283,17 +287,19 @@
   function openInCameo(key, btn) {
     const L = LINKS[key];
     if (!B || B.state().status !== "connected") { openCameo(); return; }
-    btn.disabled = true;
-    const done = L.id ? B.open(L.id, L.type) : B.openByName(nameSpec(L));
+    if (btn) btn.disabled = true;
+    const done = L.id ? B.open(L.id, L.type, nameSpec(L)) : B.openByName(nameSpec(L));
     done.then(
       () => toast("Shown in Cameo"),
-      (err) => (!L.id && FIND_ERROR[err && err.message] ? toast(FIND_ERROR[err.message](L), 8000, 'bad') : toast("Cameo could not show it", 6000, 'bad'))
-    ).then(() => { btn.disabled = false; });
+      (err) => (FIND_ERROR[err && err.message] ? toast(FIND_ERROR[err.message](L), 8000, 'bad') : toast("Cameo could not show it", 6000, 'bad'))
+    ).then(() => { if (btn) btn.disabled = false; });
   }
 
   function openLink(key) {
     const L = LINKS[key];
     if (!L) return;
+    /* A link marked direct opens the element in Cameo (the diagram or matrix itself) instead of the tree. */
+    if (L.direct && B && B.state().status === "connected") { openInCameo(key, null); return; }
     openOverlay({ kind: 'dialog', label: 'In the Model Browser', title: L.name, body: `<div style="display:grid;gap:.9rem">${treeHTML(L)}${linkActions(key)}</div>` });
   }
 
@@ -313,7 +319,7 @@
 
   function videoHTML(v) {
     return `<figure class="fig video-fig" style="--w:${v.w};--h:${v.h}">
-      <div class="video-frame"><video src="${esc(v.src)}" width="${v.w}" height="${v.h}" aria-label="${esc(v.alt || '')}" autoplay muted loop playsinline controls preload="auto"></video><button type="button" class="video-zoom" data-video-zoom aria-pressed="false" aria-label="Enlarge the video">${ic('zoom')}</button></div>
+      <div class="video-frame"><video src="${esc(v.src)}" width="${v.w}" height="${v.h}" aria-label="${esc(v.alt || '')}" autoplay muted loop playsinline controls preload="auto"></video><button type="button" class="video-zoom" data-video-zoom aria-label="Full screen">${ic('zoom')}</button></div>
       ${v.caption ? `<figcaption>${inline(v.caption)}</figcaption>` : ''}
     </figure>`;
   }
@@ -350,10 +356,124 @@
     const cur = (S.answers[qid] || {}).items || [];
     const next = Array.from({ length: rowCount(q) + 1 }, (_, i) => cur[i] || '');
     setPath(S.answers, qid + '.items', next);
+    touched('a:' + qid);
     save();
     const i = next.length - 1;
     $(`[data-list="${qid}"]`).insertAdjacentHTML('beforeend', listRowHTML(q, i, next));
     $('#q-' + qid + '-i' + i).focus();
+  }
+
+  /* ───────── shared with the other pages of the same Cameo code (phone ↔ computer) ─────────
+     Through the relay (Bridge.sendPeer; with Cameo in Local mode the browser bridge page carries it).
+     What travels is what the step on screen holds: the answers and notes typed in it, its checkboxes and
+     its validated steps, under keys 'a:<answer>' (a question, 'names', 'notes.<id>'), 't:<todo>', 's:<step>'.
+     A change made here is applied on the other page at once, over what it had (so it can correct it).
+     A page that arrives on a step (or joins) sends what it has changed there and asks the other for its
+     own: each key keeps the time of its last change, and the newest wins. */
+  const PEER_COURSE = CFG.storageKey;
+  const peerOut = new Set();
+  let peerTimer = 0;
+  function ansKey(path) {
+    const k = path.split('.');
+    return 'a:' + (k[0] === 'notes' ? k.slice(0, 2).join('.') : k[0]);
+  }
+  function syncGet(key) {
+    const id = key.slice(2);
+    if (key[0] === 'a') return getPath(S.answers, id);
+    return !!(key[0] === 't' ? S.todos : S.steps)[id];
+  }
+  function syncPut(key, v) {
+    const id = key.slice(2);
+    if (key[0] === 'a') return setPath(S.answers, id, v == null ? v : JSON.parse(JSON.stringify(v)));
+    const o = key[0] === 't' ? S.todos : S.steps;
+    if (v) o[id] = true; else delete o[id];
+  }
+  function touched(key) {
+    S.syncT[key] = Date.now();
+    peerOut.add(key);
+    clearTimeout(peerTimer);
+    peerTimer = setTimeout(flushPeer, 300);
+  }
+  function peerSet(keys) {
+    const set = {};
+    keys.forEach((k) => { set[k] = { v: syncGet(k), t: S.syncT[k] || 0 }; });
+    return set;
+  }
+  function sendPeer(data) { return !!(window.Bridge && window.Bridge.sendPeer(Object.assign({ course: PEER_COURSE }, data))); }
+  function flushPeer() {
+    if (!peerOut.size) return;
+    const keys = [...peerOut];
+    peerOut.clear();
+    sendPeer({ kind: 'sync', live: true, set: peerSet(keys) });
+  }
+  // The keys of what the step on screen shows.
+  function pageKeys() {
+    const keys = new Set();
+    $$('[data-ans]', stage).forEach((el) => keys.add(ansKey(el.dataset.ans)));
+    $$('[data-todo]', stage).forEach((el) => keys.add('t:' + el.dataset.todo));
+    $$('[data-step]', stage).forEach((el) => keys.add('s:' + el.dataset.step));
+    return [...keys];
+  }
+  function syncPeer() {
+    const keys = pageKeys();
+    if (keys.length) sendPeer({ kind: 'sync', ask: keys, set: peerSet(keys.filter((k) => S.syncT[k])) });
+  }
+  function onPeer(data) {
+    if (!data || data.course !== PEER_COURSE || data.kind !== 'sync') return;
+    const set = data.set && typeof data.set === 'object' ? data.set : {};
+    const changed = [];
+    Object.keys(set).forEach((key) => {
+      const it = set[key];
+      if (!/^[ats]:./.test(key) || !it || typeof it.t !== 'number') return;
+      /* A live change is the latest thing someone did, whatever the clocks say; the rest goes by time. */
+      if (!data.live && it.t <= (S.syncT[key] || 0)) return;
+      syncPut(key, it.v);
+      S.syncT[key] = it.t;
+      changed.push(key);
+    });
+    if (changed.length) { save(); refreshShared(changed); }
+    /* The other page asks for ours: send what it does not have newer. */
+    if (Array.isArray(data.ask)) {
+      const keys = data.ask.filter((k) => typeof k === 'string' && /^[ats]:./.test(k) && (S.syncT[k] || 0) > ((set[k] || { t: 0 }).t));
+      if (keys.length) sendPeer({ kind: 'sync', set: peerSet(keys) });
+    }
+  }
+  /* Puts the step on screen in line with what changed, without touching the field being typed in. */
+  function refreshShared(keys) {
+    const was = shown && $('.done-stamp', stage) && !$('.done-stamp', stage).hidden;
+    keys.forEach((key) => {
+      const id = key.slice(2);
+      if (key[0] === 't') { $$(`[data-todo="${CSS.escape(id)}"]`, stage).forEach((x) => { x.checked = !!S.todos[id]; }); return; }
+      if (key[0] === 's') { $$(`[data-step="${CSS.escape(id)}"]`, stage).forEach((x) => x.setAttribute('aria-checked', String(!!S.steps[id]))); return; }
+      const q = questionById(id);
+      const list = q && q.type === 'list' && $(`[data-list="${CSS.escape(id)}"]`, stage);
+      if (list) {
+        const items = (S.answers[id] || {}).items || [];
+        for (let i = list.children.length; i < rowCount(q); i++) list.insertAdjacentHTML('beforeend', listRowHTML(q, i, items));
+      }
+      $$('[data-ans]', stage).filter((el) => ansKey(el.dataset.ans) === key).forEach((el) => {
+        const v = getPath(S.answers, el.dataset.ans);
+        if (el.type === 'radio') el.checked = el.value === v;
+        else if (el !== document.activeElement && el.value !== (v || '')) el.value = v || '';
+      });
+      const p = q && document.getElementById('q-' + id + '-p');
+      const call = p && $('.q-call', p.closest('.question'));
+      if (call) call.hidden = !answered(q);
+    });
+    if (!shown) return;
+    refreshChrome();
+    const stamp = $('.done-stamp', stage);
+    if (stamp) {
+      const now = sceneStatus(shown) === 'done';
+      stamp.hidden = !now;
+      if (now && !was) { stamp.classList.remove('slap'); void stamp.offsetWidth; stamp.classList.add('slap'); }
+    }
+  }
+  if (window.Bridge) {
+    window.Bridge.onFrame((f) => {
+      if (f.kind === 'peer') onPeer(f.data);
+      else if (f.kind === 'hello') syncPeer();
+    });
   }
 
   function questionHTML(q) {
@@ -487,7 +607,7 @@
         '</div></div>';
     }
     if (b.solution) {
-      return `<div class="reveal solution"><button type="button" class="solution-cover" data-reveal aria-expanded="false">${ic('eyeoff', 'eye-closed')}${ic('eye', 'eye-open')}<span class="when-closed">${esc(b.solution.label)}</span><span class="when-open">Hide the solution</span></button><div class="reveal-body"><div>${(b.solution.blocks || []).map((x, xi) => renderBlock(x, scene, path + '.solution.' + xi)).join('')}</div></div></div>`;
+      return `<div class="reveal solution${TEACH ? ' open' : ''}"><button type="button" class="solution-cover" data-reveal aria-expanded="${!!TEACH}">${ic('eyeoff', 'eye-closed')}${ic('eye', 'eye-open')}<span class="when-closed">${esc(b.solution.label)}</span><span class="when-open">Hide the solution</span></button><div class="reveal-body"><div>${(b.solution.blocks || []).map((x, xi) => renderBlock(x, scene, path + '.solution.' + xi)).join('')}</div></div></div>`;
     }
     if (b.notes) {
       const v = getPath(S.answers, 'notes.' + b.notes.id) || '';
@@ -546,7 +666,23 @@
         ${scene.lead ? `<p class="lead">${inline(scene.lead)}</p>` : ''}
         <div class="waypoint-rule">${ic('waypoint')}</div>
       </header>`;
-    return `<article class="scene" data-scene="${scene.id}">${head}<div class="blocks">${scene.blocks.map((b, i) => renderBlock(b, scene, String(i))).join('')}</div></article>`;
+    return `<article class="scene" data-scene="${scene.id}">${head}<div class="blocks">${teachHTML(scene)}${scene.blocks.map((b, i) => renderBlock(b, scene, String(i))).join('')}</div></article>`;
+  }
+
+  /* The panel of the teacher view, at the top of a scene: what is expected, what to check, frequent mistakes. */
+  function teachHTML(scene) {
+    const t = TEACH && TEACH.scenes && TEACH.scenes[scene.id];
+    if (!t) return '';
+    const list = (items, icon, cls) => `<ul class="teach-list${cls ? ' ' + cls : ''}">` + items.map((x) => `<li>${ic(icon)}<span>${inline(x)}</span></li>`).join('') + '</ul>';
+    let h = `<section class="teach" aria-label="Teacher notes"><div class="teach-head"><span class="teach-tag">Teacher</span><strong>${inline(t.title || 'What to check')}</strong></div>`;
+    if (t.pts) h += `<p class="teach-pts">${inline(t.pts)}</p>`;
+    // A list of expected items (messages, transitions…) reads better numbered.
+    if (Array.isArray(t.expect)) h += '<ol class="teach-seq">' + t.expect.map((x) => `<li>${inline(x)}</li>`).join('') + '</ol>';
+    else if (t.expect) h += `<p class="teach-expect">${inline(t.expect)}</p>`;
+    if (t.check && t.check.length) h += '<h3 class="teach-h">Check in their model</h3>' + list(t.check, 'check');
+    if (t.mistakes && t.mistakes.length) h += '<h3 class="teach-h">Frequent mistakes</h3>' + list(t.mistakes, 'alert', 'bad');
+    if (t.blocks) h += `<div class="teach-blocks">${t.blocks.map((b, i) => renderBlock(b, scene, 'teach.' + i)).join('')}</div>`;
+    return h + '</section>';
   }
 
   function show(scene, opts) {
@@ -570,6 +706,8 @@
     $$('.scene-head, .blocks > *', art).forEach((el, i) => el.style.setProperty('--i', Math.min(i, 8)));
     mountWidgets(art, scene);
     refreshChrome();
+    if (!same) syncPeer();
+    if (!same && window.Track) window.Track.scene();
     document.title = (scene.index ? scene.title + ' · ' : '') + CFG.appName;
     if (!same) {
       window.scrollTo(0, 0);
@@ -725,7 +863,7 @@
       const done = c.scenes.filter((s) => sceneStatus(s) === 'done').length;
       h += `<div class="toc-ch"${c.phase ? ` data-phase="${esc(c.phase)}"` : ''}><div class="toc-ch-head"><span class="crumb-code">${esc(c.code)}</span><b>${esc(c.title)}</b><span>${done}/${c.scenes.length}</span></div><ul class="toc-list">`;
       c.scenes.forEach((s) => {
-        h += `<li><button type="button" class="toc-item" data-goto="${s.id}"${s === shown ? ' aria-current="true"' : ''}><span class="dot ${sceneStatus(s)}"></span><span>${esc(s.title)}</span><span class="toc-kind">${KINDS[s.kind].label}</span></button></li>`;
+        h += `<li><button type="button" class="toc-item" data-goto="${s.id}"${s === shown ? ' aria-current="true"' : ''}><span class="dot ${sceneStatus(s)}"></span><span>${esc(s.title)}</span><span class="toc-kind">${TEACH && TEACH.scenes[s.id] ? '<b class="toc-teach">Notes</b> ' : ''}${KINDS[s.kind].label}</span></button></li>`;
       });
       h += '</ul></div>';
     });
@@ -733,6 +871,7 @@
     h += `<div class="menu-group">
         <div class="menu-row"><label class="switch"><input type="checkbox" data-setting="dark"${dark ? ' checked' : ''}><i></i>Dark theme</label></div>
         <div class="menu-row"><label class="switch"><input type="checkbox" data-setting="author"${S.author ? ' checked' : ''}><i></i>Author mode</label><span class="mono-label">shows what is missing</span></div>
+        ${trackCodeHTML()}
         <div class="btn-row">
           <button type="button" class="btn ghost small" data-goto="finish">${ic('pencil')}My answers</button>
           <button type="button" class="btn ghost small author-only" data-action="board">${ic('list')}Authoring to-do</button>
@@ -829,6 +968,7 @@
     if (S.theme) document.documentElement.dataset.theme = S.theme;
     else delete document.documentElement.dataset.theme;
     document.body.classList.toggle('author', !!S.author);
+    document.body.classList.toggle('teacher', !!TEACH);
     const tb = document.getElementById('theme-btn');
     if (tb) { const dark = effectiveTheme() === 'dark'; tb.setAttribute('aria-pressed', String(dark)); tb.setAttribute('aria-label', dark ? 'Switch to light theme' : 'Switch to dark theme'); tb.dataset.theme = dark ? 'dark' : 'light'; }
   }
@@ -844,6 +984,7 @@
     const was = sceneStatus(shown);
     const on = !S.steps[id];
     if (on) S.steps[id] = true; else delete S.steps[id];
+    touched('s:' + id);
     save();
     el.setAttribute('aria-checked', String(on));
     if (on) {
@@ -889,9 +1030,9 @@
 
     const videoZoom = t.closest('[data-video-zoom]');
     if (videoZoom) {
-      const on = videoZoom.closest('.video-fig').classList.toggle('is-open');
-      videoZoom.setAttribute('aria-pressed', String(on));
-      videoZoom.setAttribute('aria-label', on ? 'Reduce the video' : 'Enlarge the video');
+      const frame = videoZoom.closest('.video-frame');
+      if (document.fullscreenElement) document.exitFullscreen();
+      else if (frame.requestFullscreen) frame.requestFullscreen();
       return;
     }
 
@@ -949,6 +1090,7 @@
     if (t.matches('[data-ans]')) {
       if (t.type === 'radio' && !t.checked) return;
       setPath(S.answers, t.dataset.ans, t.value);
+      touched(ansKey(t.dataset.ans));
       save();
       const box = t.closest('.question, .notes');
       const flag = box && $('.saved', box);
@@ -960,6 +1102,7 @@
     }
     if (t.matches('[data-todo]')) {
       if (t.checked) S.todos[t.dataset.todo] = true; else delete S.todos[t.dataset.todo];
+      touched('t:' + t.dataset.todo);
       save();
       $$(`[data-todo="${CSS.escape(t.dataset.todo)}"]`).forEach((x) => { x.checked = t.checked; });
       return;
@@ -999,10 +1142,40 @@
     if (quick && Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 2.2) step(dx < 0 ? 1 : -1);
   }, { passive: true });
 
+  /* ───────── timing (js/track.js) ───────── */
+  /* The fingerprint of the content tells two versions of the guide apart even when tpVersion was not changed. */
+  const FP = (function () {
+    let h = 5381;
+    const src = scenes.map((s) => s.id + ':' + s._steps.length).join('|');
+    for (let i = 0; i < src.length; i++) h = ((h * 33) ^ src.charCodeAt(i)) >>> 0;
+    return h.toString(36).slice(-5);
+  })();
+  function whereNow() {
+    if (!shown) return {};
+    return {
+      scene: shown.id, index: shown.index, title: String(shown.title).replace(/\(\([^)]*\)\)|[*_`]/g, ''),
+      total: scenes.length, fp: FP,
+      done: Object.keys(S.steps).length, steps: scenes.reduce((n, sc) => n + stepIds(sc).length, 0)
+    };
+  }
+  function trackCodeHTML() {
+    const c = window.Track && window.Track.code();
+    return c ? `<div class="menu-row"><span class="track-row" title="Tells the teachers how far the class is, without your name">Session code <b class="track-code">${esc(c)}</b></span><span class="mono-label">anonymous</span></div>` : '';
+  }
+
   /* ───────── go ───────── */
   if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+  if (window.Track && !TEACH) window.Track.start(whereNow);
   buildRoute();
   applySettings();
+  /* In the teacher view, a badge in the header that also leads to the teacher view of the other part. */
+  if (TEACH) {
+    const o = TEACH.other;
+    const href = o ? esc(o.href + location.search) : '';
+    $('.top-actions').insertAdjacentHTML('afterbegin', o
+      ? `<a class="teach-badge" href="${href}" title="${esc(o.label)}">Teacher<small>${esc(o.label)}</small></a>`
+      : '<span class="teach-badge">Teacher</span>');
+  }
   const first = fromHash() || byId[S.scene] || scenes[0];
   if (!fromHash() && first.index) history.replaceState(null, '', '#' + first.id);
   show(first, { focus: false });

@@ -560,30 +560,22 @@ strong { font-weight: 700; }
 .fig.xs img { max-width: min(100%, 15rem); }
 .fig.sm img { max-width: min(100%, 24rem); }
 .fig figcaption { font-size: 0.9rem; color: var(--ink-2); max-width: 36rem; }
-/* compact by default, so a video never forces a long scroll: the size follows the
-   video's own ratio (--w / --h set on the figure), hover enlarges, the button pins it open */
+/* the video opens at a readable size; the button goes full screen. No hover scaling: it moved
+   the button away from under the pointer, so it could never be clicked */
 .video-fig { position: relative; z-index: 1; max-width: 100%; }
 .video-frame {
   position: relative; padding: 6px; border: 1.5px solid var(--line); border-radius: 10px; background: var(--paper);
-  width: min(100%, 26rem, calc(18rem * var(--w, 16) / var(--h, 9)));
-  max-width: 100%; transform-origin: top left;
-  transition: width 0.3s var(--ease), transform 0.25s var(--ease), box-shadow 0.25s;
+  width: min(100%, 36rem);
+  max-width: 100%;
 }
 .video-frame video { display: block; width: 100%; height: auto; border-radius: 5px; }
-.video-fig.is-open .video-frame { width: min(100%, 44rem, calc(70vh * var(--w, 16) / var(--h, 9))); }
 .video-zoom {
   position: absolute; top: 10px; right: 10px; z-index: 1; display: grid; place-items: center; width: 2rem; height: 2rem;
-  border: 0; border-radius: 8px; background: rgba(21, 34, 26, 0.82); color: #fff; cursor: zoom-in;
+  border: 0; border-radius: 8px; background: rgba(21, 34, 26, 0.82); color: #fff; cursor: pointer;
 }
 .video-zoom svg { width: 1.1rem; height: 1.1rem; }
-.video-fig.is-open .video-zoom { cursor: zoom-out; }
-@media (hover: hover) and (pointer: fine) and (min-width: 640px) {
-  .video-fig:hover .video-frame {
-    transform: scale(1.4); z-index: 2; box-shadow: 0 12px 32px rgba(21, 34, 26, 0.22);
-    transition-delay: 0.2s;
-  }
-  .video-fig.is-open:hover .video-frame { transform: none; box-shadow: none; }
-}
+.video-frame:fullscreen { display: grid; place-items: center; width: 100%; height: 100%; padding: 0; border: 0; border-radius: 0; background: #000; }
+.video-frame:fullscreen video { width: auto; height: auto; max-width: 100%; max-height: 100%; border-radius: 0; }
 
 /* ───────── placeholders (author mode only) ───────── */
 .ph {
@@ -1346,3 +1338,79 @@ body:not(.author) .ph, body:not(.author) .author-only { display: none; }
 #theme-btn .i-sun { display: none; }
 #theme-btn[data-theme="dark"] .i-sun { display: block; }
 #theme-btn[data-theme="dark"] .i-moon { display: none; }
+
+/* Session code of the timing (js/track.js), in the Flight plan */
+.track-row { white-space: nowrap; }
+.track-code { font-family: var(--font-mono); letter-spacing: 0.08em; margin-left: 0.35rem; }
+
+/* ───────── teacher view (?teacher=<key>, see js/engine.js) ─────────
+   Its own colours: lilac ground, teal route, violet notes. A teacher view never looks like the green and pink
+   student guide, on the teacher's screen or seen from across the room. */
+body.teacher {
+  --bg: #e7e3f2;
+  --bg-line: #d3cce6;
+  --surface: #fcfbff;
+  --surface-2: #f0edf8;
+  --line: #c6bedc;
+  --ink: #1c1730;
+  --ink-2: #463f60;
+  --ink-3: #686183;
+  --route: #0b6f75;
+  --route-soft: #d0ecec;
+  --on-route: #ffffff;
+  --teach: #5a2ca0;
+  --teach-soft: #efe8fb;
+  --teach-ink: #ffffff;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) body.teacher {
+    --bg: #14111d;
+    --bg-line: #221c31;
+    --surface: #1c1828;
+    --surface-2: #252036;
+    --line: #3b3452;
+    --ink: #ece8f7;
+    --ink-2: #c3bcd9;
+    --ink-3: #9790ae;
+    --route: #6dd3d3;
+    --route-soft: #143a3c;
+    --on-route: #052224;
+    --teach: #b994ff;
+    --teach-soft: #261f3a;
+    --teach-ink: #1a0f30;
+  }
+}
+:root[data-theme="dark"] body.teacher {
+  --bg: #14111d;
+  --bg-line: #221c31;
+  --surface: #1c1828;
+  --surface-2: #252036;
+  --line: #3b3452;
+  --ink: #ece8f7;
+  --ink-2: #c3bcd9;
+  --ink-3: #9790ae;
+  --route: #6dd3d3;
+  --route-soft: #143a3c;
+  --on-route: #052224;
+  --teach: #b994ff;
+  --teach-soft: #261f3a;
+  --teach-ink: #1a0f30;
+}
+.teach { display: grid; gap: 0.6rem; padding: 0 1rem 1rem; border: 2px solid var(--teach); border-radius: var(--r); background: var(--teach-soft); overflow: hidden; }
+.teach-head { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 0.7rem; margin: 0 -1rem; padding: 0.55rem 1rem; background: var(--teach); color: var(--teach-ink); }
+.teach-head strong { font-family: var(--font-display); font-size: 1.08rem; line-height: 1.3; }
+.teach-tag { font-family: var(--font-mono); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; padding: 0.05rem 0.55rem; border: 1.5px solid currentColor; border-radius: 999px; }
+.teach-pts { margin: 0.3rem 0 0; font-weight: 700; color: var(--teach); }
+.teach-expect { margin: 0.3rem 0 0; }
+.teach-seq { display: grid; gap: 0.2rem; margin: 0.3rem 0 0; padding-left: 1.6rem; }
+.teach-seq li::marker { font-family: var(--font-mono); font-weight: 700; color: var(--teach); }
+.teach-h { margin: 0.4rem 0 0; font-family: var(--font-mono); font-size: 0.78rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); }
+.teach-list { display: grid; gap: 0.4rem; margin: 0; padding: 0; list-style: none; }
+.teach-list li { display: grid; grid-template-columns: 1.2rem minmax(0, 1fr); gap: 0.55rem; align-items: start; }
+.teach-list svg { width: 1.2rem; height: 1.2rem; margin-top: 0.22rem; color: var(--grass); }
+.teach-list.bad svg { color: var(--danger); }
+.teach-blocks { display: grid; gap: 0.8rem; margin-top: 0.3rem; }
+.teach-badge { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; padding: 0.25rem 0.8rem; border-radius: 999px; background: var(--teach); color: var(--teach-ink); font-weight: 700; font-size: 0.85rem; line-height: 1.15; text-decoration: none; white-space: nowrap; }
+.teach-badge small { font-size: 0.68rem; font-weight: 400; opacity: 0.85; }
+@media (max-width: 640px) { .teach-badge small { display: none; } }
+.toc-teach { color: var(--teach); font-weight: 700; }
