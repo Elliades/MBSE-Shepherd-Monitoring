@@ -91,6 +91,8 @@
 <script src="content/config.js"></script>
 <script src="content/model-links.js"></script>
 <script src="content/scenes.js"></script>
+<script>/* Teacher view: ?teacher=<key> adds the notes of assets/teacher-<key>/ (not linked from the guide, not in the repository). */
+(function () { var m = /[?&]teacher=([a-z0-9]{6,32})(?:&|$)/.exec(location.search); if (m) document.write('<script src="' + (window.COURSE_CONFIG.sharedBase || '') + 'assets/teacher-' + m[1] + '/part2.js"><\/script>'); })();</script>
 <script src="../js/widgets.js"></script>
 <script src="../js/relay-http.js"></script>
 <script src="../js/bridge.js"></script>
@@ -99,6 +101,7 @@
 <script src="../js/sim-motion.js"></script>
 <script src="../js/sim-scene.js"></script>
 <script src="../js/sim.js"></script>
+<script src="../js/track.js"></script>
 <script src="../js/engine.js"></script>
 </body>
 </html>

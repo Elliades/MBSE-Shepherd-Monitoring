@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 360" width="760" height="360" font-family="Segoe UI, system-ui, -apple-system, sans-serif">
+  <defs>
+    <marker id="arr" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="11" markerHeight="11" orient="auto">
+      <path d="M1 1 L11 6 L1 11 Z" fill="#1f2937"/>
+    </marker>
+  </defs>
+  <rect width="760" height="360" rx="14" fill="#ffffff"/>
+
+  <!-- Lifeline heads -->
+  <g stroke-width="2" font-size="16" font-weight="600" text-anchor="middle">
+    <rect x="50" y="24" width="140" height="44" rx="6" fill="#fef3c7" stroke="#b45309"/>
+    <text x="120" y="52" fill="#78350f">bear</text>
+    <rect x="310" y="24" width="140" height="44" rx="6" fill="#dbeafe" stroke="#1d4ed8"/>
+    <text x="380" y="52" fill="#1e3a8a">subSystemA</text>
+    <rect x="570" y="24" width="140" height="44" rx="6" fill="#dbeafe" stroke="#1d4ed8"/>
+    <text x="640" y="52" fill="#1e3a8a">subSystemB</text>
+  </g>
+
+  <!-- Lifelines -->
+  <g stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="6 5">
+    <line x1="120" y1="68" x2="120" y2="336"/>
+    <line x1="380" y1="68" x2="380" y2="336"/>
+    <line x1="640" y1="68" x2="640" y2="336"/>
+  </g>
+
+  <!-- Activations -->
+  <g fill="#e2e8f0" stroke="#64748b" stroke-width="1.5">
+    <rect x="374" y="104" width="12" height="150"/>
+    <rect x="634" y="158" width="12" height="52"/>
+  </g>
+
+  <!-- Messages -->
+  <g stroke="#1f2937" stroke-width="1.8" fill="none" marker-end="url(#arr)">
+    <line x1="120" y1="112" x2="372" y2="112"/>
+    <line x1="386" y1="166" x2="632" y2="166"/>
+    <line x1="632" y1="204" x2="388" y2="204" stroke-dasharray="7 5"/>
+    <line x1="372" y1="246" x2="122" y2="246" stroke-dasharray="7 5"/>
+  </g>
+  <g font-size="14" fill="#1f2937" text-anchor="middle">
+    <text x="246" y="102">message 1 (physical flow)</text>
+    <text x="510" y="156">message 2</text>
+    <text x="510" y="194">answer</text>
+    <text x="246" y="236">result</text>
+  </g>
+  <text x="380" y="328" font-size="13" fill="#64748b" text-anchor="middle">Shape only: your names, flows and number of subsystems are yours.</text>
+</svg>

@@ -705,6 +705,59 @@ window.COURSE = {
       ]
     },
 
+    {
+      id: "q8-1", ch: "T5", kind: "do", ref: "Question 8.1",
+      title: "Question 8.1: white box scenario, detecting the bear",
+      lead: "Describe, as a white box sequence diagram, how the physical architecture detects the bear.",
+      blocks: [
+        {
+          steps: [
+            "Create a sequence diagram of the physical scenario \"detect the bear\", from the bear approaching to the bear being detected.",
+            "Show the **actors** (the bear, the shepherd if he takes part) and the **subsystems** of the SoI that act in the scenario, each one as a lifeline.",
+            "Draw the physical flows exchanged, in order, from the bear through the subsystems.",
+            "If a subsystem is too coarse to tell who does what, **decompose it** and show its own subsystems instead."
+          ]
+        },
+        {
+          figure: {
+            src: "assets/img/sequence-white-box.svg", w: 760, h: 360,
+            alt: "A sequence diagram with three lifelines: bear, subSystemA and subSystemB. The bear sends a message to subSystemA, which sends a message to subSystemB. subSystemB answers to subSystemA, which answers to the bear.",
+            caption: "The shape expected: bear → subSystemA → subSystemB. Rename the lifelines, and add as many subsystems as your solution needs."
+          }
+        },
+        {
+          callout: {
+            tone: "note", title: "White box means visible inside",
+            text: "A black box scenario stops at the SoI. Here the SoI is opened: every lifeline is a subsystem or an actor, and each message is a physical flow between them."
+          }
+        },
+        { recall: { items: [{ id: "a-create-sd", title: "Create the sequence diagram" }, { id: "a-lifelines", title: "Add the lifelines" }, { id: "a-messages", title: "Send messages between actors" }] } },
+        { call: "When your sequence diagram is finished, call the teacher to see it." }
+      ]
+    },
+    {
+      id: "q8-2", ch: "T5", kind: "do", ref: "Question 8.2",
+      title: "Question 8.2: white box scenario, engaging the bear",
+      lead: "Describe, as a white box sequence diagram, how the physical architecture engages the bear once it enters the safe zone.",
+      blocks: [
+        {
+          steps: [
+            "Create a second sequence diagram of the physical scenario \"engage the bear\", from the bear entering the safe zone to the counter actions on the bear.",
+            "Show the **actors** and the **subsystems** that act: the ones that decide, alert the shepherd, and scare the bear with sound and light.",
+            "Draw the physical flows in order, down to the subsystem that acts on the bear.",
+            "As in Question 8.1, **decompose** a subsystem when it is too coarse to show who does what."
+          ]
+        },
+        {
+          callout: {
+            tone: "tip", title: "Same shape as Question 8.1",
+            text: "The bear is the first lifeline again, and the flows go through the subsystems one after the other, as in the figure of Question 8.1."
+          }
+        },
+        { call: "When your sequence diagram is finished, call the teacher to see it." }
+      ]
+    },
+
     /* ───────────────────────── T6 · Allocation ───────────────────────── */
     {
       id: "q9", ch: "T6", kind: "do", ref: "Question 9", pts: 1,
