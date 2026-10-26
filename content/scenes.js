@@ -198,7 +198,7 @@ window.COURSE = {
             {
               label: "Standard", sub: "Cameo's plugin manager",
               blocks: [
-                { download: { label: "Plugin to install", file: "com.elliades.isae.mbseShepherd_1.1.0.zip", src: "assets/plugins/com.elliades.isae.mbseShepherd_1.1.0.zip", size: "18 MB" } },
+                { download: { label: "Plugin to install", file: "com.elliades.isae.mbseShepherd_1.1.1.zip", src: "assets/plugins/com.elliades.isae.mbseShepherd_1.1.1.zip", size: "18 MB" } },
                 {
                   steps: [
                     "In Cameo, choose {{Help > Resource & Plugin Manager}}, then click {{Import}}.",
@@ -216,7 +216,7 @@ window.COURSE = {
             {
               label: "No admin rights", sub: "a script, no installer",
               blocks: [
-                { download: { label: "Plugin archive", file: "com.elliades.isae.mbseShepherd_1.1.0.zip", src: "assets/plugins/com.elliades.isae.mbseShepherd_1.1.0.zip", size: "18 MB" } },
+                { download: { label: "Plugin archive", file: "com.elliades.isae.mbseShepherd_1.1.1.zip", src: "assets/plugins/com.elliades.isae.mbseShepherd_1.1.1.zip", size: "18 MB" } },
                 { download: { label: "Install script", file: "install-plugin.ps1", src: "assets/plugins/install-plugin.ps1", size: "2 KB" } },
                 {
                   steps: [
@@ -497,7 +497,7 @@ window.COURSE = {
           steps: [
             "Open the diagram [[op-context]].",
             {
-              t: "From the diagram palette, choose {{Port}} and click on the border of **uAV operator**. Type the new port with [[if-flightplan]].",
+              t: "From the diagram palette, choose {{Proxy Port}} and click on the border of **uAV operator**. Type the new port with [[if-flightplan]].",
               note: "Rename the port <<fp : IF_FlightPlan>> and press **Ctrl+Space** to auto-complete, or drag **IF_FlightPlan** from the Model Browser onto the port."
             },
             "Look at the port: it shows an **out** arrow. It comes from the direction of the flow property in the interface.",
@@ -582,16 +582,14 @@ window.COURSE = {
           steps: [
             "Go to [[uc-pkg]], open **Use Cases and Scenarios**.",
             "Find *Parameter Mission*, *Surveillance of a \"safe zone\" area* and *Monitor sheep position*.",
-            "Expand **1. Preparation phase** (click the +).",
-            "Locate [[uc-prepare-mission]] in the diagram.",
-            "Identify [[uc-parameter-mission]]. This is the one we will work on."
+            "Select [[uc-parameter-mission]] in the diagram. This is the one we will work on."
           ]
         },
         {
           figure: {
-            src: "assets/img/uc-prepare-mission-circled.png",
-            alt: "The Use Cases and Scenarios diagram. The Prepare Mission use case in the 1. Preparation phase package is circled in red.",
-            caption: "The Use Cases and Scenarios diagram. Circled: Prepare Mission."
+            src: "assets/img/uc-parameter-mission-circled.png",
+            alt: "The Use Cases and Scenarios diagram. The Parameter Mission use case in the 1. Preparation phase package is circled in red.",
+            caption: "The Use Cases and Scenarios diagram. Circled: Parameter Mission."
           }
         }
       ]
@@ -850,8 +848,7 @@ window.COURSE = {
         {
           steps: [
             "Right-click on the package **Deployment**, then {{Create element > Package}}. Name it <<Parameter Mission>>.",
-            "Drag the activity [[fa-parameter-mission-act]] into this package.",
-            "Create one package per service, and move each function into the package of its service."
+            "Drag the activity [[fa-parameter-mission-act]] into this package."
           ]
         },
         {
@@ -1020,9 +1017,9 @@ window.COURSE = {
       blocks: [
         {
           steps: [
-            "In the Model Browser, expand [[fa-deployment]].",
+            "In the Model Browser, expand [[fa-deployment]], then the package <<Parameter Mission>>.",
             {
-              t: "Select the [[fn-load-flight-plan|Load Flight Plan]] activity, drag it onto the [[soi-configured]] state and select {{Do Activity}}.",
+              t: "Select the [[fn-load-flight-plan|Load Flight Plan]] activity inside <<Parameter Mission>>, drag it onto the [[soi-configured]] state and select {{Do Activity}}.",
               fig: { src: "assets/img/menu-do-activity.png", w: 172, h: 117, alt: "Small menu that opens on the Configured state with three choices: Entry, Do Activity (highlighted) and Exit.", size: "xs" }
             }
           ]
@@ -1063,13 +1060,6 @@ window.COURSE = {
             src: "assets/img/sim-trigger-list.png", w: 654, h: 280,
             alt: "Simulation panel of Cameo with the Trigger drop-down list open: Crashed Detected, FlightPlan, FlightPlan Check Failed, Predator Detected inside tracking perimeter, Ready for mission, Start Patrolling, Start Sheep Guard Mission, Start SOI.",
             caption: "The Trigger list of the Simulation panel."
-          }
-        },
-        {
-          figure: {
-            src: "assets/img/sim-running.png", w: 1089, h: 830,
-            alt: "State machine during simulation. The state Unconfigured is outlined in red: it is the active state. Off and the transition Start SOI are green: they have been visited.",
-            caption: "During the simulation: red is the active state, green is what has already been visited."
           }
         },
         {
@@ -1158,7 +1148,7 @@ window.COURSE = {
         { path: "fn-load-flight-plan" },
         {
           steps: [
-            "In the Model Browser, right-click on the [[fn-load-flight-plan|Load Flight Plan]] function, in the package ((package)) *Parameter Mission*.",
+            "In the Model Browser, expand [[fa-deployment]], then open the package ((package)) *Parameter Mission*. Right-click on the [[fn-load-flight-plan|Load Flight Plan]] function inside it.",
             "Click on {{Create Diagram}}, then choose {{Activity Diagram}}. If a window opens asking to display the parameters, click on {{Ok}}.",
             {
               t: "Drag and drop the functions related to \"Load Flight Plan\" inside the Activity Diagram, anywhere. You created them in B.1.",
@@ -1536,7 +1526,7 @@ window.COURSE = {
         { path: "alloc-matrix" },
         {
           steps: [
-            "Open the allocation matrix available under [[alloc-pkg]].",
+            "Open the allocation matrix [[alloc-matrix]].",
             "Complete the **Function Allocation** matrix so that **only the functions you created yourself** in chapter B are each allocated to a subsystem: the functions you named in Question 2 and the activity <<Parameter Mission>>. Do not allocate the functions that were already in the model."
           ]
         },
@@ -1544,12 +1534,6 @@ window.COURSE = {
           reveal: {
             label: "Show a hint",
             text: "Two functions are allocated to the navigation system and one function is allocated to the WiFi system."
-          }
-        },
-        {
-          placeholder: {
-            kind: "gif", title: "Allocating a function in the matrix",
-            todo: ["Screenshot of the Function Allocation matrix before the exercise", "Record how to create one allocation in a cell (5 s)"]
           }
         }
       ]

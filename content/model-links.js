@@ -148,7 +148,8 @@ window.MODEL_LINKS = {
     type: "matrix",
     id: "_18_5_1_150503da_1508075554206_519867_57817",
     path: ["2 - Functional Analysis", "C - Traceability", "Function Allocation"],
-    url: ""
+    url: "",
+    direct: true
   },
   "soi-block": {
     name: "SOI - Pasture Sentinel",

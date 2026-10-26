@@ -724,7 +724,7 @@
       if (doMode) {
         const st = e.target.closest('.st');
         if (!st || st.dataset.st !== 'conf' || placed.size) { if (st && picked) nope(art); return; }
-        if (!picked) { say('no', 'Pick the activity <strong>Load Flight Plan</strong> first, as you would grab it in the Model Browser.'); nope(chips); return; }
+        if (!picked) { say('no', 'Pick the activity <strong>Load Flight Plan</strong> first, in <strong>Deployment &gt; Parameter Mission</strong>, as you would grab it in the Model Browser.'); nope(chips); return; }
         closeMenu();
         const r = st.getBoundingClientRect();
         const h = art.getBoundingClientRect();
