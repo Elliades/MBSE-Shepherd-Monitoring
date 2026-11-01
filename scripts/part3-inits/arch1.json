@@ -1,0 +1,1429 @@
+{
+ "owner": {
+  "elementId": "_2026x_1_1fda04ff_1793137415433_578438_21729"
+ },
+ "name": "TP - Logical Architecture",
+ "replace": true,
+ "reuseSignals": true,
+ "reuseScope": [
+  {
+   "elementId": "_18_5_1_150503da_1507786242011_858192_48493"
+  }
+ ],
+ "stateStereotype": "Logical Mode",
+ "functions": [
+  {
+   "name": "Start subsystems",
+   "steps": []
+  },
+  {
+   "name": "Going to Safe Area",
+   "steps": [
+    {
+     "call": "get safe area starting point"
+    },
+    {
+     "call": "get flight plan"
+    },
+    {
+     "call": "get current position"
+    },
+    {
+     "call": "define best path"
+    },
+    {
+     "call": "Follow path"
+    }
+   ]
+  }
+ ],
+ "blocks": [
+  {
+   "name": "Manual Initialization",
+   "stereotypes": [
+    "Logical Component"
+   ],
+   "doc": "Power-on switch: turns the operator power action into Start SOI for the mission manager.",
+   "ports": [
+    {
+     "name": "power",
+     "in": [
+      "Start SOI"
+     ],
+     "out": []
+    },
+    {
+     "name": "mc",
+     "out": [
+      "Start SOI"
+     ],
+     "in": []
+    }
+   ],
+   "functions": [
+    {
+     "name": "Power On",
+     "trace": "Start subsystems",
+     "steps": [
+      {
+       "send": "Start SOI",
+       "port": "mc"
+      }
+     ]
+    }
+   ],
+   "stm": {
+    "initial": "Powered Off",
+    "states": [
+     {
+      "name": "Powered Off"
+     },
+     {
+      "name": "Powered On"
+     }
+    ],
+    "transitions": [
+     {
+      "from": "Powered Off",
+      "to": "Powered On",
+      "on": "Start SOI",
+      "effect": "Power On"
+     }
+    ]
+   }
+  },
+  {
+   "name": "Mission Configuration",
+   "stereotypes": [
+    "Logical Component"
+   ],
+   "doc": "Mission manager: receives the flight plan, correct or incorrect, as the input of Load Flight Plan, whose validity check plays the right scenario: Ready for mission (the drone becomes Ready for Mission) or FlightPlan Check Failed (back to Unconfigured), delegated to the base station. Hands the guard mission over to the Mission Orchestrator only once the drone is Ready for Mission.",
+   "ports": [
+    {
+     "name": "init",
+     "in": [
+      "Start SOI"
+     ],
+     "out": []
+    },
+    {
+     "name": "bsrc",
+     "in": [
+      "FlightPlan",
+      "Start Sheep Guard Mission",
+      "FlightPlan Correct",
+      "FlightPlan Incorrect"
+     ],
+     "out": []
+    },
+    {
+     "name": "verdict",
+     "out": [
+      "Ready for mission_ext",
+      "FlightPlan Check Failed_ext"
+     ],
+     "in": []
+    },
+    {
+     "name": "orch",
+     "out": [
+      "Start Sheep Guard Mission_ext"
+     ],
+     "in": []
+    }
+   ],
+   "functions": [],
+   "stm": {
+    "initial": "Undeployed",
+    "states": [
+     {
+      "name": "Undeployed",
+      "initial": "Off",
+      "states": [
+       {
+        "name": "Off"
+       },
+       {
+        "name": "Unconfigured"
+       },
+       {
+        "name": "Configured",
+        "do": "Load Flight Plan",
+        "cloneDo": {
+         "elementId": "_2022x_2_302b0611_1731444876357_158908_18227"
+        }
+       },
+       {
+        "name": "Ready for Mission",
+        "do": "Start subsystems"
+       }
+      ],
+      "transitions": [
+       {
+        "from": "Off",
+        "to": "Unconfigured",
+        "on": "Start SOI"
+       },
+       {
+        "from": "Unconfigured",
+        "to": "Configured",
+        "on": [
+         "FlightPlan Correct",
+         "FlightPlan Incorrect"
+        ]
+       },
+       {
+        "from": "Configured",
+        "to": "Ready for Mission",
+        "on": "Ready for mission",
+        "delegate": "verdict"
+       },
+       {
+        "from": "Configured",
+        "to": "Unconfigured",
+        "on": "FlightPlan Check Failed",
+        "delegate": "verdict"
+       }
+      ]
+     },
+     {
+      "name": "Deployed"
+     }
+    ],
+    "transitions": [
+     {
+      "from": "Ready for Mission",
+      "to": "Deployed",
+      "on": "Start Sheep Guard Mission",
+      "delegate": "orch"
+     }
+    ]
+   }
+  },
+  {
+   "name": "Base station remote communication",
+   "stereotypes": [
+    "Logical Component"
+   ],
+   "doc": "Relay between operator and drone: operator commands to the mission manager; feedback (readiness, sheep exit, predator) to the operator.",
+   "ports": [
+    {
+     "name": "operator",
+     "in": [
+      "FlightPlan",
+      "Start Sheep Guard Mission",
+      "FlightPlan Correct",
+      "FlightPlan Incorrect"
+     ],
+     "out": [
+      "Ready for mission",
+      "FlightPlan Check Failed",
+      "Sheep Exit Alert",
+      "Predator Alert",
+      "Predator Cleared"
+     ]
+    },
+    {
+     "name": "mc",
+     "out": [
+      "FlightPlan",
+      "Start Sheep Guard Mission",
+      "FlightPlan Correct",
+      "FlightPlan Incorrect"
+     ],
+     "in": []
+    },
+    {
+     "name": "notification",
+     "in": [
+      "Ready for mission",
+      "FlightPlan Check Failed"
+     ],
+     "out": []
+    },
+    {
+     "name": "orch",
+     "in": [
+      "Predator Alert",
+      "Predator Cleared"
+     ],
+     "out": []
+    },
+    {
+     "name": "sg",
+     "in": [
+      "Sheep Exit Alert"
+     ],
+     "out": []
+    }
+   ],
+   "functions": [
+    {
+     "name": "Relay operator and drone",
+     "trace": "Start subsystems",
+     "reactions": [
+      {
+       "on": "FlightPlan Correct",
+       "steps": [
+        {
+         "send": "FlightPlan Correct",
+         "port": "mc"
+        }
+       ]
+      },
+      {
+       "on": "FlightPlan Incorrect",
+       "steps": [
+        {
+         "send": "FlightPlan Incorrect",
+         "port": "mc"
+        }
+       ]
+      },
+      {
+       "on": "Start Sheep Guard Mission",
+       "steps": [
+        {
+         "send": "Start Sheep Guard Mission",
+         "port": "mc"
+        }
+       ]
+      },
+      {
+       "on": "Ready for mission",
+       "steps": [
+        {
+         "send": "Ready for mission",
+         "port": "operator"
+        }
+       ]
+      },
+      {
+       "on": "FlightPlan Check Failed",
+       "steps": [
+        {
+         "send": "FlightPlan Check Failed",
+         "port": "operator"
+        }
+       ]
+      },
+      {
+       "on": "Predator Alert",
+       "steps": [
+        {
+         "send": "Predator Alert",
+         "port": "operator"
+        }
+       ]
+      },
+      {
+       "on": "Predator Cleared",
+       "steps": [
+        {
+         "send": "Predator Cleared",
+         "port": "operator"
+        }
+       ]
+      },
+      {
+       "on": "Sheep Exit Alert",
+       "steps": [
+        {
+         "send": "Sheep Exit Alert",
+         "port": "operator"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "stm": {
+    "initial": "Relaying",
+    "states": [
+     {
+      "name": "Relaying",
+      "do": "Relay operator and drone"
+     }
+    ],
+    "transitions": []
+   }
+  },
+  {
+   "name": "Mission Orchestrator",
+   "stereotypes": [
+    "Logical Component"
+   ],
+   "doc": "Mode manager: decides which feature is active and nothing else. Sheep Guard runs the patrol; when Predator Defense asks to take over, it puts Sheep Guard on standby and activates Predator Defense, then hands control back when the predator is gone. Mission-level only: safe area.",
+   "ports": [
+    {
+     "name": "mc",
+     "in": [
+      "Start Sheep Guard Mission_ext"
+     ],
+     "out": []
+    },
+    {
+     "name": "ap",
+     "out": [
+      "Go To Safe Area"
+     ],
+     "in": [
+      "Arrived At Safe Area"
+     ]
+    },
+    {
+     "name": "sg",
+     "out": [
+      "Activate Sheep Guard",
+      "Standby Sheep Guard"
+     ],
+     "in": []
+    },
+    {
+     "name": "pd",
+     "out": [
+      "Arm Predator Defense",
+      "Activate Predator Defense"
+     ],
+     "in": [
+      "Takeover Request",
+      "Feature Done"
+     ]
+    },
+    {
+     "name": "bsrc",
+     "out": [
+      "Predator Alert",
+      "Predator Cleared"
+     ],
+     "in": []
+    }
+   ],
+   "functions": [
+    {
+     "name": "Send To Safe Area",
+     "trace": "Going to Safe Area",
+     "steps": [
+      {
+       "send": "Go To Safe Area",
+       "port": "ap"
+      }
+     ]
+    },
+    {
+     "name": "Start Guard",
+     "trace": "Trigger Start patrolling",
+     "steps": [
+      {
+       "send": "Activate Sheep Guard",
+       "port": "sg"
+      },
+      {
+       "send": "Arm Predator Defense",
+       "port": "pd"
+      }
+     ]
+    },
+    {
+     "name": "Hand Over To Predator Defense",
+     "trace": "Start Predator Tracking",
+     "steps": [
+      {
+       "send": "Standby Sheep Guard",
+       "port": "sg"
+      },
+      {
+       "send": "Activate Predator Defense",
+       "port": "pd"
+      },
+      {
+       "send": "Predator Alert",
+       "port": "bsrc"
+      }
+     ]
+    },
+    {
+     "name": "Hand Back To Sheep Guard",
+     "trace": "Trigger Start patrolling",
+     "steps": [
+      {
+       "send": "Activate Sheep Guard",
+       "port": "sg"
+      },
+      {
+       "send": "Predator Cleared",
+       "port": "bsrc"
+      }
+     ]
+    }
+   ],
+   "stm": {
+    "states": [],
+    "transitions": []
+   }
+  },
+  {
+   "name": "AutoPilot",
+   "stereotypes": [
+    "Logical Component"
+   ],
+   "doc": "Flight control: flies to the safe area on the orchestrator's order; follows the watch path of Sheep Guard or the tracking orders of Predator Defense, whichever feature is active.",
+   "ports": [
+    {
+     "name": "orch",
+     "in": [
+      "Go To Safe Area"
+     ],
+     "out": [
+      "Arrived At Safe Area"
+     ]
+    },
+    {
+     "name": "sg",
+     "in": [
+      "next pathing"
+     ],
+     "out": []
+    },
+    {
+     "name": "pd",
+     "in": [
+      "Tracking orders"
+     ],
+     "out": []
+    }
+   ],
+   "functions": [
+    {
+     "name": "Report Arrival",
+     "trace": "Trigger Start patrolling",
+     "steps": [
+      {
+       "send": "Arrived At Safe Area",
+       "port": "orch"
+      }
+     ]
+    },
+    {
+     "name": "Follow watch path",
+     "trace": "Follow path",
+     "steps": [
+      {
+       "call": "Follow path"
+      }
+     ],
+     "reactions": [
+      {
+       "on": "next pathing",
+       "steps": [
+        {
+         "call": "Follow path"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "Follow predator orders",
+     "trace": "Follow predator",
+     "steps": [
+      {
+       "call": "Follow path"
+      }
+     ],
+     "reactions": [
+      {
+       "on": "Tracking orders",
+       "steps": [
+        {
+         "call": "Follow path"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "stm": {
+    "initial": "Idle",
+    "states": [
+     {
+      "name": "Idle"
+     },
+     {
+      "name": "Flying",
+      "initial": "Going to Safe Area",
+      "states": [
+       {
+        "name": "Going to Safe Area",
+        "do": "Going to Safe Area"
+       },
+       {
+        "name": "Hovering"
+       },
+       {
+        "name": "Following Watch Path",
+        "do": "Follow watch path"
+       },
+       {
+        "name": "Following Predator",
+        "do": "Follow predator orders"
+       }
+      ],
+      "transitions": [
+       {
+        "from": "Going to Safe Area",
+        "to": "Hovering",
+        "effect": "Report Arrival"
+       },
+       {
+        "from": "Hovering",
+        "to": "Following Watch Path",
+        "on": "next pathing"
+       },
+       {
+        "from": "Hovering",
+        "to": "Following Predator",
+        "on": "Tracking orders"
+       },
+       {
+        "from": "Following Watch Path",
+        "to": "Following Predator",
+        "on": "Tracking orders"
+       },
+       {
+        "from": "Following Predator",
+        "to": "Following Watch Path",
+        "on": "next pathing"
+       }
+      ]
+     }
+    ],
+    "transitions": [
+     {
+      "from": "Idle",
+      "to": "Flying",
+      "on": "Go To Safe Area"
+     }
+    ]
+   }
+  },
+  {
+   "name": "Zone Surveillance",
+   "stereotypes": [
+    "Logical Component"
+   ],
+   "doc": "Shared vision: captures the surroundings and publishes sheep observations to Sheep Guard and predator observations to Predator Defense, whatever feature is active.",
+   "ports": [
+    {
+     "name": "camera",
+     "in": [
+      "Sheep Signature",
+      "Sheep Out Of Zone",
+      "Predator Detected inside tracking perimeter",
+      "Predator entering safe perimiter",
+      "Predator leaving safe perimiter",
+      "Predator leaving tracking perimiter"
+     ],
+     "out": []
+    },
+    {
+     "name": "sg",
+     "out": [
+      "Sheep Signature",
+      "Sheep Out Of Zone"
+     ],
+     "in": []
+    },
+    {
+     "name": "pd",
+     "out": [
+      "Predator Detected inside tracking perimeter",
+      "Predator entering safe perimiter",
+      "Predator leaving safe perimiter",
+      "Predator leaving tracking perimiter"
+     ],
+     "in": []
+    }
+   ],
+   "functions": [
+    {
+     "name": "Capture surrounding",
+     "trace": "Capture surounding",
+     "steps": [
+      {
+       "call": "Capture surounding"
+      }
+     ],
+     "reactions": [
+      {
+       "on": "Sheep Signature",
+       "steps": [
+        {
+         "call": "Analyse surouding signature"
+        },
+        {
+         "send": "Sheep Signature",
+         "port": "sg"
+        }
+       ]
+      },
+      {
+       "on": "Sheep Out Of Zone",
+       "steps": [
+        {
+         "call": "Analyse surouding signature"
+        },
+        {
+         "send": "Sheep Out Of Zone",
+         "port": "sg"
+        }
+       ]
+      },
+      {
+       "on": "Predator Detected inside tracking perimeter",
+       "steps": [
+        {
+         "call": "acquire animal signature"
+        },
+        {
+         "send": "Predator Detected inside tracking perimeter",
+         "port": "pd"
+        }
+       ]
+      },
+      {
+       "on": "Predator entering safe perimiter",
+       "steps": [
+        {
+         "call": "acquire animal signature"
+        },
+        {
+         "send": "Predator entering safe perimiter",
+         "port": "pd"
+        }
+       ]
+      },
+      {
+       "on": "Predator leaving safe perimiter",
+       "steps": [
+        {
+         "call": "acquire animal signature"
+        },
+        {
+         "send": "Predator leaving safe perimiter",
+         "port": "pd"
+        }
+       ]
+      },
+      {
+       "on": "Predator leaving tracking perimiter",
+       "steps": [
+        {
+         "call": "acquire animal signature"
+        },
+        {
+         "send": "Predator leaving tracking perimiter",
+         "port": "pd"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "stm": {
+    "initial": "Capturing",
+    "states": [
+     {
+      "name": "Capturing",
+      "do": "Capture surrounding"
+     }
+    ],
+    "transitions": []
+   }
+  },
+  {
+   "name": "Sheep Guard",
+   "stereotypes": [
+    "Logical Component"
+   ],
+   "doc": "Autonomous feature: while active, computes and flies the watch path (drives the AutoPilot), counts the sheep and alerts the operator of any exit. On standby it releases the AutoPilot.",
+   "ports": [
+    {
+     "name": "orch",
+     "in": [
+      "Activate Sheep Guard",
+      "Standby Sheep Guard"
+     ],
+     "out": []
+    },
+    {
+     "name": "vision",
+     "in": [
+      "Sheep Signature",
+      "Sheep Out Of Zone"
+     ],
+     "out": []
+    },
+    {
+     "name": "ap",
+     "out": [
+      "next pathing"
+     ],
+     "in": []
+    },
+    {
+     "name": "bsrc",
+     "out": [
+      "Sheep Exit Alert"
+     ],
+     "in": []
+    }
+   ],
+   "functions": [
+    {
+     "name": "Patrol route",
+     "trace": "Trigger Start patrolling",
+     "steps": [
+      {
+       "call": "get flight plan"
+      },
+      {
+       "call": "get current position"
+      },
+      {
+       "call": "Define watch pathing"
+      },
+      {
+       "send": "next pathing",
+       "port": "ap"
+      }
+     ]
+    },
+    {
+     "name": "Report Sheep Exit",
+     "trace": "Send sheep location",
+     "steps": [
+      {
+       "call": "Detect Sheeps"
+      },
+      {
+       "send": "Sheep Exit Alert",
+       "port": "bsrc"
+      }
+     ]
+    },
+    {
+     "name": "Guard sheep",
+     "trace": "Sheep monitoring",
+     "steps": [
+      {
+       "call": "Detect Sheeps"
+      },
+      {
+       "call": "store sheeps location"
+      }
+     ],
+     "reactions": [
+      {
+       "on": "Sheep Signature",
+       "steps": [
+        {
+         "call": "Detect Sheeps"
+        },
+        {
+         "call": "store sheeps location"
+        }
+       ]
+      },
+      {
+       "on": "Sheep Out Of Zone",
+       "steps": [
+        {
+         "call": "Report Sheep Exit"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "stm": {
+    "initial": "Guard Standby",
+    "states": [
+     {
+      "name": "Guard Standby"
+     },
+     {
+      "name": "Sheep Guarding",
+      "regions": [
+       {
+        "name": "route",
+        "initial": "Patrol Route",
+        "states": [
+         {
+          "name": "Patrol Route",
+          "do": "Patrol route"
+         }
+        ],
+        "transitions": []
+       },
+       {
+        "name": "sheep",
+        "initial": "Sheep Counting",
+        "states": [
+         {
+          "name": "Sheep Counting",
+          "do": "Guard sheep"
+         }
+        ],
+        "transitions": []
+       }
+      ]
+     }
+    ],
+    "transitions": [
+     {
+      "from": "Guard Standby",
+      "to": "Sheep Guarding",
+      "on": "Activate Sheep Guard"
+     },
+     {
+      "from": "Sheep Guarding",
+      "to": "Guard Standby",
+      "on": "Standby Sheep Guard"
+     }
+    ]
+   }
+  },
+  {
+   "name": "Predator Defense",
+   "stereotypes": [
+    "Logical Component"
+   ],
+   "doc": "Autonomous feature: always watching once armed. On a bear it asks the orchestrator to take over; once active it decides alone to track (follow orders to the AutoPilot), to deter in the safe zone and to stop, then hands control back.",
+   "ports": [
+    {
+     "name": "orch",
+     "in": [
+      "Arm Predator Defense",
+      "Activate Predator Defense"
+     ],
+     "out": [
+      "Takeover Request",
+      "Feature Done"
+     ]
+    },
+    {
+     "name": "vision",
+     "in": [
+      "Predator Detected inside tracking perimeter",
+      "Predator entering safe perimiter",
+      "Predator leaving safe perimiter",
+      "Predator leaving tracking perimiter"
+     ],
+     "out": []
+    },
+    {
+     "name": "ap",
+     "out": [
+      "Tracking orders"
+     ],
+     "in": []
+    },
+    {
+     "name": "light",
+     "out": [
+      "Light burst"
+     ],
+     "in": []
+    },
+    {
+     "name": "sound",
+     "out": [
+      "Sound burst"
+     ],
+     "in": []
+    }
+   ],
+   "functions": [
+    {
+     "name": "Request Takeover",
+     "trace": "Start Predator Tracking",
+     "steps": [
+      {
+       "call": "Detect Predator"
+      },
+      {
+       "call": "Compute target position"
+      },
+      {
+       "call": "store Predator location"
+      },
+      {
+       "send": "Takeover Request",
+       "port": "orch"
+      }
+     ]
+    },
+    {
+     "name": "Track predator",
+     "trace": "Follow predator",
+     "steps": [
+      {
+       "call": "get Predator Position"
+      },
+      {
+       "call": "compute following order cmd"
+      },
+      {
+       "send": "Tracking orders",
+       "port": "ap"
+      }
+     ]
+    },
+    {
+     "name": "Deter predator",
+     "trace": "Trigger predator counter actions",
+     "steps": [
+      {
+       "send": "Light burst",
+       "port": "light"
+      },
+      {
+       "send": "Sound burst",
+       "port": "sound"
+      },
+      {
+       "call": "get Predator Position"
+      }
+     ]
+    },
+    {
+     "name": "Release Control",
+     "trace": "Trigger Start patrolling",
+     "steps": [
+      {
+       "send": "Feature Done",
+       "port": "orch"
+      }
+     ]
+    }
+   ],
+   "stm": {
+    "initial": "Disarmed",
+    "states": [
+     {
+      "name": "Disarmed"
+     },
+     {
+      "name": "Predator Watch"
+     },
+     {
+      "name": "Awaiting Control"
+     },
+     {
+      "name": "Predator Response",
+      "initial": "Tracking Predator",
+      "states": [
+       {
+        "name": "Tracking Predator",
+        "do": "Track predator"
+       },
+       {
+        "name": "Deterring",
+        "do": "Deter predator"
+       }
+      ],
+      "transitions": [
+       {
+        "from": "Tracking Predator",
+        "to": "Deterring",
+        "on": "Predator entering safe perimiter"
+       },
+       {
+        "from": "Deterring",
+        "to": "Tracking Predator",
+        "on": "Predator leaving safe perimiter"
+       }
+      ]
+     }
+    ],
+    "transitions": [
+     {
+      "from": "Disarmed",
+      "to": "Predator Watch",
+      "on": "Arm Predator Defense"
+     },
+     {
+      "from": "Predator Watch",
+      "to": "Awaiting Control",
+      "on": "Predator Detected inside tracking perimeter",
+      "effect": "Request Takeover"
+     },
+     {
+      "from": "Awaiting Control",
+      "to": "Predator Response",
+      "on": "Activate Predator Defense"
+     },
+     {
+      "from": "Predator Response",
+      "to": "Predator Watch",
+      "on": "Predator leaving tracking perimiter",
+      "effect": "Release Control"
+     }
+    ]
+   }
+  },
+  {
+   "name": "Operator",
+   "doc": "External actor (simulation driver): forwards the commands injected by the tester, receives the feedback.",
+   "ports": [
+    {
+     "name": "power",
+     "out": [
+      "Start SOI"
+     ],
+     "in": []
+    },
+    {
+     "name": "link",
+     "out": [
+      "FlightPlan",
+      "Start Sheep Guard Mission",
+      "FlightPlan Correct",
+      "FlightPlan Incorrect"
+     ],
+     "in": [
+      "Ready for mission",
+      "FlightPlan Check Failed",
+      "Sheep Exit Alert",
+      "Predator Alert",
+      "Predator Cleared"
+     ]
+    }
+   ],
+   "functions": [
+    {
+     "name": "Operator console",
+     "reactions": [
+      {
+       "on": "Start SOI",
+       "steps": [
+        {
+         "send": "Start SOI",
+         "port": "power"
+        }
+       ]
+      },
+      {
+       "on": "FlightPlan Correct",
+       "steps": [
+        {
+         "send": "FlightPlan Correct",
+         "port": "link"
+        }
+       ]
+      },
+      {
+       "on": "FlightPlan Incorrect",
+       "steps": [
+        {
+         "send": "FlightPlan Incorrect",
+         "port": "link"
+        }
+       ]
+      },
+      {
+       "on": "Start Sheep Guard Mission",
+       "steps": [
+        {
+         "send": "Start Sheep Guard Mission",
+         "port": "link"
+        }
+       ]
+      },
+      {
+       "on": "Ready for mission",
+       "steps": []
+      },
+      {
+       "on": "FlightPlan Check Failed",
+       "steps": []
+      },
+      {
+       "on": "Sheep Exit Alert",
+       "steps": []
+      },
+      {
+       "on": "Predator Alert",
+       "steps": []
+      },
+      {
+       "on": "Predator Cleared",
+       "steps": []
+      }
+     ]
+    }
+   ],
+   "stm": {
+    "initial": "Operating",
+    "states": [
+     {
+      "name": "Operating",
+      "do": "Operator console"
+     }
+    ],
+    "transitions": []
+   }
+  },
+  {
+   "name": "Pasture Environment",
+   "doc": "External world (simulation driver): forwards the injected observations to the drone sensors and receives its counter actions.",
+   "ports": [
+    {
+     "name": "camera_feed",
+     "out": [
+      "Sheep Signature",
+      "Sheep Out Of Zone",
+      "Predator Detected inside tracking perimeter",
+      "Predator entering safe perimiter",
+      "Predator leaving safe perimiter",
+      "Predator leaving tracking perimiter"
+     ],
+     "in": []
+    },
+    {
+     "name": "light_effect",
+     "in": [
+      "Light burst"
+     ],
+     "out": []
+    },
+    {
+     "name": "sound_effect",
+     "in": [
+      "Sound burst"
+     ],
+     "out": []
+    }
+   ],
+   "functions": [
+    {
+     "name": "Pasture world",
+     "reactions": [
+      {
+       "on": "Sheep Signature",
+       "steps": [
+        {
+         "send": "Sheep Signature",
+         "port": "camera_feed"
+        }
+       ]
+      },
+      {
+       "on": "Sheep Out Of Zone",
+       "steps": [
+        {
+         "send": "Sheep Out Of Zone",
+         "port": "camera_feed"
+        }
+       ]
+      },
+      {
+       "on": "Predator Detected inside tracking perimeter",
+       "steps": [
+        {
+         "send": "Predator Detected inside tracking perimeter",
+         "port": "camera_feed"
+        }
+       ]
+      },
+      {
+       "on": "Predator entering safe perimiter",
+       "steps": [
+        {
+         "send": "Predator entering safe perimiter",
+         "port": "camera_feed"
+        }
+       ]
+      },
+      {
+       "on": "Predator leaving safe perimiter",
+       "steps": [
+        {
+         "send": "Predator leaving safe perimiter",
+         "port": "camera_feed"
+        }
+       ]
+      },
+      {
+       "on": "Predator leaving tracking perimiter",
+       "steps": [
+        {
+         "send": "Predator leaving tracking perimiter",
+         "port": "camera_feed"
+        }
+       ]
+      },
+      {
+       "on": "Light burst",
+       "steps": []
+      },
+      {
+       "on": "Sound burst",
+       "steps": []
+      }
+     ]
+    }
+   ],
+   "stm": {
+    "initial": "World",
+    "states": [
+     {
+      "name": "World",
+      "do": "Pasture world"
+     }
+    ],
+    "transitions": []
+   }
+  }
+ ],
+ "contexts": [
+  {
+   "name": "TP Logical SOI",
+   "stereotypes": [
+    "Logical Component"
+   ],
+   "doc": "Drone with a mission orchestrator that only activates autonomous features (Sheep Guard, Predator Defense).",
+   "ports": [
+    {
+     "name": "power",
+     "in": [
+      "Start SOI"
+     ]
+    },
+    {
+     "name": "op_link",
+     "in": [
+      "FlightPlan",
+      "Start Sheep Guard Mission",
+      "FlightPlan Correct",
+      "FlightPlan Incorrect"
+     ],
+     "out": [
+      "Ready for mission",
+      "FlightPlan Check Failed",
+      "Sheep Exit Alert",
+      "Predator Alert",
+      "Predator Cleared"
+     ]
+    },
+    {
+     "name": "camera",
+     "in": [
+      "Sheep Signature",
+      "Sheep Out Of Zone",
+      "Predator Detected inside tracking perimeter",
+      "Predator entering safe perimiter",
+      "Predator leaving safe perimiter",
+      "Predator leaving tracking perimiter"
+     ]
+    },
+    {
+     "name": "strong_light",
+     "out": [
+      "Light burst"
+     ]
+    },
+    {
+     "name": "loud_sound",
+     "out": [
+      "Sound burst"
+     ]
+    }
+   ],
+   "parts": [
+    {
+     "name": "mi",
+     "type": "Manual Initialization"
+    },
+    {
+     "name": "mc",
+     "type": "Mission Configuration"
+    },
+    {
+     "name": "bsrc",
+     "type": "Base station remote communication"
+    },
+    {
+     "name": "ap",
+     "type": "AutoPilot"
+    }
+   ],
+   "connectors": [
+    [
+     "power",
+     "mi.power"
+    ],
+    [
+     "op_link",
+     "bsrc.operator"
+    ],
+    [
+     "mi.mc",
+     "mc.init"
+    ],
+    [
+     "bsrc.mc",
+     "mc.bsrc"
+    ],
+    [
+     "mc.verdict",
+     "bsrc.notification"
+    ]
+   ]
+  },
+  {
+   "name": "TP1 SOI Simulation",
+   "doc": "Simulation context: the drone (soi) between its operator and the pasture. Inject the scenario signals into operator / pasture.",
+   "parts": [
+    {
+     "name": "soi",
+     "type": "TP Logical SOI"
+    },
+    {
+     "name": "operator",
+     "type": "Operator"
+    },
+    {
+     "name": "pasture",
+     "type": "Pasture Environment"
+    }
+   ],
+   "connectors": [
+    [
+     "operator.power",
+     "soi.power"
+    ],
+    [
+     "operator.link",
+     "soi.op_link"
+    ],
+    [
+     "pasture.camera_feed",
+     "soi.camera"
+    ],
+    [
+     "soi.strong_light",
+     "pasture.light_effect"
+    ],
+    [
+     "soi.loud_sound",
+     "pasture.sound_effect"
+    ]
+   ],
+   "stereotypes": [
+    "Logical Context"
+   ]
+  }
+ ]
+}

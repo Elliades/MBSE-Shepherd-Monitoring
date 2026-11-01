@@ -21,6 +21,7 @@ ARCHS = [
 NOTES = {
     "1": [
         "The operator powers the drone on.",
+        "A wrong plan: Load Flight Plan refuses it, Mission Configuration goes back to Unconfigured and the operator is told.",
         "The flight plan is loaded and checked.",
         "Launch: flight to the safe area, then the orchestrator activates Sheep Guard.",
         "The flock is seen and counted by Sheep Guard.",
@@ -32,6 +33,7 @@ NOTES = {
     ],
     "2": [
         "The operator powers the drone on.",
+        "A wrong plan: Load Flight Plan refuses it, Mission Configuration goes back to Unconfigured and the operator is told.",
         "The flight plan is loaded and checked.",
         "The operator starts the mission.",
         "The flock is seen and counted.",
@@ -43,6 +45,7 @@ NOTES = {
     ],
     "3": [
         "The operator powers the drone on.",
+        "A wrong plan: Load Flight Plan refuses it, Mission Configuration goes back to Unconfigured and the operator is told.",
         "The flight plan is loaded and checked.",
         "Launch: safe area, then patrol.",
         "The observation goes through the orchestrator, which dispatches it to the sheep monitoring.",
@@ -54,7 +57,8 @@ NOTES = {
     ],
 }
 PHASES = {
-    "Préparation": "Preparation",
+    "Plan de vol refusé": "Preparation",
+    "Plan de vol accepté": "Preparation",
     "Garde du troupeau": "Guarding the flock",
     "Réponse prédateur": "Predator response",
 }
@@ -66,6 +70,8 @@ CRASH_BLOCK = "System Monitoring Safety"
 CRASH_ENDS = {"sms", "health"}  # the part of that block, and the port of the SOI that feeds it
 CRASH_DOCS = [
     ("(readiness, sheep exit, predator, crash)", "(readiness, sheep exit, predator)"),
+    ("(readiness, flight plan rejected, sheep exit, predator, crash)", "(readiness, flight plan rejected, sheep exit, predator)"),
+    ("(sheep, bear positions, crash)", "(sheep, bear positions)"),
     (" Mission-level only: safe area, abort on crash.", " Mission-level only: safe area."),
     ("flies to the safe area and lands on the orchestrator's order;", "flies to the safe area on the orchestrator's order;"),
     ("; emergency landing on crash.", "."),
@@ -120,21 +126,70 @@ def slim_block(b, shared):
     }
 
 
-def correct_flight_plan(spec):
-    """The functional mission now takes FlightPlan Correct / FlightPlan Incorrect, and Load Flight Plan keeps its
-    decision: it sends itself Ready for mission or FlightPlan Check Failed, which fire the transitions of
-    Mission Configuration; their effects tell the operator. The specs do not say so yet: done here."""
-    variants = ["FlightPlan Correct", "FlightPlan Incorrect"]
+def on_list(t):
+    """The signals of a transition: `on` is one signal, or a list of them."""
+    on = t.get("on")
+    return on if isinstance(on, list) else [on] if on else []
+
+
+def walk_stm(region):
+    """A state machine or a state, then every state and region inside it."""
+    yield region
+    for st in region.get("states", []):
+        yield from walk_stm(st)
+    for sub in region.get("regions", []):
+        yield from walk_stm(sub)
+
+
+def split_verdict_port(spec):
+    """Mission Configuration tells the base station on a port of its own, one way: `verdict`, facing `notification`
+    (the specs name it after one of its signals). What comes from the base station stays on `bsrc`."""
+    old = "flightplan_check_failed_ext"
     for b in spec["blocks"]:
         for p in b.get("ports", []):
-            for side in ("in", "out"):
-                if "FlightPlan" in p.get(side, []):
-                    p[side] = p[side] + variants
+            if p["name"] == old:
+                p["name"] = "verdict"
         for f in b.get("functions", []):
-            for r in list(f.get("reactions", [])):
-                if r["on"] == "FlightPlan":
-                    for v in variants:
-                        f["reactions"].append({"on": v, "steps": [dict(st, send=v) if st.get("send") == "FlightPlan" else st for st in r.get("steps", [])]})
+            for st in f.get("steps", []):
+                if st.get("port") == old:
+                    st["port"] = "verdict"
+        if "stm" in b:
+            for r in walk_stm(b["stm"]):
+                for t in r.get("transitions", []):
+                    if t.get("delegate") == old:
+                        t["delegate"] = "verdict"
+    for ctx in spec["contexts"]:
+        ctx["connectors"] = [[e.replace("." + old, ".verdict") for e in c] for c in ctx["connectors"]]
+
+
+def flight_plan_ports(spec):
+    """The functional mission takes FlightPlan Correct / FlightPlan Incorrect; the reactions and the transitions of the
+    specs do, their ports do not say so yet. Done here."""
+    variants = ["FlightPlan Correct", "FlightPlan Incorrect"]
+    def widen(p):
+        for side in ("in", "out"):
+            if "FlightPlan" in p.get(side, []):
+                p[side] = p[side] + [v for v in variants if v not in p[side]]
+    for b in spec["blocks"]:
+        for p in b.get("ports", []):
+            widen(p)
+    for ctx in spec["contexts"]:
+        for p in ctx.get("ports", []):
+            widen(p)
+
+
+def flight_plan_for_simulator(spec):
+    """js/logical-engine.js has no cloned do activity and no delegate: Load Flight Plan keeps its decision as sends to
+    itself (when / unless), a transition on a list becomes one per signal, and a delegate becomes an effect that sends
+    the signal on the port. In the guide the verdict and the start order keep their plain names."""
+    for b in spec["blocks"]:
+        if "stm" not in b:
+            continue
+        for r in walk_stm(b["stm"]):
+            ts = r.get("transitions")
+            if ts is None:
+                continue
+            r["transitions"] = [dict(t, on=x) for t in ts for x in on_list(t)] + [t for t in ts if not on_list(t)]
         if b["name"] != "Mission Configuration":
             continue
         b["functions"].append({"name": "Load Flight Plan", "steps": [
@@ -142,27 +197,16 @@ def correct_flight_plan(spec):
             {"send": "FlightPlan Check Failed", "self": True, "when": "FlightPlan Incorrect"},
             {"send": "Ready for mission", "self": True, "unless": "FlightPlan Incorrect"},
         ]})
-
-        def rework(region):
-            ts = region.get("transitions", [])
-            for t in list(ts):
-                if t.get("from") == "Unconfigured" and t.get("on") == "FlightPlan":
-                    ts.extend(dict(t, on=v) for v in variants)
-                if t.get("from") == "Configured" and t.get("to") == "Ready for Mission":
-                    t["on"] = "Ready for mission"
-            for st in region.get("states", []):
-                rework(st)
-        rework(b["stm"])
-
-
-def correct_scenario(phases):
-    steps = phases[0]["steps"]
-    for st in steps:
-        if st["signal"] == "FlightPlan":
-            st["signal"] = "FlightPlan Correct"
-    steps.insert(1, {"signal": "FlightPlan Incorrect", "into": "operator",
-                     "note": "A wrong plan: Load Flight Plan refuses it, Mission Configuration goes back to Unconfigured and the operator is told.",
-                     "expect": {"soi.mc": "Unconfigured"}})
+        for p in b["ports"]:
+            p["out"] = [x[: -len("_ext")] if x.endswith("_ext") else x for x in p.get("out", [])]
+        for r in walk_stm(b["stm"]):
+            r.pop("cloneDo", None)
+            for t in r.get("transitions", []):
+                port = t.pop("delegate", None)
+                if port:
+                    name = "Notify " + t["on"]
+                    t["effect"] = name
+                    b["functions"].append({"name": name, "steps": [{"send": t["on"], "port": port}]})
 
 
 def remove_crash_stm(region):
@@ -170,7 +214,7 @@ def remove_crash_stm(region):
         region["states"] = [st for st in region["states"] if st["name"] not in CRASH_STATES]
     if "transitions" in region:
         region["transitions"] = [t for t in region["transitions"]
-                                 if t.get("on") not in CRASH_SIGNALS and t.get("to") not in CRASH_STATES and t.get("from") not in CRASH_STATES]
+                                 if not set(on_list(t)) & CRASH_SIGNALS and t.get("to") not in CRASH_STATES and t.get("from") not in CRASH_STATES]
     for st in region.get("states", []):
         remove_crash_stm(st)
     for sub in region.get("regions", []):
@@ -206,6 +250,10 @@ def remove_crash(spec, scen):
         ctx["connectors"] = [c for c in ctx["connectors"] if not any(end.split(".")[-1] in CRASH_ENDS or end.split(".")[0] in CRASH_ENDS for end in c)]
         if "ports" in ctx:
             ctx["ports"] = [p for p in ctx["ports"] if p["name"] != "health"]
+            for p in ctx["ports"]:
+                for side in ("in", "out"):
+                    if side in p:
+                        p[side] = [x for x in p[side] if x not in CRASH_SIGNALS]
     scen["phases"] = [dict(ph, steps=[s for s in ph["steps"] if s["signal"] not in CRASH_SIGNALS]) for ph in scen["phases"]]
     scen["phases"] = [ph for ph in scen["phases"] if ph["steps"]]
     scen["systems"] = [s for s in scen["systems"] if s["path"] != "soi.sms"]
@@ -221,16 +269,19 @@ def main(src):
         scen = read_json(src / f"{stem}.scenario.json")
         soi, ctx = spec["contexts"][0], spec["contexts"][1]
         remove_crash(spec, scen)
-        correct_flight_plan(spec)
+        split_verdict_port(spec)
+        flight_plan_ports(spec)
+        flight_plan_for_simulator(spec)
         shared = {f["name"]: f for f in spec.get("functions", [])}
         notes = iter(NOTES[key])
         phases = []
         for ph in scen["phases"]:
-            phases.append({
-                "name": PHASES.get(ph["name"], ph["name"]),
-                "steps": [{"signal": s["signal"], "into": s["into"], "note": next(notes), "expect": s.get("expect", {})} for s in ph["steps"]],
-            })
-        correct_scenario(phases)
+            name = PHASES.get(ph["name"], ph["name"])
+            steps = [{"signal": s["signal"], "into": s["into"], "note": next(notes), "expect": s.get("expect", {})} for s in ph["steps"]]
+            if phases and phases[-1]["name"] == name:
+                phases[-1]["steps"].extend(steps)
+            else:
+                phases.append({"name": name, "steps": steps})
         out[key] = {
             "package": spec["name"],
             "functions": [slim_function(f, shared) for f in spec.get("functions", [])],
