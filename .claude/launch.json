@@ -4,20 +4,45 @@
     {
       "name": "mbse-shepherd",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["-m", "http.server", "5178", "--bind", "127.0.0.1"],
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "5178",
+        "--bind",
+        "127.0.0.1"
+      ],
       "port": 5178
     },
     {
       "name": "mbse-shepherd-relay",
       "runtimeExecutable": "node",
-      "runtimeArgs": ["scripts/dev-server.mjs", "5180"],
+      "runtimeArgs": [
+        "scripts/dev-server.mjs",
+        "5180"
+      ],
       "port": 5180
     },
     {
       "name": "mbse-shepherd-silent-ws",
       "runtimeExecutable": "node",
-      "runtimeArgs": ["scripts/dev-server.mjs", "5181", "--silent-ws"],
+      "runtimeArgs": [
+        "scripts/dev-server.mjs",
+        "5181",
+        "--silent-ws"
+      ],
       "port": 5181
+    },
+    {
+      "name": "mbse-shepherd-alt",
+      "runtimeExecutable": "python",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "5183",
+        "--bind",
+        "127.0.0.1"
+      ],
+      "port": 5183
     }
   ]
 }
