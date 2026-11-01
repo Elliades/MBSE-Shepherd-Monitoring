@@ -1,13 +1,13 @@
-/* The fleet simulation (Part 3), logic only: several drones, each with a role and a step, and who leads
+/* The fleet simulation (Part 4), logic only: several drones, each with a role and a step, and who leads
    them (the base station, or one drone of the swarm). Part 1 and Part 2 do not load it: they keep the
    one-drone panel of js/sim-core.js, js/sim-scene.js and js/sim.js.
 
-   The roles, their steps and the scenario of the preview are in COURSE_CONFIG.fleet (part3/content/config.js).
+   The roles, their steps and the scenario of the preview are in COURSE_CONFIG.fleet (part4/content/config.js).
    A step is turned into a behaviour, what the drone does on screen (BEHAVIOURS), by fleet.behaviours, or
    guessed from its words when it is not listed: the model can name its states as it likes.
 
    window.FleetCore.BEHAVIOURS, behaviourOf(step), roleOf(role, name), rule(drones)
-   window.FleetCore.createFleet() -> { getSnapshot, subscribe, fromCameo, setStep, setMaster, note, reset, runScenario, stopScenario } */
+   window.FleetCore.createFleet() -> { getSnapshot, subscribe, fromCameo, setStep, setMaster, note, reset, runScenario, stopScenario, useDemo } */
 (function () {
   const CFG = (window.COURSE_CONFIG || {}).fleet || {};
   const ROLES = CFG.roles || { drone: { label: 'Drone', tag: 'D', color: '#0ea5e9', steps: [] } };
@@ -23,17 +23,19 @@
     track: 'Tracking the predator',
     counter: 'Repelling the predator',
     pursue: 'Following the predator out',
+    escort: 'Following a stray sheep out',
     return: 'Flying back to the base',
     crashed: 'Crashed',
     unknown: 'Hovering (step not known)'
   };
-  /* On the field: the drones that keep the flock safe. Away: out of the field after the predator. */
+  /* On the field: the drones that keep the flock safe. Away: out of the field after the predator or a stray sheep. */
   const ON_FIELD = ['patrol', 'guard', 'track', 'counter'];
-  const AWAY = ['pursue'];
+  const AWAY = ['pursue', 'escort'];
 
   /* Words of a step name, in the order they are tried. */
   const GUESS = [
     [/crash/, 'crashed'],
+    [/stray|escort|sheep.*(track|follow)|(track|follow).*sheep/, 'escort'],
     [/pursu|chas|follow|leav|escort|outside|outof/, 'pursue'],
     [/counter|repel|scare|engag|deter/, 'counter'],
     [/track|predator|threat/, 'track'],
@@ -68,13 +70,15 @@
 
   const nameList = (list) => list.length < 2 ? (list[0] || '') : `${list.slice(0, -1).join(', ')} and ${list[list.length - 1]}`;
 
-  /* The use case of Part 3: a drone may follow the predator out of the field only while another drone
-     stays on the field. */
+  /* The use case of Part 4: a drone may follow the predator (or a stray sheep) out of the field only while
+     another drone stays on the field. */
   function rule(drones) {
-    const away = drones.filter((d) => AWAY.includes(d.behaviour)).map((d) => d.name);
+    const leaving = drones.filter((d) => AWAY.includes(d.behaviour));
+    const away = leaving.map((d) => d.name);
     const onField = drones.filter((d) => ON_FIELD.includes(d.behaviour)).map((d) => d.name);
     if (away.length && onField.length) {
-      return { tone: 'ok', away, onField, text: `${nameList(away)} follow${away.length > 1 ? '' : 's'} the predator out; ${nameList(onField)} keep${onField.length > 1 ? '' : 's'} the field.` };
+      const what = leaving.every((d) => d.behaviour === 'escort') ? 'the stray sheep' : leaving.every((d) => d.behaviour === 'pursue') ? 'the predator' : 'the predator and the stray sheep';
+      return { tone: 'ok', away, onField, text: `${nameList(away)} follow${away.length > 1 ? '' : 's'} ${what} out; ${nameList(onField)} keep${onField.length > 1 ? '' : 's'} the field.` };
     }
     if (away.length) {
       return { tone: 'alarm', away, onField, text: `No drone left on the field: the flock is alone. ${nameList(away)} should come back.` };
@@ -102,7 +106,8 @@
   function clock() { return new Date().toLocaleTimeString(); }
 
   function createFleet() {
-    const demo = CFG.demo || { master: 'base', drones: [] };
+    let demo = CFG.demo || { master: 'base', drones: [] };
+    let scenario = CFG.scenario || [];
     let drones = [];
     let master = '';
     let log = [];
@@ -121,7 +126,8 @@
     function publish() {
       const r = rule(drones);
       drones.forEach((d) => seen.add(d.behaviour));
-      if (r.tone === 'ok') seen.add('pursue-covered');
+      if (r.tone === 'ok' && drones.some((d) => d.behaviour === 'pursue')) seen.add('pursue-covered');
+      if (r.tone === 'ok' && drones.some((d) => d.behaviour === 'escort')) seen.add('escort-covered');
       snapshot = { drones, master, rule: r, log, running, seen: new Set(seen) };
       listeners.forEach((fn) => { try { fn(snapshot); } catch (e) { /* a listener must not break the others */ } });
     }
@@ -194,7 +200,7 @@
         running = true;
         add('info', 'Scenario...');
         publish();
-        const steps = CFG.scenario || [];
+        const steps = scenario;
         let wait = 0;
         steps.forEach(([pause, id, step], i) => {
           wait += pause;
@@ -206,7 +212,13 @@
         });
         if (!steps.length) { running = false; publish(); }
       },
-      stopScenario
+      stopScenario,
+      /* Another fleet for the preview (and its scenario), e.g. the option of the swarm picked in a scene. */
+      useDemo(next, steps, message) {
+        demo = next || CFG.demo || { master: 'base', drones: [] };
+        scenario = steps || CFG.scenario || [];
+        this.reset(message);
+      }
     };
   }
 

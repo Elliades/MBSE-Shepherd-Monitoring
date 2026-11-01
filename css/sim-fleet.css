@@ -1,4 +1,4 @@
-/* ───────── fleet simulation (Part 3) ─────────
+/* ───────── fleet simulation (Part 4) ─────────
    The pasture of js/sim-fleet-scene.js and the fleet list of js/sim-fleet.js. The drawer itself is the one
    of css/sim.css, loaded before this file. Part 1 and Part 2 do not load it. */
 
@@ -28,6 +28,7 @@
 .flt-card strong { font-family: var(--font-display); font-size: 1.05rem; }
 .flt-does { font-size: 0.8rem; color: var(--ink-2); }
 .flt-card--pursue { border-color: color-mix(in srgb, #d97706 60%, var(--line)); border-left-color: var(--role); }
+.flt-card--escort { border-color: color-mix(in srgb, #16a34a 60%, var(--line)); border-left-color: var(--role); }
 .flt-card--crashed { opacity: 0.6; }
 
 /* the pasture */
@@ -87,6 +88,7 @@
 .flt-sheep { width: 5cqw; height: 5cqw; z-index: 2; }
 .flt-sheep img { width: 100%; height: 100%; display: block; animation: poc-graze-a 4.8s ease-in-out infinite; }
 .flt-sheep--nervous img { animation: poc-nervous 0.5s ease-in-out infinite; }
+.flt-sheep--out { filter: drop-shadow(0 0 0.6cqw #16a34a); }
 .flt-bleat, .flt-bubble, .flt-cry {
   position: absolute; left: 50%; bottom: calc(100% + 2px); transform: translateX(-50%);
   padding: 0 0.35rem; border-radius: 8px; white-space: nowrap; pointer-events: none;
@@ -137,6 +139,7 @@
 .flt-drone--deploy .flt-sensor { width: 14cqw; height: 14cqw; opacity: 1; border: 2px dashed rgba(34, 197, 94, 0.75); background: rgba(34, 197, 94, 0.1); }
 .flt-drone--patrol .flt-sensor { width: 26cqw; height: 26cqw; opacity: 1; border: 2px dashed rgba(56, 189, 248, 0.85); background: rgba(14, 165, 233, 0.12); }
 .flt-drone--guard .flt-sensor { width: 20cqw; height: 20cqw; opacity: 1; border: 2px dashed rgba(34, 197, 94, 0.85); background: rgba(34, 197, 94, 0.12); }
+.flt-drone--escort .flt-sensor { width: 16cqw; height: 16cqw; opacity: 1; border: 2px solid rgba(22, 163, 74, 0.6); background: rgba(22, 163, 74, 0.1); }
 .flt-drone--track .flt-sensor, .flt-drone--pursue .flt-sensor { width: 22cqw; height: 22cqw; opacity: 1; border: 2px solid rgba(217, 119, 6, 0.6); background: rgba(245, 158, 11, 0.1); }
 .flt-drone--counter .flt-sensor { width: 22cqw; height: 22cqw; opacity: 1; border: 2px solid rgba(220, 38, 38, 0.5); background: rgba(239, 68, 68, 0.08); animation: poc-sensor-pulse-red 1.2s ease-in-out infinite; }
 .flt-drone--unknown .flt-sensor { width: 12cqw; height: 12cqw; opacity: 1; border: 2px dotted rgba(255, 255, 255, 0.8); }

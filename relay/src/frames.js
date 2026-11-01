@@ -106,7 +106,7 @@ export const MAX_DRONE_ID_LENGTH = 64
 
 /**
  * The state snapshot the plugin publishes: `{"type":"info","event":"state","status","step"}`.
- * A simulation with several drones (Part 3) adds `drones: [{ id, step, role?, name? }]`, one per drone
+ * A simulation with several drones (Part 4) adds `drones: [{ id, step, role?, name? }]`, one per drone
  * instance, and `master`: "base" or the id of the drone that leads the others. Both are optional and
  * left out when absent, so a single-drone frame comes out as it went in.
  * @param {Record<string, unknown>} frame

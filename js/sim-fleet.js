@@ -1,4 +1,4 @@
-/* The simulation panel of Part 3: the same drawer as js/sim.js, for a fleet of drones. It follows the
+/* The simulation panel of Part 4: the same drawer as js/sim.js, for a fleet of drones. It follows the
    state Cameo publishes ({ step, drones: [{ id, step, role, name }], master }, see js/bridge.js) and,
    with simPreview, lets the author move each drone by hand and play the scenario of the config.
 

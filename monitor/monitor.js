@@ -7,7 +7,7 @@
   const RELAY = (params.get('relay') || `${location.origin}/relay`).replace(/\/+$/, '');
   const KEY = params.get('key') || '';
   const LIVE_MS = 3 * 60000;
-  const PARTS = { part1: 'Part 1 · Discover', part2: 'Part 2 · Marked', part3: 'Part 3 · Fleet' };
+  const PARTS = { part1: 'Part 1 · Discover', part2: 'Part 2 · Marked', part3: 'Part 3 · Logical', part4: 'Part 4 · Swarm' };
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 
@@ -364,7 +364,7 @@
   }
   function partsIn(runs) {
     const set = new Set(runs.map((r) => r.part));
-    const list = ['part1', 'part2', 'part3'].filter((p) => set.has(p)).concat([...set].filter((p) => !PARTS[p]));
+    const list = ['part1', 'part2', 'part3', 'part4'].filter((p) => set.has(p)).concat([...set].filter((p) => !PARTS[p]));
     return list.length ? list : ['part1'];
   }
   function refreshFilters(runs) {

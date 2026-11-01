@@ -1,5 +1,5 @@
-/* The pasture of the fleet simulation (Part 3): the field and its fence, the flock, the base station,
-   one drone per drone of the fleet, the predator, and the command links from the master (the base station
+/* The pasture of the fleet simulation (Part 4): the field and its fence, the flock, the base station,
+   one drone per drone of the fleet, the predator, a sheep that may stray out, and the command links from the master (the base station
    or the lead drone of the swarm) to the drones it pilots. Everything is placed in % of the field and
    moved by one frame loop; the behaviours come from js/sim-fleet-core.js.
 
@@ -20,12 +20,15 @@
   const SHEEP = [
     { x: 41, y: 40 }, { x: 52, y: 52 }, { x: 59, y: 42 }, { x: 44, y: 58 }, { x: 50, y: 45 }
   ];
+  /* The sheep that wanders out of the field while a drone escorts it (behaviour escort), and where it goes. */
+  const STRAY = { sheep: 3, out: { x: 5, y: 66 }, speed: 6 };
   const SPEED = 24;          /* % of the field per second, for a drone */
   const BEAR_SPEED = { track: 7, counter: 5, pursue: 9 };
   /* the drones that work on the field; one of them outside the fence is shown OUT */
-  const FIELD_WORK = ['patrol', 'guard', 'track', 'counter', 'pursue'];
+  const FIELD_WORK = ['patrol', 'guard', 'track', 'counter', 'pursue', 'escort'];
   const AT_BASE = ['off', 'ready', 'return'];
-  const ACTIVE = ['deploy', 'patrol', 'guard', 'track', 'counter', 'pursue', 'return', 'unknown'];
+  const ACTIVE = ['deploy', 'patrol', 'guard', 'track', 'counter', 'pursue', 'escort', 'return', 'unknown'];
+  const AWAY = ['pursue', 'escort'];
   const CRIES = ['shoo!', 'bzzt!', 'go away!'];
   const BLEATS = ['baa', 'beeeh', 'baaah', 'mehh'];
 
@@ -85,6 +88,7 @@
     /* per drone id: { pos, node, parts, cry } */
     const live = new Map();
     const bear = { x: BEAR.enter.x, y: BEAR.enter.y, shown: false, gone: false };
+    const stray = { x: SHEEP[STRAY.sheep].x, y: SHEEP[STRAY.sheep].y };
     let visible = false;
     let frame = 0;
     let last = 0;
@@ -128,6 +132,7 @@
           if (d.behaviour === 'counter') say(v, CRIES[d.index % CRIES.length], 2400);
           if (d.behaviour === 'track') say(v, 'huh!', 1500);
           if (d.behaviour === 'pursue') say(v, 'after it!', 1800);
+          if (d.behaviour === 'escort') say(v, 'come back!', 1800);
           if (d.behaviour === 'return') say(v, 'back home', 1500);
         }
       });
@@ -167,6 +172,10 @@
       step(bear, target, BEAR_SPEED[mode], dt);
       if (mode === 'pursue' && bear.x > 104) { bear.gone = true; bear.shown = false; }
     }
+    /* The stray sheep walks out while a drone escorts it, and back to the flock after. */
+    function moveStray(by, dt) {
+      step(stray, by.escort ? STRAY.out : SHEEP[STRAY.sheep], STRAY.speed, dt);
+    }
     function step(p, target, speed, dt) {
       const dx = target.x - p.x;
       const dy = target.y - p.y;
@@ -193,6 +202,10 @@
           const p = around(bear, 8, Math.PI * (1.1 + 0.25 * k));
           return { x: clamp(p.x, 6, 91), y: clamp(p.y, 6, 90) };
         }
+        case 'escort': {
+          const p = around(stray, 7, -Math.PI * (0.35 + 0.3 * k));
+          return { x: clamp(p.x, 4, 91), y: clamp(p.y, 6, 90) };
+        }
         default: return parkedSpot(d.index);
       }
     }
@@ -206,6 +219,10 @@
       setHidden(el.perimeter, !stressed);
       setClass(el.perimeter, `flt-perimeter${by.counter || by.pursue ? ' flt-perimeter--alert' : ''}`);
       el.sheep.forEach((s) => setClass(s, `flt-sheep${stressed ? ' flt-sheep--nervous' : ''}`));
+      const straySheep = el.sheep[STRAY.sheep];
+      setStyle(straySheep, 'left', `${stray.x.toFixed(2)}%`);
+      setStyle(straySheep, 'top', `${stray.y.toFixed(2)}%`);
+      setClass(straySheep, `flt-sheep${stressed ? ' flt-sheep--nervous' : ''}${insideFence(stray) ? '' : ' flt-sheep--out'}`);
 
       setHidden(el.bear, !bear.shown);
       setClass(el.bear, `flt-bear${by.counter ? ' flt-bear--danger' : ''}`);
@@ -260,7 +277,7 @@
         fleet.drones.forEach((d) => {
           if (d.id === master || !ACTIVE.includes(d.behaviour)) return;
           const p = live.get(d.id).pos;
-          const away = d.behaviour === 'pursue';
+          const away = AWAY.includes(d.behaviour);
           lines.push(`<line x1="${from.x.toFixed(2)}" y1="${from.y.toFixed(2)}" x2="${p.x.toFixed(2)}" y2="${p.y.toFixed(2)}" class="${away ? 'away' : ''}"/>`);
         });
       }
@@ -280,10 +297,11 @@
       last = now;
       const by = groups();
       moveBear(bearMode(by), dt, now);
+      moveStray(by, dt);
       fleet.drones.forEach((d) => {
         const v = live.get(d.id);
         if (!v || d.behaviour === 'crashed') return;
-        step(v.pos, targetOf(d, by, now), d.behaviour === 'pursue' ? SPEED * 1.2 : SPEED, dt);
+        step(v.pos, targetOf(d, by, now), AWAY.includes(d.behaviour) ? SPEED * 1.2 : SPEED, dt);
       });
       render(now);
       frame = requestAnimationFrame(tick);
