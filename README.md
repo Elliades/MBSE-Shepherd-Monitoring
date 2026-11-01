@@ -333,11 +333,16 @@ loads, with Part 4 only, `js/widgets-logical.js` and `css/logical.css` (the colo
 | File | What it is |
 |---|---|
 | `part3/content/archs.js` | The three architectures as the correction models build them: state machines, send steps (with the sends of the functions they call), parts, connectors, scenarios. Written by `scripts/make-part3-archs.py` from `drone-archs/arch-*.json` and `*.scenario.json`; do not edit by hand. |
-| `js/logical-engine.js` | A small simulator of those specs (nested states, regions, signal and completion transitions, do-activities with reactions, routing through connectors and boundary ports). It replays the expected states of the three scenarios (70 checks). With `{ only }` it leaves out the parts not built yet. |
-| `archs` in `part3/content/config.js` | How to draw them (labels, colours, layouts, trade-off scores, which part receives which functional state, where the logic is), the **stages** of the build (parts added, steps measured), the **story** captions, the message **badges** and the **highlighted** exchanges of the animation. |
+| `js/logical-engine.js` | A small simulator of those specs (nested states, regions, signal and completion transitions, do-activities with reactions, routing through connectors and boundary ports). It replays the expected states of the three scenarios (70 checks). With `{ only }` it leaves out the parts not built yet, with `{ drop }` the states not made yet, with `{ mute }` the signals nobody sends yet. A wanted state may be `!Name`: anything but that one, when the name is the student's (the patch). |
+| `archs` in `part3/content/config.js` | How to draw them (labels, colours, layouts, trade-off scores, where the logic is), the **target** drawing of the state machine to reach with its gestures, the **stages** of the build (parts added, states made, steps measured, what to check), the **story** captions, the message **badges** and the **highlighted** exchanges of the animation. |
 
-The widget `archSim` with `stage` plays one stage on the parts built so far; `stageCheck` lists what Cameo
-must show for a stage. Their **Validate in Cameo** button drives the simulation in Cameo through the relay:
+Chapter 5 asks for the logic before any click (role, content, interactions, steps), then gives our proposal.
+Chapter 6 is that proposal, one scenario event at a time: the subsystems are ready in the starting model, the
+student makes the states of the decider and draws the connectors. Only the patch of architecture 2 stays to design.
+Each stage has `deciderStm` (the result to reach, gesture by gesture), `stageIbd` (what this stage adds and what to
+connect, from `archs.js`) and `scenarioGrow` (the scenario so far).
+
+The widget `archSim` with `stage` plays one stage on what is built so far. Its **Validate in Cameo** button drives the simulation in Cameo through the relay:
 `simtest/start` on the context block, `simtest/send` for each signal of the scenario, `simtest/states` to read
 each part back; what is wrong shows in red. Parts are addressed by the name of their type (`Logical SOI 3 - …
 .Mission Orchestrator`), because they have no name of their own in the model. It needs a plugin with `simtest/*`

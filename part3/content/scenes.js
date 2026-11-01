@@ -9,9 +9,10 @@
         behaviour is not the same, the two questions (who fires the transition, who else wants to know), what
         Logical Transition does; then build it, a few gestures per scene;
      3. three ways to cut the rest of the drone, played; where the logic is in each; pick one;
-     4. think before building: which subsystems, and what becomes of Predator counteraction;
-     5. build it one scenario event at a time: see the goal, build, validate. Arrive and patrol, a sheep
-        strays, a bear (track it, then patrol again), scare it off (on your own);
+     4. before any click, define its logic: role, content, interactions, steps; then our proposal;
+     5. everybody builds that proposal, one scenario event at a time: see the result, build it, validate. The
+        subsystems are ready in the model: the student makes the states of the decider, and connects. Start, patrol,
+        a sheep strays, a bear, scare it off. Only the patch of architecture 2 stays to design;
      6. tidy up, the whole scenario.
    The crash is not part of this TP: the architectures have no crash signals and no System Monitoring Safety.
 
@@ -33,8 +34,8 @@ window.COURSE = {
     { id: "intro", code: "2", title: "Why a logical level", blurb: "What it is, what it is for.", phase: "lg" },
     { id: "example", code: "3", title: "One subsystem by hand", blurb: "Mission Configuration, from the mission.", phase: "lg" },
     { id: "choose", code: "4", title: "Choose an architecture", blurb: "Three ways to cut the drone.", phase: "lg" },
-    { id: "think", code: "5", title: "Think first", blurb: "Which subsystems, what changes.", phase: "lg" },
-    { id: "build", code: "6", title: "Build and validate", blurb: "One event at a time.", phase: "lg" },
+    { id: "think", code: "5", title: "Define its logic", blurb: "Role, content, interactions, steps.", phase: "lg" },
+    { id: "build", code: "6", title: "Build and validate", blurb: "The result to reach, one event at a time.", phase: "lg" },
     { id: "end", code: "✓", title: "Debrief", blurb: "Tidy up, the whole scenario." }
   ],
 
@@ -65,7 +66,7 @@ window.COURSE = {
           cards: [
             { n: "1", title: "One subsystem by hand", text: "Mission Configuration, shown then done by you." },
             { n: "2", title: "Choose an architecture", text: "Three ways to cut the rest of the drone; you pick one." },
-            { n: "3", title: "Build it, event by event", text: "Patrol, a stray sheep, a bear. Each step checked by a scenario." }
+            { n: "3", title: "Define its logic, build it", text: "Its role first; then, event by event, a scenario that grows." }
           ]
         }
       ]
@@ -133,14 +134,14 @@ window.COURSE = {
         {
           steps: [
             "Download the starting model and open it ({{File > Open Project}}). Keep the profile file next to it; do not unzip the .mdzip.",
-            "Open [[la-pkg]]: one package per architecture, each with its technical blocks already wired.",
+            "Open [[la-pkg]], then **TP - Logical Architecture**: its technical blocks are already wired.",
             "Link this guide to Cameo with the **Cameo** button at the top: the chips show the elements in your model, and the **Validate in Cameo** buttons run the scenarios for you."
           ]
         },
         {
           callout: {
             tone: "goal", title: "Given, and to do",
-            text: "Given: power-on, base station link, AutoPilot, the simulation drivers. You build Mission Configuration, then the mission subsystems of the architecture you choose."
+            text: "Given: power-on, base station link, AutoPilot, the simulation drivers, and the mission subsystems. You build Mission Configuration, then the logic of the architecture you choose, and you connect the rest."
           }
         },
         {
@@ -245,7 +246,7 @@ window.COURSE = {
     {
       id: "mission", ch: "example", kind: "read", mark: "intro",
       title: "The starting point: the functional mission",
-      lead: "Every subsystem starts from some states of one state machine, [[fa-mission]], in 2 - Functional Analysis.",
+      lead: "Every subsystem starts from some states of one state machine, [[fa-mission]], at the root of the model.",
       blocks: [
         { figure: { src: "assets/img/fonctionnel-stm-mission.png", w: 1202, h: 851, alt: "State machine SOI - Pasture Sentinel. Undeployed: Off, Unconfigured, Configured (do Load Flight Plan), Ready for Mission (do Start subsystems). Deployed, two regions: Going to Safe Area, then Patrolling with three regions (Perimiter watch, Sheep Monitoring, Predator Monitoring), Predator Detected with Predator tracking and Predator counteraction; and Mission Monitoring. Crashed on Crashed Detected.", caption: "The functional mission. Every subsystem will take some of these states; Crashed stays out of this part." } },
         {
@@ -314,7 +315,7 @@ window.COURSE = {
     {
       id: "mc-block", ch: "example", kind: "do",
       title: "Your turn: the block, and its states",
-      lead: "Create the subsystem, and let Logical Transition copy Undeployed into it. The starting model is ready for you: work in **TP - Logical Architecture 1**.",
+      lead: "Create the subsystem, and let Logical Transition copy Undeployed into it. The starting model is ready for you: work in **TP - Logical Architecture**.",
       blocks: [
         { figure: { src: "assets/img/fonctionnel-undeployed.png", w: 552, h: 289, size: "sm", alt: "Functional state Undeployed: Off, Start SOI to Unconfigured; Unconfigured, on FlightPlan, FlightPlan Correct or FlightPlan Incorrect, to Configured, which runs Load Flight Plan; FlightPlan Check Failed back to Unconfigured; Ready for mission to Ready for Mission, which runs Start subsystems.", caption: "What you transition: Undeployed, in the functional mission." } },
         { path: "tp-components" },
@@ -428,7 +429,7 @@ window.COURSE = {
       title: "Validate: a wrong plan, a good plan",
       lead: "Play it here, then send the same signals to your model. What is wrong shows in red.",
       blocks: [
-        { widget: "archSim", opts: { arch: "3", stage: "prep", validate: true, cameo: { context: "TP1 SOI Simulation", soi: "TP1 SOI" } } },
+        { widget: "archSim", opts: { arch: "3", stage: "prep", validate: true, cameo: "tp" } },
         {
           list: [
             "`FlightPlan Incorrect`: Load Flight Plan refuses it, the subsystem goes **back to Unconfigured** and the operator is told.",
@@ -517,219 +518,219 @@ window.COURSE = {
         {
           tip: {
             label: "Not sure? A rule of thumb",
-            blocks: [{ p: "**2** is the closest to the functional mission: the fewest steps, but the hardest to defend. **3** has the most subsystems and an orchestrator to write. **1** sits in between." }]
+            blocks: [{ p: "With **1** and **3**, the guide shows every state to make. With **2**, there is less to make, but you design the patch yourself." }]
           }
         }
       ]
     },
 
-    /* ───────────────────────── 5 · Think first ───────────────────────── */
+    /* ───────────────────────── 5 · Define the logic ─────────────────────────
+       Before any click, whatever the choice: role, content, interactions, steps. Then our proposal, which everybody
+       builds: chapter 6 leaves no doubt on what to make. Only the patch stays to design. */
     {
-      id: "q-subsystems", ch: "think", kind: "answer", mark: "intro",
-      title: "Which subsystems will you need?",
-      lead: "Before any click: name the mission subsystems of your architecture. The technical ones are given.",
+      id: "logic-what", ch: "think", kind: "answer", mark: "intro",
+      title: "The logic of your architecture",
+      lead: "The rest of the drone exists, or nearly. What matters is the piece that decides. Before any click: what is it?",
       blocks: [
-        { widget: "archBlank" },
         {
-          question: {
-            id: "q-subs", type: "list", itemLabel: "Subsystem", initial: 3,
-            prompt: "One line per subsystem: its name, and what it does in the mission."
+          byChoice: {
+            q: "q-arch",
+            variants: {
+              "1": { label: "In your architecture, it is the **Mission Orchestrator**.", tab: "Arch. 1", blocks: [{ widget: "logicSpot", opts: { arch: "1", noNote: true } }] },
+              "2": { label: "In your architecture, there is no orchestrator: it is **the patch**, what you add to a drone that already patrols and watches the sheep.", tab: "Arch. 2", blocks: [{ widget: "logicSpot", opts: { arch: "2", noNote: true } }] },
+              "3": { label: "In your architecture, it is the **Mission Orchestrator**.", tab: "Arch. 3", blocks: [{ widget: "logicSpot", opts: { arch: "3", noNote: true } }] }
+            }
           }
         },
+        { question: { id: "q-role", type: "text", prompt: "**Its role.** What does it decide, and what does it leave to the others?", hint: "One or two sentences." } },
+        { question: { id: "q-content", type: "text", prompt: "**Its content.** Which main states would you give it? Names only, no detail.", hint: "For example: waiting, on the way…" } },
+        { question: { id: "q-links", type: "text", prompt: "**Its interactions.** What does it receive, and from whom? What does it send, and to whom?", hint: "Subsystem by subsystem, in words." } }
+      ]
+    },
+    {
+      id: "logic-steps", ch: "think", kind: "answer",
+      title: "Your steps",
+      lead: "Now the order. To get from here to a drone that plays the whole scenario: what do you make, what do you connect, and when can you check it?",
+      blocks: [
+        { widget: "scenarioGrow" },
         {
-          solution: {
-            label: "Compare with the correction",
-            blocks: [{
-              byChoice: {
-                q: "q-arch",
-                variants: {
-                  "1": { label: "Architecture 1 · four subsystems", tab: "Arch. 1", blocks: [{ list: [
-                    "**Mission Orchestrator**: chooses which feature is active.",
-                    "**Sheep Guard**: patrol route and sheep counting.",
-                    "**Predator Defense**: watches for bears, then tracks and deters.",
-                    "**Zone Surveillance**: the shared camera."
-                  ] }] },
-                  "2": { label: "Architecture 2 · three subsystems", tab: "Arch. 2", blocks: [{ list: [
-                    "**Zone Surveillance**: the watch path, and the camera.",
-                    "**SheepMonitoring**: counts the sheep, alerts on an exit.",
-                    "**Predator Management**: tracks and deters the bear; pauses the sheep watch (the patch)."
-                  ] }] },
-                  "3": { label: "Architecture 3 · five subsystems", tab: "Arch. 3", blocks: [{ list: [
-                    "**Mission Orchestrator**: receives everything, decides everything.",
-                    "**Zone Patrolling**: the watch path, and the camera.",
-                    "**SheepMonitoring**: counts the sheep.",
-                    "**Predator Management**: locates the bear, sends requests, deters.",
-                    "**Tracking**: computes the follow orders."
-                  ] }] }
-                }
-              }
-            }]
+          question: {
+            id: "q-plan", type: "list", itemLabel: "Step", initial: 4,
+            prompt: "One line per step: what you make, what you connect, which event of the scenario then works."
+          }
+        },
+        { p: "A good plan starts small: one connection, one event, one check. Then the next." }
+      ]
+    },
+    {
+      id: "logic-ours", ch: "think", kind: "try", mark: "outro",
+      title: "Our proposal",
+      lead: "Compare it with yours. A different answer is not a wrong one, but from here on everybody builds this one: it is what the checks expect.",
+      blocks: [
+        {
+          byChoice: {
+            q: "q-arch",
+            variants: {
+              "1": { label: "Architecture 1 · the Mission Orchestrator", tab: "Arch. 1", blocks: [
+                { list: [
+                  "**Role**: it only chooses **which feature is active**. The active feature decides the rest, and drives the AutoPilot.",
+                  "**Content**: Idle, then Mission: in transit, Sheep Guard active, or Predator Defense active. Play the stages below to see it grow."
+                ] },
+                { widget: "deciderStm", opts: { arch: "1", grow: true } },
+                { h: "Its interactions" },
+                { widget: "interactions", opts: { arch: "1", part: "orch" } },
+                { h: "The steps" },
+                { cards: [
+                  { n: "1", icon: "waypoint", title: "Start", text: "Connect the orchestrator to Mission Configuration and the AutoPilot; its first states." },
+                  { n: "2", icon: "waypoint", title: "Patrol", text: "One state more; Sheep Guard is ready: connect it." },
+                  { n: "3", icon: "flag", title: "A sheep strays", text: "No state: Zone Surveillance is ready, connect it." },
+                  { n: "4", icon: "alert", tone: "warn", title: "A bear", text: "One state more, the hand-over; Predator Defense is ready: connect it." },
+                  { n: "5", icon: "bulb", tone: "tip", title: "Scare it off", text: "No state: connect the light and the horn." }
+                ] }
+              ] },
+              "2": { label: "Architecture 2 · the patch", tab: "Arch. 2", blocks: [
+                { list: [
+                  "**Role**: add the predator feature **without reworking** what works. Nothing decides for the others: the new subsystem deals with what it disturbs.",
+                  "**Content**: no new deciding block. What is new is small: in Predator Management and in SheepMonitoring.",
+                  "**Interactions**: Predator Management talks to the AutoPilot, as a new master; and to SheepMonitoring, which it disturbs. That exchange is the patch."
+                ] },
+                { widget: "logicSpot", opts: { arch: "2" } },
+                { h: "The steps" },
+                { cards: [
+                  { n: "1", icon: "waypoint", title: "Start", text: "Connect Mission Configuration to the AutoPilot." },
+                  { n: "2", icon: "waypoint", title: "Patrol", text: "Zone Surveillance is ready: connect it." },
+                  { n: "3", icon: "flag", title: "A sheep strays", text: "SheepMonitoring is ready: connect it." },
+                  { n: "4", icon: "alert", tone: "warn", title: "A bear", text: "Predator Management is ready: connect it, see what breaks, and **design your patch**." },
+                  { n: "5", icon: "bulb", tone: "tip", title: "Scare it off", text: "Connect the light and the horn." }
+                ] },
+                { callout: { tone: "goal", title: "Yours to design", text: "We do not give the patch here. The drone is yours to patch at step 4: you will see what breaks, then decide how to repair it." } }
+              ] },
+              "3": { label: "Architecture 3 · the Mission Orchestrator", tab: "Arch. 3", blocks: [
+                { list: [
+                  "**Role**: it receives everything and decides everything, by priority: bear first, then sheep and patrol. The others only report and ask.",
+                  "**Content**: Idle, then Mission: in transit, patrolling, tracking, counteracting; and a second region that dispatches the observations. Play the stages below to see it grow."
+                ] },
+                { widget: "deciderStm", opts: { arch: "3", grow: true } },
+                { h: "Its interactions" },
+                { widget: "interactions", opts: { arch: "3", part: "orch" } },
+                { h: "The steps" },
+                { cards: [
+                  { n: "1", icon: "waypoint", title: "Start", text: "Connect the orchestrator to Mission Configuration and the AutoPilot; its first states." },
+                  { n: "2", icon: "waypoint", title: "Patrol", text: "One state more; Zone Patrolling is ready: connect it." },
+                  { n: "3", icon: "flag", title: "A sheep strays", text: "The dispatch region; SheepMonitoring is ready: connect it." },
+                  { n: "4", icon: "alert", tone: "warn", title: "A bear", text: "One state more; Predator Management and Tracking are ready: connect them." },
+                  { n: "5", icon: "bulb", tone: "tip", title: "Scare it off", text: "One state more; connect the light and the horn." }
+                ] }
+              ] }
+            }
           }
         }
-      ]
-    },
-    {
-      id: "who-gets-what", ch: "think", kind: "try",
-      title: "Which states go where",
-      lead: "Each subsystem starts from some states of the functional mission. The colours say which.",
-      blocks: [
-        { widget: "stateMapping", opts: { arch: "chosen" } },
-        { p: "A state with no colour is not transitioned: what it decided becomes **exchanges** between subsystems." }
-      ]
-    },
-    {
-      id: "q-counter", ch: "think", kind: "answer", mark: "outro",
-      title: "One feature, thought through",
-      lead: "In the mission, Predator counteraction flashes and honks, and decides by itself when the bear backs off. What becomes of it in your architecture?",
-      blocks: [
-        { widget: "counterQ" },
-        {
-          question: {
-            id: "q-counteraction", type: "text",
-            prompt: "Which subsystem receives it? Who decides when to start and stop? What does its function send, on which ports?",
-            hint: "Subsystem, who decides, what the function sends, on which ports."
-          }
-        },
-        {
-          solution: {
-            label: "Compare with the correction",
-            blocks: [{
-              byChoice: {
-                q: "q-arch",
-                variants: {
-                  "1": { label: "Architecture 1 · the feature decides", tab: "Arch. 1", blocks: [{ list: [
-                    "**Predator Defense**, state `Deterring` (it comes with Predator Detected).",
-                    "The feature decides, on the same triggers as the mission. The orchestrator does not move.",
-                    "**Deter predator** sends `Light burst` and `Sound burst` out, on two ports. Its self-send goes: the position of the bear now comes from the camera."
-                  ] }] },
-                  "2": { label: "Architecture 2 · unchanged, inside Predator Management", tab: "Arch. 2", blocks: [{ list: [
-                    "**Predator Management**, inside Predator Detected, taken as it is.",
-                    "Predator Management decides, on the same triggers as the mission.",
-                    "Trigger predator counter actions sends `Light burst`, `Sound burst` out. Its self-send goes: the position of the bear now comes from the camera."
-                  ] }] },
-                  "3": { label: "Architecture 3 · the hub decides", tab: "Arch. 3", blocks: [{ list: [
-                    "**Predator Management**, in a second region: `Deterrence idle` ⇄ `Deterring`.",
-                    "The orchestrator decides: Predator Management **asks** to engage or disengage, the orchestrator answers `Engage Predator` / `Disengage Predator`.",
-                    "Trigger predator counter actions sends `Light burst`, `Sound burst` out."
-                  ] }] }
-                }
-              }
-            }]
-          }
-        },
-        { p: "You will build exactly this, on your own, in chapter 6." }
       ]
     },
 
     /* ───────────────────────── 6 · Build and validate ───────────────────────── */
     {
       id: "build-plan", ch: "build", kind: "read", mark: "intro",
-      title: "Step, validate, step",
-      lead: "Do not build everything and hope. One event of the scenario at a time: see what it needs, build it, validate it.",
+      title: "See the result, build it, watch the scenario grow",
+      lead: "One event of the scenario at a time. Each stage shows the result to reach, gesture by gesture; you make it, and the scenario goes one event further.",
       blocks: [
+        { widget: "scenarioGrow" },
         {
           byChoice: {
             q: "q-arch", change: true,
             variants: {
-              "1": { label: "You are building **architecture 1**, the feature orchestrator.", tab: "Arch. 1", blocks: [] },
-              "2": { label: "You are building **architecture 2**, the patch.", tab: "Arch. 2", blocks: [] },
-              "3": { label: "You are building **architecture 3**, the central orchestrator.", tab: "Arch. 3", blocks: [] }
+              "1": { label: "You are building **architecture 1**, the feature orchestrator.", tab: "Arch. 1", blocks: [
+                { cards: [
+                  { n: "✓", icon: "check", title: "Ready in the model", text: "**Sheep Guard**, **Zone Surveillance**, **Predator Defense**: states, functions and ports. The **Mission Orchestrator**: its ports and functions, with an empty state machine." },
+                  { n: "→", icon: "bulb", tone: "tip", title: "Yours", text: "The **states and transitions** of the orchestrator, and the **connectors**." }
+                ] }
+              ] },
+              "2": { label: "You are building **architecture 2**, the patch.", tab: "Arch. 2", blocks: [
+                { cards: [
+                  { n: "✓", icon: "check", title: "Ready in the model", text: "**Zone Surveillance**, **SheepMonitoring**, **Predator Management**: states, functions and ports. They do not know about each other's conflicts yet." },
+                  { n: "→", icon: "bulb", tone: "tip", title: "Yours", text: "The **connectors**, then **the patch**: you design it." }
+                ] }
+              ] },
+              "3": { label: "You are building **architecture 3**, the central orchestrator.", tab: "Arch. 3", blocks: [
+                { cards: [
+                  { n: "✓", icon: "check", title: "Ready in the model", text: "**Zone Patrolling**, **SheepMonitoring**, **Predator Management**, **Tracking**: states, functions and ports. The **Mission Orchestrator**: its ports and functions, with an empty state machine." },
+                  { n: "→", icon: "bulb", tone: "tip", title: "Yours", text: "The **states and transitions** of the orchestrator, and the **connectors**." }
+                ] }
+              ] }
             }
           }
         },
         {
-          cards: [
-            { n: "1", icon: "waypoint", title: "Arrive and patrol", text: "The drone flies to the field and follows its watch path." },
-            { n: "2", icon: "flag", title: "A sheep strays", text: "The flock is counted; a sheep leaves the zone; the operator is warned." },
-            { n: "3", icon: "alert", tone: "warn", title: "A bear, then patrol again", text: "The drone follows the bear; when it leaves, the drone **goes back to patrolling**." },
-            { n: "4", icon: "bulb", tone: "tip", title: "Scare it off", text: "On your own: light and sound when the bear comes too close." }
-          ]
-        },
-        { p: "Each step uses the gestures of Mission Configuration: **block, Logical Transition, states, functions, part and ports, connect**. Parts have no name; ports are named `p_Partner` and hidden on the IBD." },
-        {
           callout: {
             tone: "note", title: "State names matter",
-            text: "Type the state names exactly as given, typos of the model included (`Perimiter`): the validation checks them."
+            text: "Type the state names exactly as given: the validation checks them."
+          }
+        },
+        {
+          placeholder: {
+            kind: "text", title: "Starting models of chapter 6",
+            todo: [
+              "One package whatever the architecture: TP - Logical Architecture (Components, Contexts, blocks TP Logical SOI and TP1 SOI Simulation). All the links and Validate point there. If the technical ports differ per architecture, one package is not enough: then they each need their own.",
+              "Architectures 1 and 3: Mission Orchestrator with its ports and its effect and do functions (Send To Safe Area, Start Patrol or Start Guard…, each send with its On Port), its state machine empty and named Mission Orchestrator.",
+              "Blocks ready, with states, functions and ports. Arch. 1: Sheep Guard, Zone Surveillance, Predator Defense. Arch. 3: Zone Patrolling, SheepMonitoring, Predator Management, Tracking.",
+              "Architecture 2: Zone Surveillance, SheepMonitoring without Deactivated, Predator Management with Bear Detected and Bear Gone that only tell the operator. The AutoPilot accepts Tracking orders and Resume Patrolling.",
+              "The AutoPilot of architecture 2 and the Mission Orchestrator must fire on Start Sheep Guard Mission_ext, the signal Mission Configuration sends."
+            ]
           }
         }
       ]
     },
 
-    /* 1 · launch */
+    /* 1 · start */
     {
-      id: "launch-goal", ch: "build", kind: "try",
-      title: "1 · Arrive and patrol: the goal",
-      lead: "The operator starts the mission: the drone flies to the safe area, then follows its watch path. Here is what it should do.",
+      id: "start-build", ch: "build", kind: "do",
+      title: "1 · Start the mission: build it",
+      lead: "Mission Configuration says go. The drone must hear it, and fly to the safe area.",
       blocks: [
-        { widget: "archSim", opts: { arch: "chosen", stage: "launch" } },
-        {
-          byChoice: {
-            q: "q-arch",
-            variants: {
-              "1": { label: "You will build: Sheep Guard and the Mission Orchestrator.", tab: "Arch. 1", blocks: [] },
-              "2": { label: "You will build: Zone Surveillance.", tab: "Arch. 2", blocks: [] },
-              "3": { label: "You will build: Zone Patrolling and the Mission Orchestrator.", tab: "Arch. 3", blocks: [] }
-            }
-          }
-        }
-      ]
-    },
-    {
-      id: "launch-build", ch: "build", kind: "do",
-      title: "1 · Arrive and patrol: build it",
-      lead: "The patrol subsystem, and whoever starts it.",
-      blocks: [
+        { widget: "scenarioGrow", opts: { stage: "start" } },
         {
           byChoice: {
             q: "q-arch",
             variants: {
               "1": { label: "Architecture 1", tab: "Arch. 1", blocks: [
-                { h: "Mission Configuration, in your architecture" },
-                { steps: ["In the IBD of [[a1-ibd]], add a part typed Mission Configuration, and connect it as in the example."] },
-                { h: "Sheep Guard" },
+                { h: "The result to reach" },
+                { widget: "deciderStm", opts: { arch: "1", stage: "start" } },
                 { steps: [
-                  "Create the block <<Sheep Guard>>; transition `Perimiter watch` and `Sheep Monitoring` into it.",
-                  "States: `Guard Standby` ⇄ `Sheep Guarding` (on `Activate Sheep Guard` / `Standby Sheep Guard`). Sheep Guarding has two regions: `Patrol Route` and `Sheep Counting`.",
-                  "Patrol route sends `next pathing` to the AutoPilot, instead of calling Follow path."
+                  "Open [[tp1-orch-stm|the state machine of Mission Orchestrator]]: it is empty.",
+                  "Create the states <<Idle>> and <<Mission>>; inside Mission, <<Transit>>. Add the two initial states.",
+                  "Draw the transition from `Idle` to `Mission`. Double-click it: **Trigger** `Start Sheep Guard Mission_ext`, **Effect** `Send To Safe Area`."
                 ] },
-                { h: "Mission Orchestrator" },
+                { h: "Connect" },
+                { widget: "stageIbd", opts: { arch: "1", stage: "start" } },
                 { steps: [
-                  "Create the block <<Mission Orchestrator>>. No transition: it carries decisions, not functions.",
-                  "`Idle` → `Mission` on `Start Sheep Guard Mission_ext`, effect: send `Go To Safe Area`.",
-                  "Inside Mission: `Transit` → `Sheep Guard Active` on `Arrived At Safe Area`, effect: send `Activate Sheep Guard`.",
-                  "Add the two parts; ports; connect them to Mission Configuration, the AutoPilot and each other; propagate."
-                ] },
-                { solution: { label: "Show the target Sheep Guard", blocks: [{ figure: { src: "assets/img/arch1-6-cible-stm-sheep-guard.png", w: 364, h: 524, size: "sm", alt: "Target state machine of Sheep Guard: Guard Standby and Sheep Guarding with two regions, Patrol Route and Sheep Counting.", caption: "Sheep Guard." } }] } }
+                  "Open [[tp1-ibd]]: Mission Configuration is already on it, from chapter 3. Drag [[tp1-orch]] on it. Do not create a part by hand.",
+                  "Show its ports: right-click the part → **Display > Display Parts/Ports**.",
+                  "Draw one connector per line under the drawing. On the one that comes from Mission Configuration, {{Propagate Interface To Connected Port}}."
+                ] }
               ] },
               "2": { label: "Architecture 2", tab: "Arch. 2", blocks: [
-                { h: "Mission Configuration, in your architecture" },
+                { p: "No orchestrator here: the AutoPilot takes the start order directly. Nothing to create, only to connect." },
+                { h: "Connect" },
+                { widget: "stageIbd", opts: { arch: "2", stage: "start" } },
                 { steps: [
-                  "In the IBD of [[a2-ibd]], add a part typed Mission Configuration, and connect it as in the example.",
-                  "No orchestrator here: `Start Sheep Guard Mission_ext` starts the AutoPilot. Its port is `p_AutoPilot`."
-                ] },
-                { h: "Zone Surveillance" },
-                { steps: [
-                  "Create the block <<Zone Surveillance>>; transition `Perimiter watch` into it.",
-                  "States: `Standby` → `Patrolling` on `Start Patrolling` (the AutoPilot sends it on arrival); inside Patrolling, `Perimeter watch`.",
-                  "Watch Perimeter sends `next pathing` to the AutoPilot, instead of calling Follow path.",
-                  "Add the part; a port towards the AutoPilot; connect; propagate."
-                ] },
-                { solution: { label: "Show the target Zone Surveillance", blocks: [{ figure: { src: "assets/img/arch2-5-cible-stm-zone-surveillance.png", w: 382, h: 503, size: "sm", alt: "Target state machine of Zone Surveillance: Standby, then Patrolling with two regions, Perimeter watch and Capturing.", caption: "Zone Surveillance (its second region comes at step 2)." } }] } }
+                  "Open [[tp2-ibd]]: Mission Configuration is already on it, from chapter 3.",
+                  "Connect its start-order port to the AutoPilot, then {{Propagate Interface To Connected Port}}."
+                ] }
               ] },
               "3": { label: "Architecture 3", tab: "Arch. 3", blocks: [
-                { h: "Zone Patrolling" },
+                { h: "The result to reach" },
+                { widget: "deciderStm", opts: { arch: "3", stage: "start" } },
                 { steps: [
-                  "Create the block <<Zone Patrolling>>; transition `Perimiter watch` into it.",
-                  "States: a composite `Active`; inside, `Path Standby` ⇄ `Perimeter watch` (on `Start Patrolling` / `Stop Patrolling`).",
-                  "Watch Perimeter sends `next pathing` to the orchestrator, instead of calling Follow path."
+                  "Open [[tp3-orch-stm|the state machine of Mission Orchestrator]]: it is empty.",
+                  "Create the states <<Idle>> and <<Mission>>; inside Mission, <<Transit>>. Add the two initial states.",
+                  "Draw the transition from `Idle` to `Mission`. Double-click it: **Trigger** `Start Sheep Guard Mission_ext`, **Effect** `Send To Safe Area`."
                 ] },
-                { h: "Mission Orchestrator" },
+                { h: "Connect" },
+                { widget: "stageIbd", opts: { arch: "3", stage: "start" } },
                 { steps: [
-                  "Create the block <<Mission Orchestrator>>. No transition: it carries decisions, not functions.",
-                  "`Idle` → `Mission` on `Start Sheep Guard Mission_ext`, effect: send `Go To Safe Area`. Mission has two regions.",
-                  "Region 1: `Transit` → `Patrolling` on `Arrived At Safe Area`, effect: send `Start Patrolling`. Patrolling passes `next pathing` on to the AutoPilot.",
-                  "Region 2: one state `Dispatching`, empty for now.",
-                  "Add the two parts; ports; connect them to Mission Configuration, the AutoPilot and each other; propagate."
+                  "Open [[tp3-ibd]]: Mission Configuration is already on it, from chapter 3.",
+                  "Drag [[tp3-orch]] on the diagram. Show its ports: right-click the part → **Display > Display Parts/Ports**.",
+                  "Draw one connector per line under the drawing. On the one that comes from Mission Configuration, {{Propagate Interface To Connected Port}}."
                 ] }
               ] }
             }
@@ -738,83 +739,115 @@ window.COURSE = {
       ]
     },
     {
-      id: "launch-check", ch: "build", kind: "do",
-      title: "1 · Arrive and patrol: validate",
-      lead: "Send the signals to your model. It must end with the drone on its watch path.",
+      id: "start-check", ch: "build", kind: "do",
+      title: "1 · Start the mission: validate",
+      lead: "Watch it here, then send the same signals to your model. What is wrong shows in red.",
       blocks: [
-        { widget: "stageCheck", opts: { stage: "launch" } }
+        { widget: "archSim", opts: { arch: "chosen", stage: "start", validate: true, cameo: "tp" } }
       ]
     },
 
-    /* 2 · sheep */
+    /* 2 · patrol */
     {
-      id: "sheep-goal", ch: "build", kind: "try",
-      title: "2 · A sheep strays: the goal",
-      lead: "The camera sees the flock, then a sheep outside the zone: the operator must be warned.",
+      id: "patrol-build", ch: "build", kind: "do",
+      title: "2 · Patrol: build it",
+      lead: "The drone has arrived: now it must follow its watch path. The subsystem that computes the path is ready: it only has to be started, and connected.",
       blocks: [
-        { widget: "archSim", opts: { arch: "chosen", stage: "sheep" } },
+        { widget: "scenarioGrow", opts: { stage: "patrol" } },
         {
           byChoice: {
             q: "q-arch",
             variants: {
-              "1": { label: "You will build: Zone Surveillance (the camera), and the sheep reactions of Sheep Guard.", tab: "Arch. 1", blocks: [] },
-              "2": { label: "You will build: SheepMonitoring, and the camera region of Zone Surveillance.", tab: "Arch. 2", blocks: [] },
-              "3": { label: "You will build: SheepMonitoring, the camera region of Zone Patrolling, and the dispatch of the orchestrator.", tab: "Arch. 3", blocks: [] }
+              "1": { label: "Architecture 1", tab: "Arch. 1", blocks: [
+                { h: "The result to reach" },
+                { widget: "deciderStm", opts: { arch: "1", stage: "patrol" } },
+                { steps: [
+                  "In [[tp1-orch-stm|the state machine of Mission Orchestrator]], inside Mission, create <<Sheep Guard Active>>.",
+                  "Draw the transition from `Transit` to `Sheep Guard Active`: **Trigger** `Arrived At Safe Area`, **Effect** `Start Guard`."
+                ] },
+                { h: "Connect" },
+                { widget: "stageIbd", opts: { arch: "1", stage: "patrol" } },
+                { steps: [
+                  "In [[tp1-ibd]], drag [[tp1-sg]] on the diagram and show its ports. It is ready: states, functions, ports.",
+                  "Draw one connector per line under the drawing."
+                ] }
+              ] },
+              "2": { label: "Architecture 2", tab: "Arch. 2", blocks: [
+                { h: "Connect" },
+                { widget: "stageIbd", opts: { arch: "2", stage: "patrol" } },
+                { steps: [
+                  "In [[tp2-ibd]], drag [[tp2-zs]] on the diagram and show its ports. It is ready: states, functions, ports.",
+                  "Draw one connector per line under the drawing."
+                ] }
+              ] },
+              "3": { label: "Architecture 3", tab: "Arch. 3", blocks: [
+                { h: "The result to reach" },
+                { widget: "deciderStm", opts: { arch: "3", stage: "patrol" } },
+                { steps: [
+                  "In [[tp3-orch-stm|the state machine of Mission Orchestrator]], inside Mission, create <<Patrolling>>. Drag the activity `Supervise Patrol` on it → {{Do Activity}}.",
+                  "Draw the transition from `Transit` to `Patrolling`: **Trigger** `Arrived At Safe Area`, **Effect** `Start Patrol`."
+                ] },
+                { h: "Connect" },
+                { widget: "stageIbd", opts: { arch: "3", stage: "patrol" } },
+                { steps: [
+                  "In [[tp3-ibd]], drag [[tp3-zp]] on the diagram and show its ports. It is ready: states, functions, ports.",
+                  "Draw one connector per line under the drawing."
+                ] }
+              ] }
             }
           }
         }
       ]
     },
     {
-      id: "sheep-build", ch: "build", kind: "do",
-      title: "2 · A sheep strays: build it",
-      lead: "Who sees the sheep, who counts them, who warns the operator.",
+      id: "patrol-check", ch: "build", kind: "do",
+      title: "2 · Patrol: validate",
+      lead: "Same scenario step, one subsystem more: this time the drone ends on its watch path.",
       blocks: [
+        { widget: "archSim", opts: { arch: "chosen", stage: "patrol", validate: true, cameo: "tp" } }
+      ]
+    },
+
+    /* 3 · sheep */
+    {
+      id: "sheep-build", ch: "build", kind: "do",
+      title: "3 · A sheep strays: build it",
+      lead: "The camera sees the flock, then a sheep outside the zone: the operator must be warned.",
+      blocks: [
+        { widget: "scenarioGrow", opts: { stage: "sheep" } },
         {
           byChoice: {
             q: "q-arch",
             variants: {
               "1": { label: "Architecture 1", tab: "Arch. 1", blocks: [
-                { h: "Zone Surveillance" },
+                { p: "No state to add: Sheep Guard already counts the sheep. It only needs to see them." },
+                { h: "Connect" },
+                { widget: "stageIbd", opts: { arch: "1", stage: "sheep" } },
                 { steps: [
-                  "Create the block <<Zone Surveillance>> with one state `Capturing`, do **Capture surrounding**.",
-                  "Capture surrounding passes `Sheep Signature` and `Sheep Out Of Zone` on to Sheep Guard.",
-                  "Add the part; connect it to the camera port of the drone and to Sheep Guard."
-                ] },
-                { h: "Sheep Guard" },
-                { steps: [
-                  "Guard sheep reacts to `Sheep Out Of Zone` with **Report Sheep Exit**: send `Sheep Exit Alert` to the base station.",
-                  "Connect Sheep Guard to the base station link; propagate."
+                  "In [[tp1-ibd]], drag [[tp1-zs]] on the diagram and show its ports.",
+                  "Draw one connector per line under the drawing."
                 ] }
               ] },
               "2": { label: "Architecture 2", tab: "Arch. 2", blocks: [
-                { h: "Zone Surveillance" },
+                { h: "Connect" },
+                { widget: "stageIbd", opts: { arch: "2", stage: "sheep" } },
                 { steps: [
-                  "Add a second region to Patrolling: `Capturing`, do **Capture surrounding**, which passes the sheep observations on to SheepMonitoring.",
-                  "Effect of Standby → Patrolling: **Announce Patrolling**, send `Patrolling` to SheepMonitoring."
-                ] },
-                { h: "SheepMonitoring" },
-                { steps: [
-                  "Create the block <<SheepMonitoring>>; transition `Sheep Monitoring` into it.",
-                  "States: `Inactive` → `Sheep Monitoring` on `Patrolling`.",
-                  "Sheep monitoring reacts to `Sheep Out Of Zone` with **Raise Sheep Exit Alert**: send `Sheep Exit Alert` to the base station.",
-                  "Add the part; connect it to Zone Surveillance and the base station link, and the camera port to Zone Surveillance; propagate."
+                  "In [[tp2-ibd]], drag [[tp2-sm]] on the diagram and show its ports.",
+                  "Draw one connector per line under the drawing."
                 ] }
               ] },
               "3": { label: "Architecture 3", tab: "Arch. 3", blocks: [
-                { h: "Zone Patrolling" },
-                { steps: ["Add a second region to Active: `Capturing`, do **Capture surrounding**, which sends each sheep observation to the orchestrator."] },
-                { h: "SheepMonitoring" },
+                { h: "The result to reach" },
+                { widget: "deciderStm", opts: { arch: "3", stage: "sheep" } },
                 { steps: [
-                  "Create the block <<SheepMonitoring>>; transition `Sheep Monitoring` into it.",
-                  "States: `Inactive` → `Sheep Monitoring` on `Patrolling`.",
-                  "Sheep monitoring reacts to `Sheep Out Of Zone` with **Report Sheep Exit**: send `Sheep Exit Alert` to the orchestrator."
+                  "In [[tp3-orch-stm|the state machine of Mission Orchestrator]], add a **second region** to `Mission`.",
+                  "In it, create <<Dispatching>> and its initial state. Drag the activity `Dispatch observations` on it → {{Do Activity}}."
                 ] },
-                { h: "Mission Orchestrator" },
+                { h: "Connect" },
+                { widget: "stageIbd", opts: { arch: "3", stage: "sheep" } },
                 { steps: [
-                  "Start Patrol also sends `Patrolling` to SheepMonitoring. Dispatching passes the sheep observations on to it.",
-                  "Patrolling passes `Sheep Exit Alert` on to the base station.",
-                  "Add the part; connect the orchestrator to SheepMonitoring and the base station link, and the camera port to Zone Patrolling; propagate."
+                  "In [[tp3-ibd]], drag [[tp3-sm]] on the diagram and show its ports.",
+                  "Draw one connector per line under the drawing."
                 ] }
               ] }
             }
@@ -824,91 +857,82 @@ window.COURSE = {
     },
     {
       id: "sheep-check", ch: "build", kind: "do",
-      title: "2 · A sheep strays: validate",
+      title: "3 · A sheep strays: validate",
       lead: "The sheep watch must be on, and stay on, while the operator is warned.",
       blocks: [
-        { widget: "stageCheck", opts: { stage: "sheep" } }
+        { widget: "archSim", opts: { arch: "chosen", stage: "sheep", validate: true, cameo: "tp" } }
       ]
     },
 
-    /* 3 · bear */
-    {
-      id: "bear-goal", ch: "build", kind: "try",
-      title: "3 · A bear: the goal",
-      lead: "A bear enters the tracking zone: the drone follows it and the sheep watch pauses. When the bear leaves, the drone goes back to patrolling.",
-      blocks: [
-        { widget: "archSim", opts: { arch: "chosen", stage: "bear" } },
-        {
-          byChoice: {
-            q: "q-arch",
-            variants: {
-              "1": { label: "You will build: Predator Defense, and the hand-over in the orchestrator.", tab: "Arch. 1", blocks: [] },
-              "2": { label: "You will build: Predator Management and the patch: it pauses SheepMonitoring and takes the AutoPilot.", tab: "Arch. 2", blocks: [] },
-              "3": { label: "You will build: Predator Management, Tracking, and the decisions of the orchestrator.", tab: "Arch. 3", blocks: [] }
-            }
-          }
-        }
-      ]
-    },
+    /* 4 · bear */
     {
       id: "bear-build", ch: "build", kind: "do",
-      title: "3 · A bear: build it",
-      lead: "Track the bear, pause the sheep watch, and put everything back when it leaves.",
+      title: "4 · A bear: build it",
+      lead: "A bear enters the tracking zone: the drone follows it and the sheep watch pauses. When it leaves, everything goes back as it was.",
       blocks: [
+        { widget: "scenarioGrow", opts: { stage: "bear" } },
         {
           byChoice: {
             q: "q-arch",
             variants: {
               "1": { label: "Architecture 1", tab: "Arch. 1", blocks: [
-                { h: "Predator Defense" },
+                { h: "The result to reach" },
+                { widget: "deciderStm", opts: { arch: "1", stage: "bear" } },
                 { steps: [
-                  "Create the block <<Predator Defense>>; transition `Predator Monitoring`, then `Predator Detected`.",
-                  "States: `Disarmed` → `Predator Watch` → `Awaiting Control` (on a bear, effect **Request Takeover**: send `Takeover Request`) → `Predator Response` (on `Activate Predator Defense`).",
-                  "Inside Predator Response: `Tracking Predator`, do **Track predator**: send `Tracking orders` to the AutoPilot.",
-                  "Back to Predator Watch when the bear leaves, effect **Release Control**: send `Feature Done`."
+                  "In [[tp1-orch-stm|the state machine of Mission Orchestrator]], inside Mission, create <<Predator Defense Active>>.",
+                  "Draw the transition from `Sheep Guard Active` to it: **Trigger** `Takeover Request`, **Effect** `Hand Over To Predator Defense`.",
+                  "And the way back: **Trigger** `Feature Done`, **Effect** `Hand Back To Sheep Guard`."
                 ] },
-                { h: "Orchestrator and Zone Surveillance" },
+                { h: "Connect" },
+                { widget: "stageIbd", opts: { arch: "1", stage: "bear" } },
                 { steps: [
-                  "Orchestrator: `Sheep Guard Active` → `Predator Defense Active` on `Takeover Request` (standby Sheep Guard, activate Predator Defense, alert the operator), and back on `Feature Done`.",
-                  "Zone Surveillance passes the bear observations on to Predator Defense.",
-                  "Add the part; connect it to the orchestrator, Zone Surveillance and the AutoPilot; propagate."
-                ] },
-                { solution: { label: "Show the target Predator Defense", blocks: [{ figure: { src: "assets/img/arch1-5-cible-stm-predator-defense.png", w: 942, h: 435, alt: "Target state machine of Predator Defense: Disarmed, Predator Watch, Awaiting Control, Predator Response with Tracking Predator and Deterring.", caption: "Predator Defense." } }] } }
+                  "In [[tp1-ibd]], drag [[tp1-pd]] on the diagram and show its ports. It already decides how to track the bear.",
+                  "Draw one connector per line under the drawing."
+                ] }
               ] },
               "2": { label: "Architecture 2", tab: "Arch. 2", blocks: [
-                { h: "Predator Management" },
+                { h: "Plug it in" },
+                { widget: "stageIbd", opts: { arch: "2", stage: "raw" } },
                 { steps: [
-                  "Create the block <<Predator Management>>; transition `Predator Monitoring`, then `Predator Detected` as it is.",
-                  "States: `Standby` → `Predator watch` on `Patrolling`. Inside: `No predator` ⇄ `Predator Detected`.",
-                  "Entering Predator Detected, effect **Bear Detected**: send `Deactivate Sheep Monitoring` (the patch) and `Predator Alert`.",
-                  "Start Predator Tracking sends `Tracking orders` to the AutoPilot. Leaving, effect **Bear Gone**: `Reactivate Sheep Monitoring`, `Resume Patrolling`, `Predator Cleared`."
+                  "In [[tp2-ibd]], drag [[tp2-pm]] on the diagram and show its ports.",
+                  "Draw one connector per line under the drawing."
                 ] },
-                { h: "The other side of the patch" },
-                { steps: [
-                  "SheepMonitoring: `Sheep Monitoring` ⇄ `Deactivated` on `Deactivate` / `Reactivate Sheep Monitoring`.",
-                  "Zone Surveillance passes `Patrolling` and the bear observations on to Predator Management.",
-                  "Add the part; connect it to Zone Surveillance, SheepMonitoring, the AutoPilot and the base station link; propagate."
+                { h: "Play it: what goes wrong?" },
+                { p: "It works on its own, but nobody told the others. Press **Next step**, twice: each time, one check stays red. Find out why." },
+                { widget: "archSim", opts: { arch: "2", stage: "raw" } },
+                { h: "Your patch" },
+                { list: [
+                  "While the bear is there, the sheep watch must be **off**; afterwards, **on** again.",
+                  "When the bear leaves, the drone must go **back to its path**. The AutoPilot already understands `Resume Patrolling`.",
+                  "**Free**: the names of your signals and of your state, how many you need. The rule: touch as little as you can."
                 ] },
-                { solution: { label: "Show the target Predator Management", blocks: [{ figure: { src: "assets/img/arch2-4-cible-stm-predator-management.png", w: 731, h: 689, alt: "Target state machine of Predator Management: Standby, Predator watch with No predator and Predator Detected, which holds Predator tracking and Predator counteraction.", caption: "Predator Management." } }] } }
+                { notes: { id: "patch", label: "Your patch, before you click", hint: "Which subsystem changes? What new exchange? What new state?" } },
+                { tip: { label: "Stuck? Who knows, who must react", blocks: [{ p: "**Predator Management** knows about the bear. **SheepMonitoring** must react, and it has no idea: it needs a state where it does nothing, and a signal from Predator Management to get there and back." }] } },
+                { tip: { label: "Stuck? The gestures", blocks: [
+                  { steps: [
+                    "In [[tp2-sm-stm|the state machine of SheepMonitoring]]: the new state, and its two transitions.",
+                    "In [[tp2-pm-stm|the state machine of Predator Management]]: the effects of the transitions of `Predator Detected`, `Bear Detected` and `Bear Gone`, send your signals.",
+                    "On the IBD, right-click each of the two parts → {{Create All Missing Signal Ports}}, then connect the new ports."
+                  ] }
+                ] } },
+                { solution: { label: "Show our patch", blocks: [
+                  { widget: "deciderStm", opts: { arch: "2", stage: "bear" } },
+                  { p: "Yours may differ: the validation only asks that the sheep watch has left `Sheep Monitoring` while the bear is there, and that everything is back afterwards." }
+                ] } }
               ] },
               "3": { label: "Architecture 3", tab: "Arch. 3", blocks: [
-                { h: "Predator Management" },
+                { h: "The result to reach" },
+                { widget: "deciderStm", opts: { arch: "3", stage: "bear" } },
                 { steps: [
-                  "Create the block <<Predator Management>>; transition `Predator Monitoring`.",
-                  "States: `Standby` → `Predator watch` on `Patrolling`; inside, `Monitoring predators`.",
-                  "Each bear observation becomes a request: send `Predator Tracking Request` when it enters, `Predator Tracking Release` when it leaves."
+                  "In [[tp3-orch-stm|the state machine of Mission Orchestrator]], in the first region of Mission, create <<Predator tracking>>. Drag the activity `Relay tracking orders` on it → {{Do Activity}}.",
+                  "Draw the transition from `Patrolling` to it: **Trigger** `Predator Tracking Request`, **Effect** `Grant Tracking`.",
+                  "And the way back: **Trigger** `Predator Tracking Release`, **Effect** `Resume Patrol`."
                 ] },
-                { h: "Tracking" },
+                { h: "Connect" },
+                { widget: "stageIbd", opts: { arch: "3", stage: "bear" } },
                 { steps: [
-                  "Create the block <<Tracking>>; transition `Predator tracking`. Delete the transitions towards off-TO RENAME: they become requests.",
-                  "States: `Tracking Idle` ⇄ `Tracking Target` (on `Start Tracking` / `Stop Tracking`).",
-                  "**Compute tracking orders** sends `Tracking orders` to the orchestrator. Remove the decision and its self-sends: that decision now belongs to the orchestrator."
-                ] },
-                { h: "Mission Orchestrator" },
-                { steps: [
-                  "`Patrolling` → `Predator tracking` on `Predator Tracking Request`: stop the patrol, pause the sheep watch, start tracking, alert the operator.",
-                  "Back to Patrolling on `Predator Tracking Release`: the reverse. Predator tracking passes `Tracking orders` on to the AutoPilot.",
-                  "Dispatching passes the bear observations to Predator Management. Add the two parts; connect them to the orchestrator; propagate."
+                  "In [[tp3-ibd]], drag [[tp3-pm]] and [[tp3-trk]] on the diagram and show their ports.",
+                  "Draw one connector per line under the drawing."
                 ] }
               ] }
             }
@@ -918,76 +942,59 @@ window.COURSE = {
     },
     {
       id: "bear-check", ch: "build", kind: "do",
-      title: "3 · A bear: validate",
+      title: "4 · A bear: validate",
       lead: "The drone follows the bear, then patrols again with the sheep watch back on.",
       blocks: [
-        { widget: "stageCheck", opts: { stage: "bear" } }
+        { widget: "archSim", opts: { arch: "chosen", stage: "bear", validate: true, cameo: "tp" } }
       ]
     },
 
-    /* 4 · deter, on your own */
-    {
-      id: "deter-goal", ch: "build", kind: "try",
-      title: "4 · Scare it off: the goal",
-      lead: "When the bear comes too close to the flock, the drone flashes its light and sounds its horn; when it backs off, back to tracking. This one, you build alone.",
-      blocks: [
-        { widget: "archSim", opts: { arch: "chosen", stage: "deter" } },
-        { p: "You thought it through in chapter 5: your answer is your plan." }
-      ]
-    },
+    /* 5 · deter */
     {
       id: "deter-build", ch: "build", kind: "do",
-      title: "4 · Scare it off: on your own",
-      lead: "The two questions again: who fires the transition, and who else wants to know?",
+      title: "5 · Scare it off: build it",
+      lead: "The bear comes too close to the flock: the drone flashes its light and sounds its horn. When it backs off, back to tracking.",
       blocks: [
+        { widget: "scenarioGrow", opts: { stage: "deter" } },
         {
-          steps: [
-            "Which functional state does it, and which subsystem receives it?",
-            "Who starts and stops the deterrence, and what travels for that?",
-            "What does its function send, and to whom?",
-            "Ports towards the light and the sound of the drone, connected to its boundary ports."
-          ]
-        },
-        {
-          solution: {
-            label: "Show the solution",
-            blocks: [{
-              byChoice: {
-                q: "q-arch",
-                variants: {
-                  "1": { label: "Architecture 1", tab: "Arch. 1", blocks: [{ list: [
-                    "`Deterring` is already in Predator Response, with the triggers of the mission: nothing to change in the states, nor in the orchestrator.",
-                    "Its do-activity, **Deter predator**, sends `Light burst` and `Sound burst` on two ports.",
-                    "Connect those ports to the light and sound ports of the drone."
-                  ] }] },
-                  "2": { label: "Architecture 2", tab: "Arch. 2", blocks: [{ list: [
-                    "`Predator counteraction` came with Predator Detected, triggers included.",
-                    "Trigger predator counter actions: remove the self-send (the camera now says when the bear leaves), send `Light burst` and `Sound burst` on two ports.",
-                    "Connect those ports to the light and sound ports of the drone."
-                  ] }] },
-                  "3": { label: "Architecture 3", tab: "Arch. 3", blocks: [
-                    { list: [
-                      "Transition `Predator counteraction` into Predator Management, as a second region: `Deterrence idle` ⇄ `Deterring` on `Engage Predator` / `Disengage Predator`.",
-                      "Predator monitoring sends `Predator Engage Request` when the bear enters the safe perimeter, `Predator Disengage Request` when it leaves.",
-                      "Trigger predator counter actions sends `Light burst` and `Sound burst` on two ports, connected to the light and sound ports of the drone.",
-                      "Orchestrator: `Predator tracking` ⇄ `Predator counteraction` on the two requests, effects **Grant Engagement** / **Grant Disengagement**."
-                    ] },
-                    { figure: { src: "assets/img/arch3-5-cible-stm-predator-management.png", w: 418, h: 622, size: "sm", alt: "Target state machine of Predator Management of architecture 3: Standby, Predator watch with the regions monitoring and deterrence.", caption: "Predator Management." } },
-                    { figure: { src: "assets/img/arch3-4-cible-stm-orchestrator.png", w: 921, h: 876, alt: "Target state machine of the Mission Orchestrator of architecture 3.", caption: "The orchestrator, complete." } }
-                  ] }
-                }
-              }
-            }]
+          byChoice: {
+            q: "q-arch",
+            variants: {
+              "1": { label: "Architecture 1", tab: "Arch. 1", blocks: [
+                { p: "No state to add: Predator Defense decides this on its own, and the orchestrator does not move. That is the point of this architecture." },
+                { h: "Connect" },
+                { widget: "stageIbd", opts: { arch: "1", stage: "deter" } },
+                { steps: ["In [[tp1-ibd]], draw one connector per line under the drawing."] }
+              ] },
+              "2": { label: "Architecture 2", tab: "Arch. 2", blocks: [
+                { p: "No state to add: Predator Management decides this on its own, and your patch does not change." },
+                { h: "Connect" },
+                { widget: "stageIbd", opts: { arch: "2", stage: "deter" } },
+                { steps: ["In [[tp2-ibd]], draw one connector per line under the drawing."] }
+              ] },
+              "3": { label: "Architecture 3", tab: "Arch. 3", blocks: [
+                { h: "The result to reach" },
+                { widget: "deciderStm", opts: { arch: "3", stage: "deter" } },
+                { steps: [
+                  "In [[tp3-orch-stm|the state machine of Mission Orchestrator]], in the first region of Mission, create <<Predator counteraction>>. Drag the activity `Relay tracking orders` on it → {{Do Activity}}.",
+                  "Draw the transition from `Predator tracking` to it: **Trigger** `Predator Engage Request`, **Effect** `Grant Engagement`.",
+                  "And the way back: **Trigger** `Predator Disengage Request`, **Effect** `Grant Disengagement`."
+                ] },
+                { h: "Connect" },
+                { widget: "stageIbd", opts: { arch: "3", stage: "deter" } },
+                { steps: ["In [[tp3-ibd]], draw one connector per line under the drawing."] }
+              ] }
+            }
           }
         }
       ]
     },
     {
       id: "deter-check", ch: "build", kind: "do",
-      title: "4 · Scare it off: validate",
+      title: "5 · Scare it off: validate",
       lead: "Light and sound when the bear is too close, tracking again when it backs off, patrol when it is gone.",
       blocks: [
-        { widget: "stageCheck", opts: { stage: "deter" } }
+        { widget: "archSim", opts: { arch: "chosen", stage: "deter", validate: true, cameo: "tp" } }
       ]
     },
 
@@ -1027,7 +1034,7 @@ window.COURSE = {
       title: "The whole scenario",
       lead: "All the steps in a row. If each stage passed, this one does too.",
       blocks: [
-        { widget: "stageCheck", opts: { stage: "full" } }
+        { widget: "archSim", opts: { arch: "chosen", stage: "full", validate: true, cameo: "tp" } }
       ]
     },
     {
@@ -1071,10 +1078,10 @@ window.COURSE = {
 
   authorNotes: [
     { scene: "three-archs", text: "The simulation runs part3/content/archs.js (written by scripts/make-part3-archs.py) with js/logical-engine.js. Captions, message labels, the highlighted patch exchange and the refused plan left out: config archs.story, archs.badges, archs[\"2\"].highlight, archs.leaveOut." },
-    { scene: "build-plan", text: "Stages: config archs.stages. Each simulates only the parts built so far. Validate in Cameo sends the signals to the simulation over the relay (simtest/start, send, states, stop: allow-list of RpcDispatcher) and reads the states back; parts are addressed by the name of their type. If the plugin is too old, the button offers the scenario file." },
+    { scene: "build-plan", text: "Stages: config archs.stages. Each simulates only the parts built so far, and the states of the decider made so far. Validate in Cameo sends the signals to the simulation over the relay (simtest/start, send, states, stop: allow-list of RpcDispatcher) and reads the states back; parts are addressed by the name of their type. If the plugin is too old, the button offers the scenario file." },
     { scene: "an-perf", text: "The latencies (8 ms per interface, 4 ms per subsystem) are illustrative, not measured." },
     { scene: "load-model", text: "The ids in part3/content/model-links.js come from the correction project; the starting model must be cut from it (handoff README §4) for them to hold. Otherwise the chips fall back to the names." },
     { scene: "trade-off", text: "The scores of the star diagram (config archs.*.score, axes in archs.axes) are a reading of the three fiches, not measured. Adjust them." },
-    { scene: "launch-build", text: "Stage texts follow transition-features-mission.md, split by scenario event. State and function names are kept as in the model, typos included (Perimiter, surounding)." }
+    { scene: "start-build", text: "The drawings and the gestures of the states: config archs[k].target. What each stage adds: config archs.stages. The connectors under the IBD come from archs.js. State and function names are kept as in the model, typos included (Perimiter, surounding)." }
   ]
 };

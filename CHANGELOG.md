@@ -2,7 +2,20 @@
 
 ## Unreleased
 
-- **Part 3, Mission Configuration on the starting model**: built in `TP - Logical Architecture 1`, and Validate runs on
+- **Part 3, the links follow the model**: every link and Validate point at `TP - Logical Architecture`, its IBD
+  `TP Logical SOI` and `TP1 SOI Simulation`, one package whatever the architecture; a state machine link opens its
+  diagram; the functional mission is at the root of the model; the links to the correction packages are gone. The caption
+  of the staged drawings no longer breaks into columns (it shared a class with the *Play in Cameo too* switch). The
+  subsystems around the central orchestrator light up. The labels of a transition sit next to it.
+- **Part 3, the logic first, then a guided build**: the exercise now focuses on the piece that decides. Chapter 5 asks for
+  its role, its content, its interactions and the steps, before any click, then gives our proposal. Chapter 6 builds that
+  proposal one event at a time (start, patrol, a sheep strays, a bear, scare it off): the subsystems are ready in the
+  starting model, the student makes the states of the Mission Orchestrator and draws the connectors. Each stage shows
+  the state machine to reach, gesture by gesture, the IBD with what it adds, and the scenario that grows; each
+  validation is the animated drawing with its button. In the patch, Predator Management is connected first, the two
+  red checks show what breaks, and the patch is the student's: the check does not name its state. Removed: the question on
+  Predator counteraction, the blanks to name the subsystems, the state mapping, the build "on your own".
+- **Part 3, Mission Configuration on the starting model**: built in `TP - Logical Architecture`, and Validate runs on
   `TP1 SOI Simulation`. Who relays the signals (the base station), then two commands instead of writing effects and
   ports by hand, each in its own scene with an animation: *Create All Missing Signal Ports*, after dropping the block
   on the IBD, and *Delegate to external systems* (`_ext` signals). Later scenes use `Start Sheep Guard Mission_ext`.

@@ -12,7 +12,9 @@
 
    const sim = LogicalEngine.create(arch, opts)    arch = LOGICAL_ARCHS["3"]; opts.only = names of the SOI parts
                                                    built so far (the others are left out: what they would
-                                                   receive is lost, as in a model where they are not there yet)
+                                                   receive is lost, as in a model where they are not there yet);
+                                                   opts.drop = { block: [states not made yet] }, with their
+                                                   transitions; opts.mute = [signals nobody sends yet]
    sim.inject(signal, into)  -> [events]            into = "operator" | "pasture" (a part of the context)
        events, in order:  { kind: 'msg', from, to, signal, via }   from/to = paths ("soi.orch"), via = boundary ports
                           { kind: 'self', path, signal }             a signal the part sends itself, on no port
@@ -20,12 +22,15 @@
    sim.states(path)  -> ["Mission", "Patrolling", "Dispatching"]   every active state, outermost first
    sim.leaves(path)  -> ["Patrolling", "Dispatching"]               the innermost ones
    sim.check(expect) -> [{ path, want, ok }]                         against a scenario step's expect
-   sim.reset() */
+   sim.reset()
+   A wanted state may be "!Name": the part must not be in it, whatever it is in instead (LogicalEngine.wantOk). */
 (function (root) {
   'use strict';
 
   function create(arch, opts) {
     const only = opts && opts.only;
+    const drop = (opts && opts.drop) || {};
+    const mute = (opts && opts.mute) || [];
     const blocks = new Map(arch.blocks.map((b) => [b.name, b]));
     const shared = new Map((arch.functions || []).map((f) => [f.name, f]));
     const composite = new Map([[arch.soi.name, arch.soi]]);
@@ -34,10 +39,12 @@
     function model(block) {
       const states = new Map();
       const transitions = [];
+      const gone = drop[block.name] || [];
+      const keepT = (t) => { if (gone.indexOf(t.from) < 0 && gone.indexOf(t.to) < 0) transitions.push(t); };
       function region(def, parent) {
         const r = { parent, states: [], initial: def.initial };
-        (def.states || []).forEach((s) => r.states.push(state(s, r)));
-        (def.transitions || []).forEach((t) => transitions.push(t));
+        (def.states || []).filter((s) => gone.indexOf(s.name) < 0).forEach((s) => r.states.push(state(s, r)));
+        (def.transitions || []).forEach(keepT);
         return r;
       }
       function state(def, reg) {
@@ -45,7 +52,7 @@
         states.set(def.name, s);
         if (def.regions) def.regions.forEach((r) => s.regions.push(region(r, s)));
         else if (def.states) s.regions.push(region({ initial: def.initial, states: def.states, transitions: def.transitions }, s));
-        else (def.transitions || []).forEach((t) => transitions.push(t));
+        else (def.transitions || []).forEach(keepT);
         return s;
       }
       const top = region({ initial: block.stm.initial, states: block.stm.states, transitions: block.stm.transitions }, null);
@@ -117,6 +124,7 @@
     }
 
     function send(part, step) {
+      if (mute.indexOf(step.send) >= 0) return;
       if (step.when && part.last !== step.when) return;
       if (step.unless && part.last === step.unless) return;
       if (step.self) {
@@ -250,14 +258,16 @@
       leaves,
       check: (expect) => Object.keys(expect || {}).map((path) => {
         const want = [].concat(expect[path]);
-        const have = states(path);
-        return { path, want, ok: want.every((w) => have.indexOf(w) >= 0) };
+        return { path, want, ok: wantOk(want, states(path)) };
       }),
       reset
     };
   }
+  function wantOk(want, have) {
+    return [].concat(want).every((w) => (w.charAt(0) === '!' ? have.indexOf(w.slice(1)) < 0 : have.indexOf(w) >= 0));
+  }
 
-  const api = { create };
+  const api = { create, wantOk };
   if (typeof module === 'object' && module.exports) module.exports = api;
   else root.LogicalEngine = api;
 })(typeof window !== 'undefined' ? window : this);

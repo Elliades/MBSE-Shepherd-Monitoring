@@ -31,7 +31,7 @@
 .chip[aria-pressed="true"] .lg-chip-n { background: var(--route); color: var(--on-route); }
 .lg-auto { margin-left: auto; }
 .lg-live { min-height: 4.4em; }
-.lg-live b, .lg-trade .w-live b, .lg-map .w-live b { color: var(--ph-lg); }
+.lg-live b, .lg-trade .w-live b { color: var(--ph-lg); }
 
 /* ───────── trade-off ───────── */
 .lg-trade-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); align-items: center; }
@@ -54,12 +54,6 @@
 .lg-tick { fill: none; stroke: var(--grass); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; transition: opacity 0.3s; opacity: 0; }
 
 /* ───────── the package tree ───────── */
-.lg-tree-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.25rem; }
-.lg-tree-list li { padding-left: calc(var(--d) * 1.4rem); }
-.lg-tree-list button { display: inline-flex; align-items: center; gap: 0.5rem; min-height: 2.4rem; padding: 0.2rem 0.7rem; border-radius: var(--r-sm); border: 1.5px solid transparent; background: none; font: inherit; font-weight: 700; color: var(--ink); cursor: pointer; text-align: left; }
-.lg-tree-list button:hover { border-color: var(--line); }
-.lg-tree-list button[aria-pressed="true"] { border-color: var(--ph-lg); background: color-mix(in srgb, var(--ph-lg) 12%, var(--surface)); }
-.lg-tree-ico { font-style: normal; display: inline-grid; place-items: center; width: 1.4rem; height: 1.4rem; border-radius: 5px; background: var(--surface-2); color: var(--ph-lg); font-size: 0.85rem; }
 .lg-k-package { color: var(--amber); }
 .lg-k-signal { color: var(--route); }
 .lg-k-activity { color: var(--ph-fn); }
@@ -150,17 +144,6 @@
 .lg-pc li.con::before { content: '−'; color: var(--danger); }
 
 /* ───────── who receives which state ───────── */
-.lg-ms-box { fill: color-mix(in srgb, #f4e48c 55%, var(--surface)); stroke: #b39a2e; stroke-width: 1.2; transition: fill 0.35s, stroke 0.35s; }
-.lg-ms-frame .lg-ms-box { fill: color-mix(in srgb, #f4e48c 18%, var(--surface)); }
-.lg-ms.given .lg-ms-box { fill: color-mix(in srgb, var(--pc) 42%, var(--surface)); stroke: var(--pc); stroke-width: 1.8; }
-.lg-ms-frame.given .lg-ms-box { fill: color-mix(in srgb, var(--pc) 20%, var(--surface)); }
-.w svg text.lg-ms-t { font-size: 9px; font-weight: 700; }
-.w svg text.lg-ms-ft { font-size: 9.5px; font-weight: 700; fill: var(--ink-2); }
-.lg-legend { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 0.35rem 1rem; font-size: 0.9rem; }
-.lg-legend li { display: inline-flex; align-items: center; gap: 0.4rem; }
-.lg-legend i { width: 0.9rem; height: 0.9rem; border-radius: 4px; background: var(--pc); border: 1.5px solid color-mix(in srgb, var(--pc) 70%, var(--ink)); }
-.lg-legend li.none i { background: color-mix(in srgb, #f4e48c 55%, var(--surface)); border-color: #b39a2e; }
-.lg-legend li.none { color: var(--ink-3); }
 
 /* ───────── Part 4: scope ───────── */
 .lg-soi-big { fill: var(--route-soft); stroke: var(--route); stroke-width: 2; stroke-dasharray: 8 6; animation: march-14 2.4s linear infinite; }
@@ -211,7 +194,7 @@
 .w svg text.lg-ab-tok-t { font-size: 9.5px; opacity: 1; }
 
 /* ───────── Part 3, second pass: illustrations ───────── */
-.lg-validate .btn svg, .lg-check .btn svg { width: 1.15rem; height: 1.15rem; display: inline-block; }
+.lg-validate .btn svg { width: 1.15rem; height: 1.15rem; display: inline-block; }
 /* ports of the guided example */
 .w svg text.lg-mcp-t { font-size: 9.5px; fill: var(--ink-2); }
 .w svg text.lg-mcp-name { font-family: var(--font-mono); font-size: 11px; font-weight: 700; fill: var(--ph-lg); }
@@ -229,8 +212,6 @@
 .lg-vote { fill: color-mix(in srgb, var(--ph-lg) 14%, var(--surface)); stroke: var(--ph-lg); stroke-width: 1.6; }
 .lg-bad .pf-fn { stroke: var(--danger); fill: color-mix(in srgb, var(--danger) 14%, var(--surface)); }
 .lg-cam { fill: var(--surface-2); stroke: var(--ink-3); stroke-dasharray: 3 3; }
-.w svg text.lg-ms { font-family: var(--font-mono); font-size: 13px; font-weight: 700; fill: var(--danger); }
-.w svg text.lg-ms.ok { fill: var(--grass); }
 /* sequence check */
 .lg-seq-m, .lg-seq-end { opacity: 0; transition: opacity 0.2s; }
 .lg-seq-m.on, .lg-seq-end.on { opacity: 1; }
@@ -265,18 +246,13 @@
 .lg-badge.hot .lg-badge-box { fill: var(--amber, #d98b00); }
 .w svg .lg-badge.hot text.lg-badge-t { font-size: 13px; }
 /* what Cameo must show */
-.lg-check-steps { margin: 0; padding: 0; list-style: none; display: grid; gap: 0.4rem; }
-.lg-check-steps li { display: grid; gap: 0.15rem; padding: 0.55rem 0.75rem; border-radius: 8px; background: var(--surface-2); }
-.lg-check-ev { font-family: var(--font-display); font-weight: 700; display: flex; gap: 0.45rem; align-items: center; }
-.lg-check-ev i { font-style: normal; }
-.lg-check-ex { font-size: 0.9rem; color: var(--ink-2); }
 /* a bigger star diagram */
 .lg-trade-grid { grid-template-columns: 1fr; }
 .lg-radar svg { max-width: 620px; margin: 0 auto; }
 .lg-ibd svg { max-width: 560px; margin: 0 auto; }
 .w svg text.lg-axis { font-size: 10.5px; }
 @media (prefers-reduced-motion: reduce) { .lg-cq-hot .lg-st-box { animation: none; } }
-.lg-spotting .lg-ap.near { opacity: 0.8; }
+.lg-spotting .lg-ap.near { opacity: 0.95; }
 
 /* ───────── Part 3, third pass ───────── */
 .lg-mst.now .lg-st-box { fill: color-mix(in srgb, var(--route) 28%, var(--surface)); stroke: var(--route); stroke-width: 2.6; }
@@ -289,12 +265,6 @@
 .lg-badge.hot .lg-badge-box { fill: var(--danger); }
 .lg-red-t { color: var(--danger); }
 .lg-validate-have { font-weight: 700; }
-.lg-check-sig { font-size: 0.8rem; color: var(--ink-3); }
-.lg-check-ex { display: flex; flex-wrap: wrap; gap: 0.3rem; }
-.lg-check-it { padding: 0.1rem 0.5rem; border-radius: 6px; background: var(--surface); }
-.lg-check-it b { font-weight: 700; }
-.lg-check-it.ok { background: var(--grass-soft); color: var(--grass); }
-.lg-check-it.no { background: var(--danger-soft); color: var(--danger); }
 
 .lg-table-w { overflow-x: auto; }
 .lg-table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
@@ -302,6 +272,28 @@
 .lg-table td { padding: 0.5rem 0.7rem; border-bottom: 1px solid var(--line); vertical-align: top; }
 .lg-table td:first-child { font-weight: 700; white-space: nowrap; }
 
-.lg-live { display: inline-flex; align-items: center; gap: 6px; font-size: .85rem; cursor: pointer; }
+.lg-live-toggle { display: inline-flex; align-items: center; gap: 6px; font-size: .85rem; cursor: pointer; }
 .lg-live-out { min-height: 1.2em; margin: 6px 0 0; font-size: .85rem; }
 .lg-live-ok { font-weight: 700; color: var(--ok, #1a7f37); }
+
+/* The build, stage by stage: the scenario that grows, the result to reach, what to connect. */
+.lg-grow { display: flex; flex-wrap: wrap; gap: 0.3rem; margin: 0 0 0.6rem; padding: 0; list-style: none; }
+.lg-grow li { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.15rem 0.6rem; border-radius: 999px; border: 1px solid var(--line); color: var(--ink-3); font-size: 0.85rem; }
+.lg-grow li i { font-style: normal; }
+.lg-grow li.done { background: var(--grass-soft); border-color: var(--grass); color: var(--grass); }
+.lg-grow li.done::after { content: "✓"; font-weight: 700; }
+.lg-grow li.now { background: var(--ph-lg); border-color: var(--ph-lg); color: #fff; font-weight: 700; }
+.lg-grow-only { margin: 0; }
+.lg-tnew .lg-st-box { stroke: var(--grass); stroke-width: 2.2; fill: var(--grass-soft); }
+.lg-tnew .s-frame { stroke: var(--grass); stroke-width: 2; }
+.w svg .lg-region { stroke: var(--ink-3); stroke-width: 1.2; stroke-dasharray: 6 4; }
+.lg-tnew .lg-region { stroke: var(--grass); stroke-width: 2; }
+.lg-ap-new .lg-ap-box { stroke: var(--grass); stroke-width: 3.5; }
+.lg-conn-line.fresh { stroke: var(--grass); stroke-width: 3.5; stroke-dasharray: 9 6; animation: lg-fresh 1.1s linear infinite; }
+@keyframes lg-fresh { to { stroke-dashoffset: -15; } }
+@media (prefers-reduced-motion: reduce) { .lg-conn-line.fresh { animation: none; } }
+.lg-conn-list { margin: 0.6rem 0 0; padding: 0; list-style: none; display: grid; gap: 0.3rem; }
+.lg-conn-list li { padding: 0.35rem 0.7rem; border-radius: 8px; border-left: 4px solid var(--grass); background: var(--surface-2); }
+.lg-conn-list small { display: block; margin-top: 0.15rem; line-height: 1.7; color: var(--ink-3); }
+.w svg text.lg-ms { font-family: var(--font-mono); font-size: 13px; font-weight: 700; fill: var(--danger); }
+.w svg text.lg-ms.ok { fill: var(--grass); }

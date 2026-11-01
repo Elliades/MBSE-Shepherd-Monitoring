@@ -45,9 +45,13 @@ window.COURSE_CONFIG = {
        ports:   the side of the SOI frame where each boundary port is drawn (L, R, T, B).
        "1".."3": name, who decides, for / against, score on `axes` (0..5, the star diagram of the trade-off),
                 layout = centre of each part in a 800 x 420 drawing (frame 100..700 x 20..400),
-                mapping = which part receives each state of the functional mission (stateMapping),
                 spot = where the logic is (logicSpot: parts and links lit, a note),
-                highlight = signals the animation slows down and keeps drawn (the patch of architecture 2). */
+                highlight = signals the animation slows down and keeps drawn (the patch of architecture 2),
+                decider = the part whose states the student makes, stage by stage (none in the patch),
+                anyName = state of the correction -> what the check asks instead, when its name is the student's,
+                target = the drawing of the result to reach (deciderStm): items with s = the stage that adds them
+                ("given": there from the start), g = the gesture of that stage that shows them (default 1), and
+                gestures = per stage, the chips of the animation. */
   archs: {
     order: ["1", "2", "3"],
     parts: {
@@ -75,11 +79,53 @@ window.COURSE_CONFIG = {
       cons: ["Each feature carries a lot of logic", "Two features must agree on who drives the AutoPilot"],
       score: [3, 4, 5, 4, 3, 2],
       layout: { bsrc: [210, 75], mc: [210, 200], mi: [210, 330], orch: [355, 200], ap: [355, 340], sg: [565, 125], zs: [565, 230], pd: [565, 335] },
-      mapping: {
-        Undeployed: "mc", Off: "mc", Unconfigured: "mc", Configured: "mc", "Ready for Mission": "mc", "Going to Safe Area": "ap",
-        "Perimiter watch": "sg", "Sheep Monitoring": "sg", "Predator Monitoring": "pd", "Predator Detected": "pd", "Predator tracking": "pd", "Predator counteraction": "pd"
-      },
-      mappingNote: "Sheep Guard receives **Perimiter watch** and **Sheep Monitoring** side by side: group them into one state with two regions. Predator Defense receives **Predator Monitoring** and the whole **Predator Detected**. The Mission Orchestrator and Zone Surveillance have no source state: you build them by hand."
+      decider: "orch",
+      target: {
+        vb: "0 0 520 300", block: "Mission Orchestrator",
+        items: [
+          { t: "dot", x: 8, y: 38, s: "start" },
+          { t: "arrow", pts: [[13, 38], [18, 38]], s: "start" },
+          { t: "state", x: 18, y: 26, w: 44, name: "Idle", s: "start" },
+          { t: "frame", x: 150, y: 8, w: 364, h: 284, name: "Mission", s: "start" },
+          { t: "dot", x: 170, y: 44, s: "start" },
+          { t: "arrow", pts: [[175, 44], [186, 44]], s: "start" },
+          { t: "state", x: 186, y: 32, w: 90, name: "Transit", s: "start" },
+          { t: "arrow", pts: [[62, 38], [150, 38]], s: "start", g: 2 },
+          { t: "on", x: 66, y: 22, text: "Start Sheep Guard", s: "start", g: 2 },
+          { t: "on", x: 66, y: 33, text: "Mission_ext", s: "start", g: 2 },
+          { t: "eff", x: 66, y: 50, text: "/ Send To Safe Area", s: "start", g: 3 },
+          { t: "state", x: 176, y: 112, w: 224, name: "Sheep Guard Active", s: "patrol" },
+          { t: "arrow", pts: [[231, 56], [231, 112]], s: "patrol", g: 2 },
+          { t: "on", x: 237, y: 78, text: "Arrived At Safe Area", s: "patrol", g: 2 },
+          { t: "eff", x: 237, y: 90, text: "/ Start Guard", s: "patrol", g: 3 },
+          { t: "state", x: 176, y: 214, w: 224, name: "Predator Defense Active", s: "bear" },
+          { t: "arrow", pts: [[190, 136], [190, 214]], s: "bear", g: 2 },
+          { t: "on", x: 196, y: 166, text: "Takeover Request", s: "bear", g: 2 },
+          { t: "eff", x: 196, y: 178, text: "/ Hand Over To", s: "bear", g: 2 },
+          { t: "eff", x: 196, y: 189, text: "Predator Defense", s: "bear", g: 2 },
+          { t: "arrow", pts: [[350, 214], [350, 136]], s: "bear", g: 3 },
+          { t: "on", x: 356, y: 166, text: "Feature Done", s: "bear", g: 3 },
+          { t: "eff", x: 356, y: 178, text: "/ Hand Back To", s: "bear", g: 3 },
+          { t: "eff", x: 356, y: 189, text: "Sheep Guard", s: "bear", g: 3 }
+        ],
+        gestures: {
+          start: [
+            { label: "The states", text: "**Idle**; the composite **Mission**; inside it **Transit**. Two initial states." },
+            { label: "The transition", text: "From **Idle** to **Mission**. Trigger: **Start Sheep Guard Mission_ext**, the order Mission Configuration passes on." },
+            { label: "Its effect", text: "Effect: **Send To Safe Area**, ready in the model. It sends **Go To Safe Area** to the AutoPilot." }
+          ],
+          patrol: [
+            { label: "The state", text: "Inside Mission: **Sheep Guard Active**. While in it, Sheep Guard is the active feature." },
+            { label: "The transition", text: "From **Transit** to **Sheep Guard Active**. Trigger: **Arrived At Safe Area**, from the AutoPilot." },
+            { label: "Its effect", text: "Effect: **Start Guard**. It activates Sheep Guard and arms Predator Defense." }
+          ],
+          bear: [
+            { label: "The state", text: "Inside Mission: **Predator Defense Active**. While in it, Predator Defense has the AutoPilot." },
+            { label: "Hand over", text: "From **Sheep Guard Active**. Trigger: **Takeover Request**, the feature asks. Effect: **Hand Over To Predator Defense**: guard on standby, control given, operator alerted." },
+            { label: "Hand back", text: "And back. Trigger: **Feature Done**. Effect: **Hand Back To Sheep Guard**: guard active again, operator told." }
+          ]
+        }
+      }
     },
     "2": {
       name: "Decentralised patch", short: "Patch",
@@ -90,54 +136,175 @@ window.COURSE_CONFIG = {
       cons: ["The mission rules are scattered: who may cut the sheep guard is read in Predator Management, not in one place", "Every new conflict will call for a new patch"],
       score: [1, 5, 2, 5, 4, 3],
       layout: { bsrc: [210, 75], mc: [210, 200], mi: [210, 330], ap: [355, 300], sm: [505, 110], pm: [505, 320], zs: [636, 215] },
-      mapping: {
-        Undeployed: "mc", Off: "mc", Unconfigured: "mc", Configured: "mc", "Ready for Mission": "mc", "Going to Safe Area": "ap",
-        "Perimiter watch": "zs", "Sheep Monitoring": "sm", "Predator Monitoring": "pm", "Predator Detected": "pm", "Predator tracking": "pm", "Predator counteraction": "pm",
-        "Mission Monitoring": "mc"
-      },
-      mappingNote: "Close to the functional mission: most states go over as they are, and Predator Management takes **Predator Detected** whole. **Mission Monitoring** goes to Mission Configuration, where it becomes **Deployed**. There is no orchestrator."
+      /* The state that pauses the sheep watch is the student's to name: the check only asks that it has left Sheep Monitoring. */
+      anyName: { Deactivated: "!Sheep Monitoring" },
+      target: {
+        vb: "0 0 520 244", block: "SheepMonitoring and Predator Management",
+        items: [
+          { t: "frame", x: 6, y: 8, w: 246, h: 228, name: "SheepMonitoring", s: "given" },
+          { t: "dot", x: 24, y: 42, s: "given" },
+          { t: "arrow", pts: [[29, 42], [38, 42]], s: "given" },
+          { t: "state", x: 38, y: 30, w: 76, name: "Inactive", s: "given" },
+          { t: "arrow", pts: [[76, 54], [76, 92]], s: "given" },
+          { t: "on", x: 82, y: 76, text: "Patrolling", s: "given" },
+          { t: "state", x: 30, y: 92, w: 170, name: "Sheep Monitoring", do: "Sheep monitoring", s: "given" },
+          { t: "state", x: 30, y: 200, w: 170, name: "Deactivated", s: "bear" },
+          { t: "arrow", pts: [[52, 128], [52, 200]], s: "bear", g: 2 },
+          { t: "on", x: 58, y: 158, text: "Deactivate", s: "bear", g: 2 },
+          { t: "on", x: 58, y: 170, text: "Sheep Monitoring", s: "bear", g: 2 },
+          { t: "arrow", pts: [[176, 200], [176, 128]], s: "bear", g: 2 },
+          { t: "on", x: 182, y: 158, text: "Reactivate", s: "bear", g: 2 },
+          { t: "on", x: 182, y: 170, text: "Sheep Mon.", s: "bear", g: 2 },
+          { t: "frame", x: 268, y: 8, w: 246, h: 228, name: "Predator Management", s: "given" },
+          { t: "state", x: 282, y: 30, w: 218, name: "No predator", s: "given" },
+          { t: "state", x: 282, y: 200, w: 218, name: "Predator Detected", s: "given" },
+          { t: "arrow", pts: [[296, 54], [296, 200]], s: "given" },
+          { t: "arrow", pts: [[488, 200], [488, 54]], s: "given" },
+          { t: "on", x: 302, y: 70, text: "a bear enters", s: "given" },
+          { t: "on", x: 302, y: 82, text: "/ Bear Detected", s: "given" },
+          { t: "eff", x: 302, y: 96, text: "+ send Deactivate Sheep Monitoring", s: "bear", g: 3 },
+          { t: "on", x: 482, y: 128, a: "end", text: "the bear is gone", s: "given" },
+          { t: "on", x: 482, y: 140, a: "end", text: "/ Bear Gone", s: "given" },
+          { t: "eff", x: 482, y: 154, a: "end", text: "+ send Reactivate Sheep Monitoring", s: "bear", g: 3 },
+          { t: "eff", x: 482, y: 168, a: "end", text: "+ send Resume Patrolling", s: "bear", g: 4 }
+        ],
+        gestures: {
+          bear: [
+            { label: "A state to pause", text: "SheepMonitoring gets a state where it does nothing: **Deactivated**." },
+            { label: "Two transitions", text: "To it on **Deactivate Sheep Monitoring**, back on **Reactivate Sheep Monitoring**. Two new signals." },
+            { label: "Who says so", text: "Predator Management knows about the bear: **Bear Detected** also sends the first, **Bear Gone** the second." },
+            { label: "Back to the path", text: "**Bear Gone** also sends **Resume Patrolling**: the AutoPilot already understands it." }
+          ]
+        }
+      }
     },
     "3": {
       name: "Centralised orchestrator", short: "Central orchestrator",
       decides: "A **star**: the orchestrator receives every observation and every request, and dispatches every command, by priority: predator first, then sheep and patrol. The other components decide nothing; Predator Management only sends requests.",
-      spot: { parts: ["orch"], links: [["orch", "zp"], ["orch", "sm"], ["orch", "pm"], ["orch", "trk"], ["orch", "ap"], ["orch", "mc"], ["orch", "bsrc"]], note: "Every decision is in the **orchestrator**: every arrow goes through it." },
+      spot: { parts: ["orch"], also: ["zp", "sm", "pm", "trk", "ap", "mc", "bsrc"], links: [["orch", "zp"], ["orch", "sm"], ["orch", "pm"], ["orch", "trk"], ["orch", "ap"], ["orch", "mc"], ["orch", "bsrc"]], note: "Every decision is in the **orchestrator**: every arrow goes through it." },
       pros: ["All the rules and priorities can be read in one place", "Simple, interchangeable components"],
       cons: ["The most messages in the scenario", "A bottleneck and a single point of failure: every new sensor or job goes through it"],
       score: [5, 3, 3, 2, 1, 5],
       layout: { bsrc: [210, 75], mc: [210, 200], mi: [210, 330], orch: [355, 200], ap: [355, 340], zp: [565, 62], sm: [565, 152], pm: [565, 242], trk: [565, 332] },
-      mapping: {
-        Undeployed: "mc", Off: "mc", Unconfigured: "mc", Configured: "mc", "Ready for Mission": "mc", "Going to Safe Area": "ap",
-        "Perimiter watch": "zp", "Sheep Monitoring": "sm", "Predator Monitoring": "pm", "Predator counteraction": "pm", "Predator tracking": "trk"
-      },
-      mappingNote: "**Predator tracking** and **Predator counteraction** go to two different blocks: their transitions to each other become requests to the orchestrator. The composites **Patrolling** and **Predator Detected** are not transitioned: their decisions go to the Mission Orchestrator, which you build by hand."
+      decider: "orch",
+      target: {
+        vb: "0 0 520 410", block: "Mission Orchestrator",
+        items: [
+          { t: "dot", x: 8, y: 38, s: "start" },
+          { t: "arrow", pts: [[13, 38], [18, 38]], s: "start" },
+          { t: "state", x: 18, y: 26, w: 44, name: "Idle", s: "start" },
+          { t: "frame", x: 150, y: 8, w: 364, h: 394, name: "Mission", s: "start" },
+          { t: "dot", x: 170, y: 44, s: "start" },
+          { t: "arrow", pts: [[175, 44], [186, 44]], s: "start" },
+          { t: "state", x: 186, y: 32, w: 90, name: "Transit", s: "start" },
+          { t: "arrow", pts: [[62, 38], [150, 38]], s: "start", g: 2 },
+          { t: "on", x: 66, y: 22, text: "Start Sheep Guard", s: "start", g: 2 },
+          { t: "on", x: 66, y: 33, text: "Mission_ext", s: "start", g: 2 },
+          { t: "eff", x: 66, y: 50, text: "/ Send To Safe Area", s: "start", g: 3 },
+          { t: "state", x: 176, y: 112, w: 224, name: "Patrolling", do: "Supervise Patrol", s: "patrol" },
+          { t: "arrow", pts: [[231, 56], [231, 112]], s: "patrol", g: 2 },
+          { t: "on", x: 237, y: 78, text: "Arrived At Safe Area", s: "patrol", g: 2 },
+          { t: "eff", x: 237, y: 90, text: "/ Start Patrol", s: "patrol", g: 3 },
+          { t: "region", x1: 150, x2: 514, y: 350, s: "sheep" },
+          { t: "dot", x: 170, y: 378, s: "sheep", g: 2 },
+          { t: "arrow", pts: [[175, 378], [186, 378]], s: "sheep", g: 2 },
+          { t: "state", x: 186, y: 360, w: 214, name: "Dispatching", do: "Dispatch observations", s: "sheep", g: 2 },
+          { t: "state", x: 176, y: 206, w: 224, name: "Predator tracking", do: "Relay tracking orders", s: "bear" },
+          { t: "arrow", pts: [[190, 148], [190, 206]], s: "bear", g: 2 },
+          { t: "on", x: 196, y: 170, text: "Predator Tracking Request", s: "bear", g: 2 },
+          { t: "eff", x: 196, y: 182, text: "/ Grant Tracking", s: "bear", g: 2 },
+          { t: "arrow", pts: [[345, 206], [345, 148]], s: "bear", g: 3 },
+          { t: "on", x: 351, y: 170, text: "Predator Tracking Release", s: "bear", g: 3 },
+          { t: "eff", x: 351, y: 182, text: "/ Resume Patrol", s: "bear", g: 3 },
+          { t: "state", x: 176, y: 300, w: 224, name: "Predator counteraction", do: "Relay tracking orders", s: "deter" },
+          { t: "arrow", pts: [[190, 242], [190, 300]], s: "deter", g: 2 },
+          { t: "on", x: 196, y: 264, text: "Predator Engage Request", s: "deter", g: 2 },
+          { t: "eff", x: 196, y: 276, text: "/ Grant Engagement", s: "deter", g: 2 },
+          { t: "arrow", pts: [[345, 300], [345, 242]], s: "deter", g: 3 },
+          { t: "on", x: 351, y: 264, text: "Predator Disengage Request", s: "deter", g: 3 },
+          { t: "eff", x: 351, y: 276, text: "/ Grant Disengagement", s: "deter", g: 3 }
+        ],
+        gestures: {
+          start: [
+            { label: "The states", text: "**Idle**; the composite **Mission**; inside it **Transit**. Two initial states." },
+            { label: "The transition", text: "From **Idle** to **Mission**. Trigger: **Start Sheep Guard Mission_ext**, the order Mission Configuration passes on." },
+            { label: "Its effect", text: "Effect: **Send To Safe Area**, ready in the model. It sends **Go To Safe Area** to the AutoPilot." }
+          ],
+          patrol: [
+            { label: "The state", text: "Inside Mission: **Patrolling**. Its do activity, **Supervise Patrol**, passes the watch path on to the AutoPilot." },
+            { label: "The transition", text: "From **Transit** to **Patrolling**. Trigger: **Arrived At Safe Area**, from the AutoPilot." },
+            { label: "Its effect", text: "Effect: **Start Patrol**. It sends **Start Patrolling** to Zone Patrolling." }
+          ],
+          sheep: [
+            { label: "A second region", text: "Mission gets a **second region**: the dispatch runs at the same time as the mission, whatever its state." },
+            { label: "The state", text: "One state, **Dispatching**, with its initial state. Its do activity, **Dispatch observations**, passes each observation on to who needs it." }
+          ],
+          bear: [
+            { label: "The state", text: "In the first region: **Predator tracking**. Its do activity, **Relay tracking orders**, passes the orders on to the AutoPilot." },
+            { label: "Go", text: "From **Patrolling**. Trigger: **Predator Tracking Request**. Effect: **Grant Tracking**: stop the patrol, pause the sheep watch, start tracking, alert the operator." },
+            { label: "Back", text: "To **Patrolling**. Trigger: **Predator Tracking Release**. Effect: **Resume Patrol**: the reverse." }
+          ],
+          deter: [
+            { label: "The state", text: "**Predator counteraction**, same do activity: the drone keeps following the bear." },
+            { label: "Engage", text: "From **Predator tracking**. Trigger: **Predator Engage Request**. Effect: **Grant Engagement**: it orders the deterrence." },
+            { label: "Disengage", text: "And back. Trigger: **Predator Disengage Request**. Effect: **Grant Disengagement**." }
+          ]
+        }
+      }
     },
 
-    /* The package 3 - Logical Analysis, node by node (logicalTree). */
-    tree: [
-      { d: 0, name: "3 - Logical Analysis", kind: "package", text: "The logical level, next to `2 - Functional Analysis`. One package per architecture. Nothing in it ever changes the functional mission." },
-      { d: 1, name: "3 - Centralized orchestrator", kind: "package", text: "Everything of one architecture: its SOI, its simulation context, its components. Your starting model has the one you work on." },
-      { d: 2, name: "Logical SOI 3 - Centralized orchestrator", kind: "block", text: "The drone at the logical level, a block **«Logical Component»**. Its internal block diagram holds the parts (Mission Configuration, the orchestrator…), their ports and the connectors." },
-      { d: 3, name: "Logical SOI … (internal block diagram)", kind: "ibd", text: "Where you create the parts of your features, their ports and connectors. **Show STM Overview in Parts** shows the state machine of each part in it." },
-      { d: 2, name: "Logical SOI … Simulation", kind: "block", text: "The simulation context, **«Logical Context»**: the parts `soi`, `operator` and `pasture`. The scenarios are run from here." },
-      { d: 2, name: "Mission Configuration", kind: "block", text: "A logical component: a block **«Logical Component»** with its state machine and its proxy ports." },
-      { d: 3, name: "Mission Configuration (state machine)", kind: "stm", text: "Cloned by **Logical Transition** from the functional mission, then reworked by hand. Its states take the stereotype **«Logical Mode»**." },
-      { d: 3, name: "IF_Mission Configuration_bsrc", kind: "iface", text: "One InterfaceBlock per port, with a FlowProperty per signal: `out` = sent, `in` = accepted. The port in front gets it conjugated: `~IF_…`." },
-      { d: 2, name: "Logical Functions", kind: "activity", text: "The activities cloned with the states, each with a **«refine»** to its functional original, and the effects **Delegate to external systems** adds." },
-      { d: 2, name: "Signals", kind: "signal", text: "The functional signals are reused. New exchanges between components (Go To Safe Area, the requests…) are new signals." }
-    ],
-
     /* The build, one scenario event at a time (archSim with opts.stage, and its "Validate in Cameo" button).
-         steps: the scenario steps measured at this stage (indexes over the steps of archs.js);
-         setup: the steps played before, as preconditions (not measured);
-         add:   per architecture, the parts built at this stage. The technical parts are always there. */
+         steps:  the scenario steps measured at this stage (indexes over the steps of archs.js);
+         setup:  the steps played before, as preconditions (not measured);
+         add:    per architecture, the parts built at this stage. The technical parts are always there;
+         states: per architecture, the states of the decider made at this stage: the simulation and the checks
+                 have only those so far;
+         expect: per architecture, per step, what to check instead of the scenario of archs.js, when the decider
+                 is not complete yet;
+         mute / drop: per architecture, signals and states that do not exist yet, for this stage only;
+         quiet: the notes of the scenario would tell more than this stage does: not shown;
+         short, icon: its chip in scenarioGrow (none: no chip; growAs: the chip it counts as). */
     stages: {
       tech: ["mi", "mc", "bsrc", "ap"],
+      /* A connector that does not come with its part: the stage where it is drawn. */
+      connAt: { strong_light: "deter", loud_sound: "deter", "mc.ap": "start", "pm.sm": "bear" },
       list: [
-        { id: "prep", title: "Preparation", event: "Power on, a wrong flight plan, a good one", steps: [0, 1, 2], setup: [] },
-        { id: "launch", title: "Arrive and patrol", event: "Mission start: the drone flies to the field and patrols", steps: [3], setup: [0, 2], add: { "1": ["orch", "sg"], "2": ["zs"], "3": ["orch", "zp"] } },
-        { id: "sheep", title: "A sheep strays", event: "The flock is seen, then a sheep leaves the zone", steps: [4, 5], setup: [0, 2, 3], add: { "1": ["zs"], "2": ["sm"], "3": ["sm"] } },
-        { id: "bear", title: "A bear: track it, then patrol again", event: "A bear enters the tracking zone, the drone follows it; it leaves, the drone patrols again", steps: [6, 9], setup: [0, 2, 3], add: { "1": ["pd"], "2": ["pm"], "3": ["pm", "trk"] } },
-        { id: "deter", title: "Scare it off", event: "The bear comes too close, then backs off", steps: [6, 7, 8, 9], setup: [0, 2, 3] },
+        { id: "prep", short: "Preparation", icon: "📋", title: "Preparation", event: "Power on, a wrong flight plan, a good one", steps: [0, 1, 2], setup: [] },
+        {
+          id: "start", quiet: true, short: "Start", icon: "🛫", title: "Start the mission", event: "The operator starts the mission: the drone flies to the safe area", steps: [3], setup: [0, 2],
+          add: { "1": ["orch"], "3": ["orch"] },
+          states: { "1": ["Idle", "Mission", "Transit"], "3": ["Idle", "Mission", "Transit"] },
+          expect: {
+            "1": { "3": { "soi.mc": "Deployed", "soi.orch": "Transit", "soi.ap": "Hovering" } },
+            "3": { "3": { "soi.mc": "Deployed", "soi.orch": "Transit", "soi.ap": "Hovering" } }
+          }
+        },
+        {
+          id: "patrol", short: "Patrol", icon: "🧭", title: "Patrol", event: "On arrival, the drone follows its watch path", steps: [3], setup: [0, 2],
+          add: { "1": ["sg"], "2": ["zs"], "3": ["zp"] },
+          states: { "1": ["Sheep Guard Active"], "3": ["Patrolling"] },
+          expect: { "3": { "3": { "soi.mc": "Deployed", "soi.orch": "Patrolling", "soi.ap": "Following Watch Path", "soi.zp": "Perimeter watch" } } }
+        },
+        {
+          id: "sheep", short: "A sheep strays", icon: "🐑", title: "A sheep strays", event: "The flock is seen, then a sheep leaves the zone: the operator is warned", steps: [4, 5], setup: [0, 2, 3],
+          add: { "1": ["zs"], "2": ["sm"], "3": ["sm"] },
+          states: { "3": ["Dispatching"] }
+        },
+        {
+          id: "raw", growAs: "bear", quiet: true, title: "A bear, before the patch", event: "Predator Management is plugged in, and nothing else has changed", steps: [6, 9], setup: [0, 2, 3],
+          add: { "2": ["pm"] },
+          mute: { "2": ["Deactivate Sheep Monitoring", "Reactivate Sheep Monitoring", "Resume Patrolling"] },
+          drop: { "2": { SheepMonitoring: ["Deactivated"] } }
+        },
+        {
+          id: "bear", short: "A bear", icon: "🐻", title: "A bear: track it, then patrol again", event: "A bear enters the tracking zone, the drone follows it; it leaves, the drone patrols again", steps: [6, 9], setup: [0, 2, 3],
+          add: { "1": ["pd"], "3": ["pm", "trk"] },
+          states: { "1": ["Predator Defense Active"], "3": ["Predator tracking"] }
+        },
+        {
+          id: "deter", short: "Scare it off", icon: "💡", title: "Scare it off", event: "The bear comes too close, then backs off", steps: [6, 7, 8, 9], setup: [0, 2, 3],
+          states: { "3": ["Predator counteraction"] }
+        },
         { id: "full", title: "The whole scenario", event: "Preparation, patrol, sheep, bear, back to patrol", steps: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], setup: [] }
       ]
     },

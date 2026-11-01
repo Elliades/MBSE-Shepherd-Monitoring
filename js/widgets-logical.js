@@ -2,9 +2,9 @@
    part3/ and part4/: Part 1 and Part 2 do not load this file.
 
    Part 3: logicalIntro, makeOrBuy, archSim (needs js/logical-engine.js and part3/content/archs.js), tradeOff,
-           stateMapping, logicalTree, behaviourAB, mcTransition, mcPorts, whatFor, safetyChain, perfChain,
-           seqCheck, archVersions, mcCut, logicSpot, archBlank, counterQ, tidyDemo, stageCheck, signalTable,
-           mcStatesFix, mcPortsMagic, mcDelegate
+           behaviourAB, mcTransition, mcPorts, whatFor, safetyChain, perfChain, seqCheck, archVersions, mcCut,
+           logicSpot, tidyDemo, signalTable, mcStatesFix, mcPortsMagic, mcDelegate, scenarioGrow, deciderStm,
+           stageIbd, interactions
            (settings in COURSE_CONFIG.archs)
    Part 4: swarmScope, strayDilemma, parallelRegions, swarmOptions (settings in COURSE_CONFIG.swarm)
 
@@ -351,9 +351,25 @@
     if (at < 0) return null;
     const def = list[at];
     let built = (ST.tech || []).slice();
-    list.slice(0, at + 1).forEach((x) => { built = built.concat(((x.add || {})[key]) || []); });
+    let made = [];
+    list.slice(0, at + 1).forEach((x) => {
+      built = built.concat(((x.add || {})[key]) || []);
+      made = made.concat(((x.states || {})[key]) || []);
+    });
+    const drop = Object.assign({}, (def.drop || {})[key]);
     if (def.id === 'full') built = null;
-    return { def, built, setup: def.setup || [], steps: def.steps || [] };
+    else if ((AC[key] || {}).decider) {
+      const type = partType(key, AC[key].decider);
+      drop[type] = stateNames(ARCHS[key].blocks.find((b) => b.name === type).stm).filter((n) => made.indexOf(n) < 0);
+    }
+    return { def, built, drop, setup: def.setup || [], steps: def.steps || [], mute: (def.mute || {})[key] || [], expect: (def.expect || {})[key] || {} };
+  }
+  const partType = (key, name) => ARCHS[key].soi.parts.find((p) => p.name === name).type;
+  /* Every state of a state machine, or of a region. */
+  function stateNames(r) {
+    const out = [];
+    (r.states || []).forEach((s) => { out.push(s.name); out.push(...stateNames(s)); (s.regions || []).forEach((x) => out.push(...stateNames(x))); });
+    return out;
   }
   const allSteps = (arch) => {
     const out = [];
@@ -365,20 +381,35 @@
     Object.keys(expect || {}).forEach((p) => { if (!built || built.indexOf(short(p)) >= 0) o[p] = expect[p]; });
     return o;
   };
+  /* What to check at step i of a stage: what the stage says, else the scenario; only the parts built so far. */
+  const stageExpect = (key, stage, i, st) => {
+    const any = (AC[key] || {}).anyName || {};
+    const o = keepBuilt(stage.expect[i] || st.expect, stage.built);
+    Object.keys(o).forEach((p) => { o[p] = [].concat(o[p]).map((w) => any[w] || w); });
+    return o;
+  };
+  const wantOk = (want, have) => window.LogicalEngine.wantOk(want, have);
+  const wantText = (want) => [].concat(want).map((w) => (w.charAt(0) === '!' ? 'not ' + w.slice(1) : w)).join(', ');
   /* The scenario file of one stage, in the format of MBSE Shepherd > Simulation Scenarios: the steps of
      the earlier stages as preconditions (setup, not measured), then the steps of this stage, each expecting
      only the parts built so far. */
   function scenarioFile(key, stage, cameo) {
     const arch = ARCHS[key];
     const steps = allSteps(arch);
-    const clean = (st) => ({ signal: st.signal, into: st.into, note: st.note, expect: keepBuilt(st.expect, stage.built) });
+    /* the file names states: "not in this one" stays with the guide */
+    const clean = (i) => {
+      const st = steps[i];
+      const ex = stageExpect(key, stage, i, st);
+      Object.keys(ex).forEach((p) => { ex[p] = ex[p].filter((w) => w.charAt(0) !== '!'); if (!ex[p].length) delete ex[p]; });
+      return { signal: st.signal, into: st.into, note: st.note, expect: ex };
+    };
     const phases = [];
-    if (stage.setup.length) phases.push({ name: 'Before', goal: 'Played to get there, not measured.', setup: true, steps: stage.setup.map((i) => clean(steps[i])) });
+    if (stage.setup.length) phases.push({ name: 'Before', goal: 'Played to get there, not measured.', setup: true, steps: stage.setup.map(clean) });
     stage.steps.forEach((i) => {
       const st = steps[i];
       let ph = phases[phases.length - 1];
       if (!ph || ph.setup || ph.name !== st.phase) { ph = { name: st.phase, steps: [] }; phases.push(ph); }
-      ph.steps.push(clean(st));
+      ph.steps.push(clean(i));
     });
     const systems = (arch.scenario.systems || []).filter((x) => !stage.built || stage.built.indexOf(short(x.path)) >= 0)
       .map((x) => ({ path: x.path, label: (PARTS[short(x.path)] || {}).label || x.type, type: x.type }));
@@ -473,7 +504,7 @@
           out.textContent = `Sending ${step.signal}…`;
           await B.call('simtest', 'send', [step.signal, where(step.into)]);
           await pause(SETTLE);
-          const expect = keepBuilt(step.expect, st.built);
+          const expect = stageExpect(key, st, i, step);
           for (const path of Object.keys(expect)) {
             const want = [].concat(expect[path]);
             const addr = where(path);
@@ -485,7 +516,7 @@
                 const r = await B.call('simtest', 'states', [{ paths: [addr] }]);
                 have = ((r && r.states) || {})[addr] || [];
               } catch (err) { have = null; }
-              ok = !!have && want.every((w) => have.indexOf(w) >= 0);
+              ok = !!have && wantOk(want, have);
               if (ok || waited >= PATIENCE || !alive) break;
               await pause(POLL);
             }
@@ -495,7 +526,7 @@
             else {
               const li = document.createElement('li');
               li.className = ok ? 'ok' : 'no';
-              li.innerHTML = `${ok ? '✓' : '✗'} <b>${esc(lab(path))}</b> ${esc(want.join(', '))}${ok ? '' : ` <span class="lg-validate-have">${have ? `is in ${esc(have.join(', ') || 'no state')}` : 'not found in your model'}</span>`}`;
+              li.innerHTML = `${ok ? '✓' : '✗'} <b>${esc(lab(path))}</b> ${esc(wantText(want))}${ok ? '' : ` <span class="lg-validate-have">${have ? `is in ${esc(have.join(', ') || 'no state')}` : 'not found in your model'}</span>`}`;
               res.appendChild(li);
             }
           }
@@ -518,39 +549,14 @@
   }
   const CHECK_HTML = (api) => `<div class="lg-validate"><div class="btn-row"><button type="button" class="btn small" data-validate>${api.icon('play')}Validate in Cameo</button><a class="btn ghost small" data-download hidden>Download the scenario</a></div><p class="lg-validate-out" aria-live="polite"></p><ul class="lg-validate-res"></ul></div>`;
 
-  /* What Cameo must show at the end of one stage, step by step, and the button that runs it there.
-     opts: { stage } (the architecture chosen in the scene "choose"). */
-  W.stageCheck = function (root, opts, api) {
-    const key = chosenArch(api);
-    root.className = 'w lg-arch lg-check';
-    if (!key) { root.innerHTML = '<p class="lg-arch-warn">Choose your architecture first (chapter 4).</p>'; return undefined; }
-    const stage = stageOf(key, opts.stage);
-    const every = allSteps(ARCHS[key]);
-    const STORY = AC.story || {};
-    root.innerHTML = `<ol class="lg-check-steps">${stage.steps.map((i) => {
-      const st = every[i];
-      const ex = keepBuilt(st.expect, stage.built);
-      const tell = STORY[st.signal] || { icon: '•', text: st.signal };
-      return `<li><span class="lg-check-ev"><i aria-hidden="true">${tell.icon}</i>${esc(tell.text)}</span><small class="lg-check-sig">sends <code>${esc(st.signal)}</code></small><span class="lg-check-ex">${Object.keys(ex).map((p) => `<span class="lg-check-it" data-at="${i}|${esc(p)}"><b>${esc(lab(p))}</b> ${esc([].concat(ex[p]).join(', '))}</span>`).join('') || 'nothing to check'}</span></li>`;
-    }).join('')}</ol>${CHECK_HTML(api)}`;
-    return cameoCheck(root.querySelector('.lg-validate'), key, stage, api, {
-      start() { root.querySelectorAll('.lg-check-it').forEach((n) => { n.classList.remove('ok', 'no'); const h = n.querySelector('.lg-validate-have'); if (h) h.remove(); }); },
-      mark(i, path, ok, want, have) {
-        const n = root.querySelector(`[data-at="${i}|${path}"]`);
-        if (!n) return;
-        n.classList.add(ok ? 'ok' : 'no');
-        if (!ok) n.insertAdjacentHTML('beforeend', ` <span class="lg-validate-have">${have ? `is in ${esc(have.join(', ') || 'no state')}` : 'not found in your model'}</span>`);
-      }
-    });
-  };
-
   /* One architecture running its scenario: each signal travels along the connectors, each part shows its
      active states, and the expected states of the scenario step are ticked. What happens in the pasture is
      said big over the drawing; the messages worth reading pop over the part that receives them.
      opts: { arch: "3" | "chosen" (else chips for the three), stage: id in COURSE_CONFIG.archs.stages
              (the parts built so far, the others drawn faded; the earlier steps already played),
              validate: true (a button that runs the same stage in Cameo),
-             cameo: { context, soi } (the blocks it runs on, when they are not those of the architecture),
+             cameo: { context, soi } (the blocks it runs on, when they are not those of the architecture), or
+             "tp" (the starting model: TP1 SOI Simulation, TP Logical SOI),
              only / phases: older form, the parts drawn and the phases played } */
   W.archSim = function (root, opts, api) {
     const keys = (AC.order || Object.keys(ARCHS)).filter((k) => ARCHS[k]);
@@ -562,11 +568,12 @@
     root.className = 'w lg-arch';
     root.innerHTML = `${fixed ? '' : `<div class="chips">${keys.map((k, i) => `<button type="button" class="chip" aria-pressed="${i === 0}" data-k="${k}"><b class="lg-chip-n">${k}</b>${esc((AC[k] || {}).name || ARCHS[k].package)}</button>`).join('')}</div>`}
       ${opts.arch === 'chosen' && !chosen ? '<p class="lg-arch-warn">You have not chosen your architecture yet: pick one to see it here.</p>' : ''}
+      <div class="lg-grow-w"></div>
       <p class="lg-arch-sum"></p>
       <div class="lg-arch-art" data-noswipe><div class="lg-story" aria-live="polite"><span class="lg-story-i" aria-hidden="true"></span><span class="lg-story-t"></span></div></div>
       <div class="lg-arch-ctl">
         <div class="lg-arch-step"><span class="mono-label"></span><strong></strong><span class="lg-arch-note"></span></div>
-        <div class="btn-row"><button type="button" class="btn small" data-next>▶ Next step</button><button type="button" class="btn ghost small" data-all>Play to the end</button>${opts.validate ? '<label class="lg-live"><input type="checkbox" data-live> Play in Cameo too</label>' : ''}<button type="button" class="btn ghost small" data-reset>Restart</button></div>
+        <div class="btn-row"><button type="button" class="btn small" data-next>▶ Next step</button><button type="button" class="btn ghost small" data-all>Play to the end</button>${opts.validate ? '<label class="lg-live-toggle"><input type="checkbox" data-live> Play in Cameo too</label>' : ''}<button type="button" class="btn ghost small" data-reset>Restart</button></div>
       </div>
       <div class="lg-arch-cols">
         <div><span class="mono-label">Expected (scenario)</span><ul class="lg-expect"></ul></div>
@@ -593,6 +600,7 @@
     let all = false;
     let stack = {};
     let offCheck = null;
+    const cameo = () => (opts.cameo === 'tp' ? { context: 'TP1 SOI Simulation', soi: 'TP Logical SOI' } : opts.cameo);
 
     /* "Play in Cameo too": each step also sends its signal to the simulation in Cameo, and what Cameo answers
        (the states of the parts) is written under the expected states, so you see where it differs. */
@@ -614,7 +622,7 @@
       const B = window.Bridge;
       if (!(B && B.call && B.state && B.state().status === 'connected')) throw new Error('not linked');
       const arch = ARCHS[key];
-      const ctxName = (opts.cameo && opts.cameo.context) || arch.context.name;
+      const ctxName = (cameo() && cameo().context) || arch.context.name;
       const found = await B.call('model', 'getElementsByName', [{ name: ctxName }]);
       const ctx = (Array.isArray(found) ? found : []).find((e) => e && e.metaclass === 'Class');
       if (!ctx) throw new Error(`no block named “${ctxName}” in your model`);
@@ -625,7 +633,7 @@
     async function liveSend(st, res, idx) {
       const B = window.Bridge;
       const every = allSteps(ARCHS[key]);
-      const where = (p) => cameoPath(key, p, opts.cameo);
+      const where = (p) => cameoPath(key, p, cameo());
       if (!liveRun) await liveStart();
       if (!liveRun.setupDone) {
         liveRun.setupDone = true;
@@ -646,7 +654,7 @@
           const addr = where(path);
           let have = null;
           try { have = (((await B.call('simtest', 'states', [{ paths: [addr] }])) || {}).states || {})[addr] || []; } catch (err) { have = null; }
-          const ok = !!have && [].concat(st.expect[path]).every((w) => have.indexOf(w) >= 0);
+          const ok = !!have && wantOk(st.expect[path], have);
           seen[path] = { ok, have };
           if (!ok) allOk = false;
         }
@@ -685,10 +693,10 @@
       const every = allSteps(arch);
       stage = opts.stage ? stageOf(k, opts.stage) : null;
       const built = stage ? stage.built : opts.only || null;
-      sim = window.LogicalEngine.create(arch, built ? { only: built } : undefined);
+      sim = window.LogicalEngine.create(arch, stage ? { only: built, drop: stage.drop, mute: stage.mute } : built ? { only: built } : undefined);
       if (stage) {
         stage.setup.forEach((i) => sim.inject(every[i].signal, every[i].into));
-        steps = stage.steps.map((i) => Object.assign({}, every[i], { expect: keepBuilt(every[i].expect, built) }));
+        steps = stage.steps.map((i) => Object.assign({}, every[i], { expect: stageExpect(k, stage, i, every[i]) }));
       } else {
         const phases = arch.scenario.phases.filter((_, i) => !opts.phases || opts.phases.indexOf(i) >= 0);
         steps = [];
@@ -697,6 +705,7 @@
       }
       at = 0;
       const info = AC[k] || {};
+      root.querySelector('.lg-grow-w').innerHTML = stage ? growHTML(stage.def.id) : '';
       sum.innerHTML = stage || opts.only
         ? `<b>${esc(info.short || arch.package)}</b>${stage ? ` · ${esc(stage.def.title)}: ${esc(stage.def.event)}.` : ''}${stage && stage.built ? ' Faded: not built yet.' : ''}`
         : `<b>${esc(info.name || arch.package)}.</b> ${api.inline(info.decides || '')}`;
@@ -721,7 +730,7 @@
         const fresh = box.cloneNode(true);
         box.replaceWith(fresh);
         offCheck = cameoCheck(fresh, k, stage, api, {
-          cameo: opts.cameo,
+          cameo: cameo(),
           start() { liveStop(); Object.keys(ibd.boxes).forEach((path) => ibd.boxes[path].g.classList.remove('lg-ap-bad', 'lg-ap-good')); },
           part(path, ok) {
             const b = ibd.boxes[path];
@@ -749,8 +758,8 @@
       const tell = STORY[st.signal];
       label.textContent = `Step ${at + 1} / ${steps.length} · ${st.phase}`;
       strong.textContent = tell ? tell.text : st.signal;
-      note.innerHTML = `${esc(st.note || '')} <small>Injected: <code>${esc(st.signal)}</code> into ${esc(st.into)}.</small>`;
-      if (!done) expectEl.innerHTML = Object.keys(st.expect).map((p) => `<li><b>${esc(lab(p))}</b> ${esc([].concat(st.expect[p]).join(', '))}</li>`).join('') || '<li>Nothing to check at this stage.</li>';
+      note.innerHTML = `${esc((stage && stage.def.quiet) || !st.note ? '' : st.note)} <small>Injected: <code>${esc(st.signal)}</code> into ${esc(st.into)}.</small>`;
+      if (!done) expectEl.innerHTML = Object.keys(st.expect).map((p) => `<li><b>${esc(lab(p))}</b> ${esc(wantText(st.expect[p]))}</li>`).join('') || '<li>Nothing to check at this stage.</li>';
     }
     function tellStory(st) {
       const tell = STORY[st.signal] || { icon: '•', text: st.signal };
@@ -856,7 +865,7 @@
       L.wait(() => play(events.slice(), () => {
         Object.keys(ibd.boxes).forEach((path) => { if (sim.has(path)) setStates(ibd.boxes[path], sim.leaves(path)); });
         const res = sim.check(st.expect);
-        expectEl.innerHTML = res.map((r) => `<li class="${r.ok ? 'ok' : 'no'}">${r.ok ? '✓' : '✗'} <b>${esc(lab(r.path))}</b> ${esc(r.want.join(', '))}</li>`).join('') || '<li>Nothing to check at this stage.</li>';
+        expectEl.innerHTML = res.map((r) => `<li class="${r.ok ? 'ok' : 'no'}">${r.ok ? '✓' : '✗'} <b>${esc(lab(r.path))}</b> ${esc(wantText(r.want))}</li>`).join('') || '<li>Nothing to check at this stage.</li>';
         at += 1;
         busy = false;
         showStep(true);
@@ -926,72 +935,6 @@
     return () => L.end();
   };
   const api_inline = (s) => esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/`(.+?)`/g, '<code>$1</code>');
-
-  /* Who receives which state of the functional mission, in each architecture (figures archN-mapping-etats). */
-  W.stateMapping = function (root, opts, api) {
-    const chosen = opts && opts.arch === 'chosen' && chosenArch(api);
-    const keys = (AC.order || []).filter((k) => (AC[k] || {}).mapping && (!chosen || k === chosen));
-    if (!keys.length) { root.textContent = ''; return; }
-    const first = chosen || keys[0];
-    root.className = 'w lg-map';
-    root.innerHTML = `<div class="chips">${keys.map((k, i) => `<button type="button" class="chip" aria-pressed="${k === first}" data-k="${k}"><b class="lg-chip-n">${k}</b>${esc(AC[k].short || AC[k].name)}</button>`).join('')}</div><div class="lg-map-art"></div><ul class="lg-legend"></ul><p class="w-live" aria-live="polite"></p>`;
-    const s = svg('0 0 420 300', 'The functional mission state machine of SOI - Pasture Sentinel, each state coloured by the logical component that receives it.');
-    root.querySelector('.lg-map-art').appendChild(s);
-    const shapes = {};
-    const box = (name, x, y, w, h, frame, label) => {
-      const g = el('g', { class: 'lg-ms' + (frame ? ' lg-ms-frame' : '') }, s);
-      el('rect', { x, y, width: w, height: h, rx: frame ? 8 : 6, class: 'lg-ms-box' }, g);
-      txt(g, x + (frame ? 8 : w / 2), y + (frame ? 13 : h / 2 + 4), label || name, frame ? 'lg-ms-ft' : 'lg-ms-t', frame ? 'start' : 'middle');
-      shapes[name] = g;
-    };
-    box('Undeployed', 8, 8, 196, 122, true);
-    box('Off', 18, 28, 82, 28);
-    box('Unconfigured', 112, 28, 82, 28);
-    box('Configured', 18, 88, 82, 32, false);
-    box('Ready for Mission', 112, 88, 82, 32, false, 'Ready for Mission');
-    box('Deployed', 8, 140, 404, 152, true);
-    box('Going to Safe Area', 18, 162, 82, 50, false, 'Going to Safe');
-    box('Patrolling', 108, 156, 132, 128, true);
-    box('Perimiter watch', 116, 176, 116, 28);
-    box('Sheep Monitoring', 116, 212, 116, 28);
-    box('Predator Monitoring', 116, 248, 116, 28);
-    box('Predator Detected', 250, 156, 154, 104, true);
-    box('Predator tracking', 262, 178, 130, 30);
-    box('Predator counteraction', 262, 220, 130, 30);
-    box('Mission Monitoring', 18, 238, 82, 34, false, 'Mission Mon.');
-    const legend = root.querySelector('.lg-legend');
-    const live = root.querySelector('.w-live');
-    function pick(k) {
-      const map = AC[k].mapping;
-      root.querySelectorAll('[data-k]').forEach((c) => c.setAttribute('aria-pressed', String(c.dataset.k === k)));
-      Object.keys(shapes).forEach((name) => {
-        const part = map[name];
-        const g = shapes[name];
-        g.classList.toggle('given', !!part);
-        g.style.setProperty('--pc', part ? partInfo(part).color : '');
-      });
-      const used = [...new Set(Object.values(map))];
-      legend.innerHTML = used.map((p) => `<li style="--pc:${esc(partInfo(p).color)}"><i></i>${esc(partInfo(p).label)}</li>`).join('') + '<li class="none"><i></i>not transitioned: its decisions go elsewhere</li>';
-      live.innerHTML = api_inline(AC[k].mappingNote || '');
-    }
-    root.querySelectorAll('[data-k]').forEach((c) => c.addEventListener('click', () => pick(c.dataset.k)));
-    pick(first);
-  };
-
-  /* The package 3 - Logical Analysis, one node at a time. */
-  W.logicalTree = function (root, opts) {
-    const NODES = opts.nodes || AC.tree || [];
-    root.className = 'w lg-tree';
-    const ico = { package: '▣', block: '■', iface: '◧', activity: '⬭', signal: '✉', stm: '◎', ibd: '⊞' };
-    root.innerHTML = `<ul class="lg-tree-list">${NODES.map((n, i) => `<li style="--d:${n.d}"><button type="button" aria-pressed="${i === 0}" data-i="${i}"><i class="lg-tree-ico lg-k-${n.kind}">${ico[n.kind] || '•'}</i>${esc(n.name)}</button></li>`).join('')}</ul><p class="w-live" aria-live="polite"></p>`;
-    const live = root.querySelector('.w-live');
-    function pick(i) {
-      root.querySelectorAll('[data-i]').forEach((b) => b.setAttribute('aria-pressed', String(+b.dataset.i === i)));
-      live.innerHTML = `<b>${esc(NODES[i].name)}</b> ${api_inline(NODES[i].text)}`;
-    }
-    root.querySelectorAll('[data-i]').forEach((b) => b.addEventListener('click', () => pick(+b.dataset.i)));
-    if (NODES.length) pick(0);
-  };
 
   /* A small state, drawn for the step-by-step animations: name, and do / function under a line. */
   function mstate(g, x, y, w, name, fn, cls) {
@@ -1187,7 +1130,7 @@
     txt(menu, 122, 148, 'Logical Transition… → Mission Configuration', 's-name');
     txt(menu, 122, 172, 'Delegate to external systems', 'lg-do');
     return stager(root, s, [
-      { label: 'Create logical component', text: 'In the package <b>Components</b> of <b>TP - Logical Architecture 1</b>, create a <b>logical component</b> (a block with the stereotype «Logical Component»), named <b>Mission Configuration</b>. Logical Transition needs a target.', dwell: 5 },
+      { label: 'Create logical component', text: 'In the package <b>Components</b> of <b>TP - Logical Architecture</b>, create a <b>logical component</b> (a block with the stereotype «Logical Component»), named <b>Mission Configuration</b>. Logical Transition needs a target.', dwell: 5 },
       { label: 'Select', text: 'In the functional mission, select the composite <b>Undeployed</b>. One state is enough: its sub-states come with it.' },
       { label: 'Logical Transition', text: 'Right-click <b>MBSE Shepherd ▸ Logical Transition</b>, and pick the block <b>Mission Configuration</b>.' },
       { label: 'Cloned', text: 'The composite, its 4 sub-states and their transitions are copied into the state machine of the block, with the functions they run. Each copy gets a <b>«refine»</b> to its original, and the original is <b>allocated</b> to the block. The transition that left towards Deployed points to <b>off-TO RENAME</b>. The mission is never changed.', dwell: 5.4 },
@@ -1310,7 +1253,7 @@
     root.className = 'w lg-mc';
     const s = svg('0 0 420 244', 'The block Mission Configuration is dragged from the Model Browser and dropped on the IBD, which makes the part. The part is right-clicked, then MBSE Shepherd, Create All Missing Signal Ports. Three ports appear: start_soi, flight_plan and start_sheep_guard. Each is typed by an interface whose flow property carries the signal, which fires a transition of the state machine. Ready for mission and FlightPlan Check Failed get no port: they are internal.');
     root.appendChild(s);
-    txt(s, 6, 13, 'IBD · TP1 SOI', 'lg-tag');
+    txt(s, 6, 13, 'IBD · TP Logical SOI', 'lg-tag');
     /* the drop */
     const drop = el('g', { class: 'lg-fade', 'data-only': 1 }, s);
     el('rect', { x: 150, y: 22, width: 262, height: 130, rx: 6, class: 'lg-ab-note' }, drop);
@@ -1739,7 +1682,7 @@
       if (on(a, b)) ibd.conn[key].classList.add('spot');
       if ((info.spot.hot || []).some(([x, y]) => (x === a && y === b) || (x === b && y === a))) ibd.conn[key].classList.add('hot');
     });
-    if (info.spot.note) {
+    if (info.spot.note && !opts.noNote) {
       const p = document.createElement('p');
       p.className = 'w-live';
       p.innerHTML = api_inline(info.spot.note);
@@ -1747,42 +1690,147 @@
     }
   };
 
-  /* The question "which subsystems?": the technical part as it is given, and blanks for the rest. */
-  W.archBlank = function (root, opts, api) {
-    const k = chosenArch(api);
-    root.className = 'w lg-blank';
-    if (!k) { root.innerHTML = '<p class="lg-arch-warn">Choose your architecture first (chapter 4): its drawing shows here.</p>'; return; }
-    const s = svg(`0 0 ${VB.w} ${VB.h}`, `The internal block diagram of architecture ${k}, with the technical parts and question marks for the mission subsystems.`);
-    root.appendChild(s);
-    drawIbd(s, k, { built: (AC.stages || {}).tech || [], blank: true });
-    const p = document.createElement('p');
-    p.className = 'w-live';
-    p.innerHTML = `<b>${esc((AC[k] || {}).short || '')}.</b> Grey: given. Each <b>?</b> is a mission subsystem to name.`;
-    root.appendChild(p);
+  /* ───────── the build, stage by stage: what to reach, what to connect, the scenario that grows ───────── */
+
+  /* The scenario so far, one chip per stage: played and checked, being built, still to come. */
+  function growHTML(id) {
+    const all = (AC.stages || {}).list || [];
+    const list = all.filter((x) => x.short);
+    const at = list.findIndex((x) => x.id === ((all.find((y) => y.id === id) || {}).growAs || id));
+    const whole = id === 'full';
+    return `<ol class="lg-grow" aria-label="The scenario, stage by stage">${list.map((x, i) => {
+      const cls = whole || i < at ? 'done' : i === at ? 'now' : '';
+      return `<li class="${cls}"><i aria-hidden="true">${x.icon}</i><span>${esc(x.short)}</span></li>`;
+    }).join('')}</ol>`;
+  }
+  W.scenarioGrow = function (root, opts) {
+    root.className = 'w lg-grow-only';
+    root.innerHTML = growHTML((opts || {}).stage);
   };
 
-  /* The question on Predator counteraction: the functional state, its function and its self-send. */
-  W.counterQ = function (root) {
-    root.className = 'w lg-mc lg-cq';
-    const s = svg('0 0 420 220', 'The composite Predator Detected of the functional mission: Predator tracking and Predator counteraction, linked by Predator entering safe perimiter and Predator leaving safe perimiter. Predator counteraction runs Trigger predator counter actions, which flashes the light, sounds the horn, and sends Predator leaving safe perimiter to itself. On the right, a question mark: which subsystem receives it, and who decides?');
+  const boldText = (s) => s.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+  /* The order of a stage in the build; what is given comes before all of them. */
+  const stageRank = (id) => ((AC.stages || {}).list || []).findIndex((x) => x.id === id);
+
+  /* The state machine to reach. opts: { arch, stage } draws what the earlier stages made, then adds the items of
+     this stage gesture by gesture, in green; { arch, grow: true } adds the stages one after the other. */
+  W.deciderStm = function (root, opts, api) {
+    const k = opts.arch === 'chosen' ? chosenArch(api) : opts.arch;
+    const T = (AC[k] || {}).target;
+    if (!T) { root.textContent = ''; return undefined; }
+    root.className = 'w lg-mc lg-target';
+    const s = svg(T.vb, `The state machine of ${T.block} to reach${opts.stage ? ', with what this stage adds in green' : ''}.`);
     root.appendChild(s);
-    el('rect', { x: 8, y: 10, width: 260, height: 200, rx: 8, class: 's-frame' }, s);
-    txt(s, 16, 26, 'Predator Detected (functional)', 's-name');
-    mstate(s, 20, 40, 112, 'Predator tracking');
-    const ct = mstate(s, 20, 120, 236, 'Predator counteraction', 'Trigger predator counter actions');
-    ct.classList.add('lg-cq-hot');
-    arrow(s, [[60, 64], [60, 120]]);
-    arrow(s, [[96, 120], [96, 64]]);
-    txt(s, 54, 94, 'entering safe', 'lg-trig', 'end');
-    txt(s, 102, 94, 'leaving safe', 'lg-trig');
-    el('path', { d: 'M256,140 C300,140 300,60 134,52', class: 'lg-ab-loop' }, s);
-    txt(s, 248, 186, 'send Predator leaving safe perimiter @<no port>', 'lg-trig lg-red', 'end');
-    txt(s, 34, 200, '💡 Light burst   🔊 Sound burst', 'lg-act-t');
-    el('rect', { x: 290, y: 40, width: 122, height: 140, rx: 8, class: 's-box lg-box lg-ghosted' }, s);
-    txt(s, 351, 112, '?', 'lg-q', 'middle');
-    txt(s, 351, 140, 'which subsystem?', 'lg-do', 'middle');
-    txt(s, 351, 154, 'who decides?', 'lg-do', 'middle');
-    arrow(s, [[262, 132], [288, 112]], 'lg-out');
+    const rank = opts.stage ? stageRank(opts.stage) : Infinity;
+    const list = ((AC.stages || {}).list || []).filter((x) => T.items.some((it) => it.s === x.id));
+    const items = T.items.filter((it) => stageRank(it.s) <= rank);
+    const drawn = (it) => {
+      const fresh = opts.stage ? it.s === opts.stage : false;
+      const from = opts.grow ? (it.s === 'given' ? 1 : list.findIndex((x) => x.id === it.s) + 1) : fresh ? (it.g || 1) : 0;
+      const g = el('g', { class: (from ? 'lg-fade ' : '') + (fresh ? 'lg-tnew' : '') }, s);
+      if (from) g.setAttribute('data-from', from);
+      return g;
+    };
+    /* Only as tall as what is in it so far: the composite grows with the stages. */
+    const low = (it) => (it.t === 'state' ? it.y + (it.do ? 36 : 24) : it.t === 'arrow' ? Math.max(...it.pts.map((p) => p[1])) : it.y);
+    const fit = opts.stage ? Math.max(...items.filter((it) => it.t !== 'frame').map(low)) + 12 : null;
+    if (fit) { const v = T.vb.split(' '); s.setAttribute('viewBox', `${v[0]} ${v[1]} ${v[2]} ${fit + 8}`); }
+    /* The frames first, so that what is inside stays on top of them. */
+    items.filter((it) => it.t === 'frame').forEach((it) => {
+      const g = drawn(it);
+      el('rect', { x: it.x, y: it.y, width: it.w, height: fit ? fit - it.y : it.h, rx: 8, class: 's-frame' }, g);
+      txt(g, it.x + 8, it.y + 14, it.name, 's-name');
+    });
+    items.filter((it) => it.t !== 'frame').forEach((it) => {
+      const g = drawn(it);
+      if (it.t === 'dot') dot(g, it.x, it.y);
+      else if (it.t === 'arrow') arrow(g, it.pts);
+      else if (it.t === 'state') mstate(g, it.x, it.y, it.w, it.name, it.do);
+      else if (it.t === 'region') el('line', { x1: it.x1, y1: it.y, x2: it.x2, y2: it.y, class: 'lg-region' }, g);
+      else if (it.t === 'on') txt(g, it.x, it.y, it.text, 'lg-trig', it.a);
+      else if (it.t === 'eff') txt(g, it.x, it.y, it.text, 'lg-eff', it.a);
+    });
+    if (opts.grow) {
+      return stager(root, s, list.map((x) => ({ label: x.short, text: x.event + '.', dwell: 3 })), { start: 1 });
+    }
+    const gestures = (T.gestures || {})[opts.stage] || [];
+    if (!gestures.length) return undefined;
+    return stager(root, s, gestures.map((x) => ({ label: x.label, text: boldText(x.text), dwell: 4.4 })));
+  };
+
+  /* The connectors of an architecture at a stage: both ends built, and not waiting for a later stage (connAt). */
+  function connectorsAt(key, stage) {
+    const ST = AC.stages || {};
+    const rank = stageRank(stage.def.id);
+    const inner = (e) => (e.indexOf('.') < 0 ? null : e.split('.')[0]);
+    return ARCHS[key].soi.connectors.filter(([a, b]) => {
+      const later = [a, b].some((e) => { const at = (ST.connAt || {})[e]; return at && stageRank(at) > rank; });
+      if (later) return false;
+      return [a, b].every((e) => !inner(e) || !stage.built || stage.built.indexOf(inner(e)) >= 0);
+    });
+  }
+  /* What travels on a connector, from the ports of its two ends. */
+  function connectorSignals(key, a, b) {
+    const arch = ARCHS[key];
+    const out = [];
+    [[a, b], [b, a]].forEach(([from, to]) => {
+      if (from.indexOf('.') < 0) return;
+      const [p, port] = from.split('.');
+      const type = (arch.soi.parts.find((x) => x.name === p) || {}).type;
+      const sp = ((arch.blocks.find((x) => x.name === type) || {}).ports || []).find((x) => x.name === port);
+      /* What Mission Configuration passes on leaves it under its own name, marked _ext. */
+      ((sp || {}).out || []).forEach((sig) => out.push(`${sig}${type === 'Mission Configuration' && to.split('.')[0] !== 'bsrc' ? '_ext' : ''}`));
+    });
+    return [...new Set(out)];
+  }
+  const endLabel = (e) => (e.indexOf('.') < 0 ? `the ${e.replace('_', ' ')} port of the drone` : lab(e.split('.')[0]));
+
+  /* The internal block diagram at a stage: what is there, what this stage adds in green, what is to come faded;
+     and the list of what to connect, with what travels. opts: { arch, stage }. */
+  W.stageIbd = function (root, opts, api) {
+    const k = opts.arch === 'chosen' ? chosenArch(api) : opts.arch;
+    if (!ARCHS[k]) { root.textContent = ''; return; }
+    const stage = stageOf(k, opts.stage);
+    const list = (AC.stages || {}).list || [];
+    const at = list.findIndex((x) => x.id === opts.stage);
+    const before = at > 0 ? stageOf(k, list[at - 1].id) : null;
+    const was = before ? connectorsAt(k, before).map((c) => c.join('|')) : [];
+    const fresh = connectorsAt(k, stage).filter((c) => was.indexOf(c.join('|')) < 0);
+    const newParts = (stage.built || []).filter((p) => !before || before.built.indexOf(p) < 0);
+    root.className = 'w lg-arch lg-stage-ibd';
+    const box = document.createElement('div');
+    box.className = 'lg-arch-art';
+    root.appendChild(box);
+    const s = svg(`0 0 ${VB.w} ${VB.h}`, `Internal block diagram of architecture ${k}. New at this stage: ${newParts.map(lab).join(', ') || 'no part'}, and the connectors listed below.`);
+    box.appendChild(s);
+    const ibd = drawIbd(s, k, { built: stage.built });
+    /* A connector the diagram draws from the start: faded until its stage, whatever its parts. */
+    connectorsOff(k, stage).forEach((key) => { if (ibd.conn[key]) ibd.conn[key].classList.add('ghost'); });
+    newParts.forEach((p) => { const b = ibd.boxes['soi.' + p]; if (b) b.g.classList.add('lg-ap-new'); });
+    fresh.forEach((c) => { const n = ibd.conn[c.join('|')]; if (n) n.classList.add('fresh'); });
+    const ul = document.createElement('ul');
+    ul.className = 'lg-conn-list';
+    ul.innerHTML = fresh.map(([a, b]) => {
+      const sig = connectorSignals(k, a, b);
+      return `<li><b>${esc(endLabel(a))}</b> <span aria-hidden="true">↔</span> <b>${esc(endLabel(b))}</b>${sig.length ? `<small>${sig.map((x) => `<code>${esc(x)}</code>`).join(' · ')}</small>` : ''}</li>`;
+    }).join('') || '<li>Nothing to connect at this stage.</li>';
+    root.appendChild(ul);
+  };
+  /* The keys, in drawIbd, of the connectors not there yet at this stage. */
+  function connectorsOff(key, stage) {
+    const on = connectorsAt(key, stage).map((c) => c.join('|'));
+    return ARCHS[key].soi.connectors.map((c) => c.join('|')).filter((c) => on.indexOf(c) < 0);
+  }
+
+  /* Who a block talks to, from its ports: partner, what it receives, what it sends. opts: { arch, part }. */
+  W.interactions = function (root, opts) {
+    const arch = ARCHS[opts.arch];
+    const type = arch && partType(opts.arch, opts.part);
+    const block = arch && arch.blocks.find((b) => b.name === type);
+    if (!block) { root.textContent = ''; return; }
+    const code = (l) => l.map((x) => `<code>${esc(x)}</code>`).join(' · ') || '–';
+    root.className = 'lg-table-w';
+    root.innerHTML = `<table class="lg-table"><thead><tr><th>With</th><th>Receives</th><th>Sends</th></tr></thead><tbody>${block.ports.map((p) => `<tr><td><b>${esc((PARTS[p.name] || {}).label || p.name)}</b></td><td>${code(p.in)}</td><td>${code(p.out)}</td></tr>`).join('')}</tbody></table>`;
   };
 
   /* Tidy up: what each command does to the model, and why. */
