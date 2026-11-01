@@ -9,6 +9,9 @@ COPY js /usr/share/nginx/html/js
 COPY assets /usr/share/nginx/html/assets
 COPY part2 /usr/share/nginx/html/part2
 COPY part3 /usr/share/nginx/html/part3
+# Part 4 without its lab (part4/lab/, a proof of concept not published yet)
+COPY part4/index.html /usr/share/nginx/html/part4/
+COPY part4/content /usr/share/nginx/html/part4/content
 COPY diag /usr/share/nginx/html/diag
 COPY bridge /usr/share/nginx/html/bridge
 COPY monitor /usr/share/nginx/html/monitor
