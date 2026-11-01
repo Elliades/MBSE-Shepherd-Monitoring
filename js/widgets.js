@@ -1530,9 +1530,9 @@
   /* ───────── levels of the method: steps as small animated diagrams ─────────
      { widget: "phaseSteps", opts: { done: false, steps: [{ pic, title, text, off }] } }
      One tile per step, in a row, lit one after the other. Each picture takes the colour of its level
-     (operational, functional or physical), so a chain across levels reads orange, blue, yellow.
+     (operational, functional, logical or physical), so a chain across levels reads orange, blue, (violet,) yellow.
      done: true (a wrap-up) ticks the steps one by one. off: "…" greys a step that is out of the seminar. */
-  const LEVEL = { op: 'var(--ph-op)', fn: 'var(--ph-fn)', ph: 'var(--ph-ph)' };
+  const LEVEL = { op: 'var(--ph-op)', fn: 'var(--ph-fn)', lg: 'var(--ph-lg, #7a4fc4)', ph: 'var(--ph-ph)' };
   function lbl(s, x, y, t) { return txt(s, x, y, t, 'pf-lbl', 'middle'); }
   // A token that runs along a route while its tile is lit: returns run(t) for the widget loop.
   function runner(s, d, period) {
@@ -1664,6 +1664,46 @@
       const a = runner(s, 'M40,19 H80', 1.6);
       const b = runner(s, 'M97,30 V59 H77', 2.2);
       return (t) => { a(t); b(t + 0.8); };
+    } },
+    /* the logical level (Part 3) */
+    cut: { lv: 'lg', draw(s) {
+      el('rect', { x: 6, y: 6, width: 108, height: 64, rx: 4, class: 'pf-hot' }, s);
+      lbl(s, 60, 18, 'Logical SoI');
+      [[14, 'A'], [48, 'B'], [82, 'C']].forEach((c, i) => {
+        const g = el('g', { class: 'a-pop', style: `--d:${0.3 + i * 0.3}s` }, s);
+        el('rect', { x: c[0], y: 28, width: 26, height: 32, rx: 3, class: 's-box' }, g);
+        lbl(g, c[0] + 13, 48, c[1]);
+      });
+    } },
+    share: { lv: 'lg', draw(s) {
+      el('rect', { x: 6, y: 10, width: 40, height: 16, rx: 7, class: 'pf-st', style: '--i:0' }, s);
+      el('rect', { x: 6, y: 34, width: 40, height: 16, rx: 7, class: 'pf-st', style: '--i:1' }, s);
+      lbl(s, 26, 21, 'state'); lbl(s, 26, 45, 'state');
+      el('rect', { x: 70, y: 6, width: 44, height: 28, rx: 3, class: 'pf-hot' }, s);
+      el('rect', { x: 70, y: 42, width: 44, height: 28, rx: 3, class: 'pf-hot' }, s);
+      lbl(s, 92, 30, 'A'); lbl(s, 92, 66, 'B');
+      arrow(s, [[48, 18], [68, 18]], 'pf-msg a-draw');
+      arrow(s, [[48, 42], [68, 54]], 'pf-msg a-draw').setAttribute('style', '--d:.5s');
+    } },
+    ports: { lv: 'lg', draw(s) {
+      el('rect', { x: 6, y: 20, width: 36, height: 36, rx: 3, class: 'pf-hot' }, s);
+      el('rect', { x: 78, y: 20, width: 36, height: 36, rx: 3, class: 'pf-hot' }, s);
+      lbl(s, 24, 42, 'A'); lbl(s, 96, 42, 'B');
+      el('rect', { x: 38, y: 34, width: 8, height: 8, class: 's-box' }, s);
+      el('rect', { x: 74, y: 34, width: 8, height: 8, class: 's-box' }, s);
+      el('path', { d: 'M46,38 H74', class: 's-line' }, s);
+      lbl(s, 60, 30, 'signal');
+      return runner(s, 'M46,38 H74', 1.4);
+    } },
+    verify: { lv: 'lg', draw(s) {
+      [16, 60, 104].forEach((x) => {
+        el('rect', { x: x - 10, y: 4, width: 20, height: 10, rx: 2, class: 'pf-hot' }, s);
+        el('path', { d: `M${x},14 V72`, class: 's-line s-dash' }, s);
+      });
+      arrow(s, [[16, 28], [58, 28]], 'pf-msg a-draw');
+      arrow(s, [[60, 42], [102, 42]], 'pf-msg a-draw').setAttribute('style', '--d:.5s');
+      arrow(s, [[104, 56], [18, 56]], 'pf-msg a-draw').setAttribute('style', '--d:1s');
+      check(s, 104, 24);
     } },
     alloc: { lv: 'ph', draw(s) {
       el('rect', { x: 18, y: 36, width: 84, height: 34, rx: 3, class: 'pf-hot' }, s);
@@ -1800,4 +1840,7 @@
     const done = api.scenes.filter((s) => api.status(s) === 'done').length;
     if (!celebrated && done >= total * 0.6) { celebrated = true; api.confetti(70); }
   };
+
+  /* The drawing helpers, for the widgets a guide adds in its own file (js/widgets-logical.js). */
+  window.WidgetKit = { svg, el, txt, arrow, pathD, life, ease, reduced, drone, move, pressGroup };
 })();
