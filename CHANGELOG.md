@@ -2,11 +2,32 @@
 
 ## Unreleased
 
-- **Part 3: a fleet of drones** (`/part3/`, first skeleton). Its simulation panel shows several drones, each
-  with a role (drone shepherd, sheep guard, anti-predator) and its own step, the master (base station or the
-  lead drone of a swarm), and the new use case: a drone follows the predator out of the field only while
-  another one keeps the field. The plugin's state frame may carry `drones` and `master`; the relay passes
-  them on. Part 1 and Part 2 keep their one-drone panel, unchanged.
+- **Part 3, Mission Configuration on the starting model**: built in `TP - Logical Architecture 1`, and Validate runs on
+  `TP1 SOI Simulation`. Who relays the signals (the base station), then two commands instead of writing effects and
+  ports by hand, each in its own scene with an animation: *Create All Missing Signal Ports*, after dropping the block
+  on the IBD, and *Delegate to external systems* (`_ext` signals). Later scenes use `Start Sheep Guard Mission_ext`.
+  The animation of Logical Transition starts by creating the logical component. Small drawings for the two gestures
+  on the states. *Show Port Type Only* is now a tip. Menu paths match the plugin (no *Signal Ports* level).
+- **Find in Cameo, exact path**: a link marked `strict` is looked up by its qualified name and nowhere else, so the
+  copies in the correction packages are never selected.
+
+- **Part 3: the logical architecture** (`/part3/`, author mode), rebuilt on the TP handoff and told as a
+  story. The four levels of the method (operational, functional, logical, physical) with animated steps, as
+  in Parts 1 and 2. Why a logical level, with drawings: what it is for, safety (a functional chain, its FHA,
+  a function allocated three times), performance (latency along a chain, merging two subsystems), flows
+  checked by sequence diagrams, other analyses, and several versions to compare. Mission Configuration by
+  hand, a few gestures per scene. The three architectures played in the page, with captions for the
+  events, labels on the key messages, the patch drawn thick; where the logic is in each; a larger trade-off
+  chart. Think first (blanks to name, Predator counteraction). Then the build of the chosen architecture,
+  one event at a time, each as goal / build / validate. Validate in Cameo sends the signals to the simulation and shows what is wrong in red. Parts go
+  by what they do, without prefixes, port names hidden. The crash is not part of it: no crash signals, no System Monitoring Safety. New block `byChoice`; `` `name` `` shows in code font in
+  every guide; phaseSteps has logical-level pictures. The starting model is still to be made.
+
+- **Part 4: the swarm** (`/part4/`, was the fleet skeleton of Part 3). New system of interest (UAVs, base
+  station, weather station), the problem (follow a stray sheep or the predator, keep the flock guarded), a
+  mission state machine with parallel regions, three organisations of the swarm that load in the fleet
+  panel. The fleet panel gains a stray sheep and the behaviour *escort*. The plugin's state frame may carry
+  `drones` and `master`; the relay passes them on. Part 1 and Part 2 keep their one-drone panel, unchanged.
 
 - **Session timing.** The guides tell the relay which scene each student is on, under an anonymous code
   shown in the Flight plan, with the version of the exercise (`tpVersion`). `/monitor/` shows a session

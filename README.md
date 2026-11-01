@@ -9,8 +9,11 @@ No build step and no dependency: plain HTML, CSS and JavaScript.
 **Part 2**, the marked seminar (BE Cameo · Part 2 · Marked), is a second guide in `part2/`, served at
 `/part2/` (online: `https://shepherd.chaos-art.fr/part2/`). See [Part 2](#part-2-the-marked-seminar) below.
 
-**Part 3**, a fleet of drones, is a third guide in `part3/`, served at `/part3/`, with its own simulation
-panel. See [Part 3](#part-3-a-fleet-of-drones) below.
+**Part 3**, the logical architecture of the shepherd drone, is a third guide in `part3/`, served at
+`/part3/`. See [Part 3](#part-3-the-logical-architecture) below.
+
+**Part 4**, the swarm, is a fourth guide in `part4/`, served at `/part4/`, with its own simulation panel
+(several drones). See [Part 4](#part-4-the-swarm) below.
 
 ## Run it
 
@@ -184,6 +187,9 @@ What the plugin does with it:
    None: `"ok": false, "error": "not-found"`. Several equal: select them all and answer
    `"error": "ambiguous"`. The guide shows a message for these two; any other error shows "Cameo could not show it".
 
+An entry marked `strict: true` skips all this: the guide sends `model/getByQualifiedName` with its exact path, and
+answers `not-found` if nothing is there. Use it when copies of the element exist elsewhere in the project.
+
 Things to add in the guide for this to work: give the entry a `path` that matches the steps, spell `name` as
 the steps tell the student to type it. For the functions the student names in Question 2, the guide builds the
 entry itself (`fromAnswer` with `under: "<link key>"`, in `b-exercise`).
@@ -310,9 +316,47 @@ solution block. Keep it that way when editing it. What it adds:
 Open it locally at `http://localhost:5178/part2/` (same server as Part 1). Both guides keep their progress
 under different `storageKey`s; the Cameo pairing code and the relay address are shared.
 
-## Part 3: a fleet of drones
+## Part 3: the logical architecture
 
-`part3/` is a third guide, same layout as `part2/` (served at `/part3/`). Its content is a first skeleton.
+`part3/` is a third guide, same layout as `part2/` (served at `/part3/`). The content follows the TP handoff
+of the OMF plugin docs (`docs/pasture-sentinel/tp/`); its figures are in `part3/assets/img/`. The story:
+theory and analyses; one subsystem by hand (Mission Configuration); the three logical architectures of the
+drone played in the page; the student's choice; thinking first; then the build of the chosen architecture
+one scenario event at a time, each as goal, build and validate. The crash is not part of it
+(`archs.leaveOut`). Scenes that depend on the choice use the block
+`byChoice` (see the header of `content/scenes.js`).
+
+It keeps the one-drone simulation panel of Part 1 and 2 (the `js/sim*.js` files are not changed for it) and
+loads, with Part 4 only, `js/widgets-logical.js` and `css/logical.css` (the colour of the logical level,
+`phase: "lg"`). Part 3 alone also loads:
+
+| File | What it is |
+|---|---|
+| `part3/content/archs.js` | The three architectures as the correction models build them: state machines, send steps (with the sends of the functions they call), parts, connectors, scenarios. Written by `scripts/make-part3-archs.py` from `drone-archs/arch-*.json` and `*.scenario.json`; do not edit by hand. |
+| `js/logical-engine.js` | A small simulator of those specs (nested states, regions, signal and completion transitions, do-activities with reactions, routing through connectors and boundary ports). It replays the expected states of the three scenarios (70 checks). With `{ only }` it leaves out the parts not built yet. |
+| `archs` in `part3/content/config.js` | How to draw them (labels, colours, layouts, trade-off scores, which part receives which functional state, where the logic is), the **stages** of the build (parts added, steps measured), the **story** captions, the message **badges** and the **highlighted** exchanges of the animation. |
+
+The widget `archSim` with `stage` plays one stage on the parts built so far; `stageCheck` lists what Cameo
+must show for a stage. Their **Validate in Cameo** button drives the simulation in Cameo through the relay:
+`simtest/start` on the context block, `simtest/send` for each signal of the scenario, `simtest/states` to read
+each part back; what is wrong shows in red. Parts are addressed by the name of their type (`Logical SOI 3 - …
+.Mission Orchestrator`), because they have no name of their own in the model. It needs a plugin with `simtest/*`
+on the allow-list of `RpcDispatcher` and the lookup by type in `SimTestMcpProvider`; with an older plugin the
+button offers the scenario as a file, to open in *MBSE Shepherd > Simulation Scenarios*.
+
+On screen, parts go by what they do (`:Orchestrator`, never `orch`) and port names are hidden. The internal keys
+of `archs.js` (`soi.orch`…) stay in the data only. The generator also applies what the specs do not say yet: the
+signals `FlightPlan Correct` / `FlightPlan Incorrect`, Load Flight Plan keeping its decision (`correct_flight_plan`), and
+no crash, so no System Monitoring Safety (`remove_crash`).
+
+```bash
+python -I scripts/make-part3-archs.py <path to OMF_Private/docs/pasture-sentinel/drone-archs>
+```
+
+## Part 4: the swarm
+
+`part4/` is a fourth guide, same layout as `part2/` (served at `/part4/`; `part4/lab/`, a drone-assembly
+proof of concept, is not published by the Dockerfile).
 What is new is its simulation panel: several drones instead of one. It loads `js/sim-fleet-core.js`,
 `js/sim-fleet-scene.js`, `js/sim-fleet.js` and `css/sim-fleet.css` **instead of** `js/sim-core.js`,
 `js/sim-motion.js`, `js/sim-scene.js` and `js/sim.js`. Part 1 and Part 2 do not load the fleet files, and
@@ -320,12 +364,12 @@ the one-drone files were not changed, so they behave as before.
 
 What the panel shows:
 
-- One drone per drone of the fleet, each with a **role** (`fleet.roles` in `part3/content/config.js`:
+- One drone per drone of the fleet, each with a **role** (`fleet.roles` in `part4/content/config.js`:
   drone shepherd, sheep guard, anti-predator) and its own step.
 - The **master**: the base station (it pilots every drone), one drone (the lead of the swarm), or none.
   Dashed lines go from the master to the drones it pilots.
-- The use case of Part 3: a drone may **follow the predator out of the field as long as another drone stays
-  on the field**. The panel says which drones keep the field, and turns red when none is left.
+- The use case of Part 4: a drone may **follow a stray sheep or the predator out of the field as long as
+  another drone stays on the field**. The panel says which drones keep the field, and turns red when none is left.
 
 A step is turned into what the drone does on screen (patrol, guard, track, counter, pursue, return, ...)
 from the words of its name, so the model can name its states as it likes; `fleet.behaviours` lists the
@@ -346,7 +390,7 @@ The state frame of the plugin gains two optional fields (the relay keeps them, `
 
 `id` and `step` are required, `role` and `name` optional; at most 16 drones; `master` is `"base"` or the
 `id` of a drone. `step` stays: it is what Part 1 and Part 2 read. A frame without `drones` shows one drone
-of `fleet.defaultRole` in Part 3.
+of `fleet.defaultRole` in Part 4.
 
 Plugin side, still to do: today `PastureSimulationEngine` merges the active states of every object into one
 step; it must keep them per drone instance to fill `drones`. `LocalRelay.kt` (the relay inside Cameo)
