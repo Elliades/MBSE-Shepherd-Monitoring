@@ -7,12 +7,15 @@
      {{Menu > Item}}    a menu, button or label of the Cameo interface
      ((icon))           small toolbar button image (see config.js > icons)
      <<text>>           a name to type in Cameo; tapping it copies it
+     `name`             a name of the model, in code font
 
    Scene kinds: "read" (understand), "do" (hands on in Cameo), "answer" (question
    from the handout), "try" (interactive, in the browser).
 
    Blocks: p, h, steps, list, figure, video, placeholder, callout, quote, path, copy, download,
-   cards, widget, question, reveal, tip, notes, answers, tabs, fromAnswer.
+   cards, widget, question, reveal, tip, notes, answers, tabs, fromAnswer, byChoice.
+   byChoice { q, variants: { key: { label, tab?, blocks } } } shows the variant whose key starts the
+   answer of the choice question q (all of them in tabs until it is answered); only its steps count.
    A tip is an optional toggle around p, list and copy blocks; its steps are not counted for "Done".
    A placeholder marks something missing; its to-do list is only shown in author mode.
 

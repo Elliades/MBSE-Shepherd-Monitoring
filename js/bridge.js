@@ -20,6 +20,9 @@
                                   { kind: 'hello', resumed }           joined the room (resumed: it replays what was missed)
                                   { kind: 'resync', reason }           signals were lost: start over
                                   { kind: 'peer', data }               what another page of the same code shared
+   window.Bridge.call(category, name, args, timeoutMs)   any method of the plugin's relay allow-list (a Promise of
+                                  its result; rejects with 'not-connected', 'timeout', 'unknown-method'…). Part 3
+                                  uses simtest/start, send, states and stop for its "Validate in Cameo" button.
    window.Bridge.sendPeer(data)   share an object with the other pages of the same code (not Cameo): true if sent */
 (function () {
   const CFG = window.COURSE_CONFIG || {};
@@ -159,7 +162,7 @@
         else if (frame.event === 'plugin-offline') set('waiting', 'Cameo is not connected to the relay.', 'cameo');
         else if (frame.event === 'state' && typeof frame.step === 'string') {
           const st = { kind: 'state', status: String(frame.status || ''), step: frame.step };
-          /* several drones (Part 3, js/sim-fleet.js): one { id, step, role, name } each, and who leads */
+          /* several drones (Part 4, js/sim-fleet.js): one { id, step, role, name } each, and who leads */
           if (Array.isArray(frame.drones)) st.drones = frame.drones.filter((d) => d && typeof d.id === 'string' && typeof d.step === 'string');
           if (typeof frame.master === 'string') st.master = frame.master;
           emit(st);
@@ -307,11 +310,11 @@
     return { ok: true };
   }
 
-  function call(category, name, args) {
+  function call(category, name, args, timeoutMs) {
     return new Promise((resolve, reject) => {
       if (!socket || socket.readyState !== 1 || status !== 'connected') return reject(new Error('not-connected'));
       const req = 'r' + (++reqCounter);
-      const t = setTimeout(() => { waiting.delete(req); reject(new Error('timeout')); }, 10000);
+      const t = setTimeout(() => { waiting.delete(req); reject(new Error('timeout')); }, timeoutMs || 10000);
       waiting.set(req, { resolve, reject, timer: t });
       socket.send(JSON.stringify({ req, category, name, args: args || [] }));
     });
@@ -354,6 +357,11 @@
   /* An element the student creates has no UUID in the guide: Cameo looks it up by its name.
      spec = { name, type, path, kinds, qualifiedName } (see "Links by name" in README.md). */
   function showByName(spec) {
+    if (spec.strict) {
+      return call('model', 'getByQualifiedName', [spec.qualifiedName])
+        .catch((e) => Promise.reject(e && NOT_REACHED.has(e.message) ? e : new Error('not-found')))
+        .then((found) => show(found.id, spec.type));
+    }
     const arg = [spec];
     const select = () => call('browser', 'selectByName', arg)
       .catch((e) => (e && (e.message === 'ambiguous' || NOT_REACHED.has(e.message)) ? Promise.reject(e) : findThenSelect(spec)));
@@ -368,6 +376,7 @@
     disconnect: () => disconnect(false),
     open: show,
     openByName: showByName,
+    call,
     onChange: (fn) => listeners.push(fn),
     onFrame: (fn) => frameListeners.push(fn),
     sendPeer,

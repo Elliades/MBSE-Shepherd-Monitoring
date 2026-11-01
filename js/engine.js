@@ -111,6 +111,7 @@
     s._steps = [];
     s._dyn = [];
     s._questions = [];
+    s._choice = [];
     walk(s.blocks, s, '');
   });
 
@@ -123,7 +124,25 @@
       if (b.notes) NOTES.push(Object.assign({ scene: scene.id }, b.notes));
       if (b.placeholder) PLACEHOLDERS.push({ scene: scene.id, path: p, ph: b.placeholder });
       if (b.tabs) b.tabs.forEach((t, ti) => walk(t.blocks || [], scene, p + '.' + ti + '.'));
+      if (b.byChoice) {
+        // Only the steps of the variant the student chose count (stepIds), so they are kept apart.
+        const keys = Object.keys(b.byChoice.variants);
+        const ids = keys.map((k, i) => {
+          const kept = scene._steps;
+          scene._steps = [];
+          walk(b.byChoice.variants[k].blocks || [], scene, p + '.' + i + '.');
+          const mine = scene._steps;
+          scene._steps = kept;
+          return mine;
+        });
+        scene._choice.push({ q: b.byChoice.q, keys, ids });
+      }
     });
+  }
+  /* The variant of a byChoice block that matches the answer of its choice question (options start with the key). */
+  function choiceIndex(q, keys) {
+    const a = ((S.answers[q] || {}).choice || '').trim();
+    return a ? keys.findIndex((k) => a.indexOf(k) === 0) : -1;
   }
   function stepId(scene, path, i) { return scene.id + '/' + path + '/' + i; }
   function todoId(sceneId, path, i) { return sceneId + '/' + path + '/t' + i; }
@@ -176,7 +195,7 @@
     return scene._dyn.reduce((ids, d) => {
       for (let i = 0; i < rowCount(questionById(d.q)); i++) ids.push(stepId(scene, d.path, i));
       return ids;
-    }, scene._steps.slice());
+    }, scene._steps.slice().concat(...scene._choice.map((c) => { const i = choiceIndex(c.q, c.keys); return i < 0 ? [] : c.ids[i]; })));
   }
   function stepsDone(scene) { return stepIds(scene).filter((id) => S.steps[id]).length; }
   function sceneStatus(scene) {
@@ -192,7 +211,7 @@
 
   /* ───────── inline marks ───────── */
   function inline(src) {
-    const rx = /\*\*(.+?)\*\*|\*(.+?)\*|\[\[(.+?)\]\]|\{\{(.+?)\}\}|\(\((.+?)\)\)|<<(.+?)>>|\[([^[\]]+)\]\(([^()\s]+)\)/g;
+    const rx = /\*\*(.+?)\*\*|\*(.+?)\*|\[\[(.+?)\]\]|\{\{(.+?)\}\}|\(\((.+?)\)\)|<<(.+?)>>|\[([^[\]]+)\]\(([^()\s]+)\)|`([^`]+)`/g;
     let out = '';
     let last = 0;
     let m;
@@ -212,6 +231,7 @@
       else if (m[5] != null) out += inlineIcon(m[5]);
       else if (m[6] != null) out += `<button type="button" class="cchip" data-copy="${esc(m[6])}" title="Copy">${esc(m[6])}${ic('copy')}</button>`;
       else if (m[7] != null) out += `<a class="xlink" href="${esc(m[8])}" target="_blank" rel="noopener">${inline(m[7])}${ic('open')}</a>`;
+      else if (m[9] != null) out += '<code>' + esc(m[9]) + '</code>';
     }
     return out + esc(src.slice(last));
   }
@@ -278,10 +298,10 @@
      path is the element itself; kinds is the type of each item (same length as path). */
   function nameSpec(L) {
     const kinds = L.kinds || L.path.map((_, i) => (i === L.path.length - 1 ? L.type : 'package'));
-    return { name: L.path[L.path.length - 1], type: L.type, path: L.path.slice(), kinds, qualifiedName: L.path.join('::') };
+    return { name: L.path[L.path.length - 1], type: L.type, path: L.path.slice(), kinds, qualifiedName: L.path.join('::'), strict: !!L.strict };
   }
   const FIND_ERROR = {
-    'not-found': (L) => `Cameo cannot find “${L.path[L.path.length - 1]}”. Is it created, and is it named exactly like this?`,
+    'not-found': (L) => `Cameo cannot find “${L.path[L.path.length - 1]}”${L.strict ? ` in ${L.path.slice(0, -1).join(' / ')}` : ''}. Is it created, and is it named exactly like this?`,
     ambiguous: (L) => `Several elements in Cameo are named “${L.path[L.path.length - 1]}”. Look in: ${L.path.slice(0, -1).join(' / ')}.`
   };
   function openInCameo(key, btn) {
@@ -599,9 +619,9 @@
     }
     if (b.call) return `<div class="q-call">${ic('hand')}<span>${inline(b.call)}</span></div>`;
     if (b.recall) {
-      // Scenes of another guide (config.recallBase, Part 1) that show a gesture again. They open in a new tab.
+      // Scenes of another guide (config.recallBase, Part 1, or r.base) that show a gesture again. They open in a new tab.
       const r = b.recall;
-      const base = CFG.recallBase || '';
+      const base = r.base || CFG.recallBase || '';
       return `<div class="recall"><span class="mono-label">${esc(r.label || 'Forgot how? See it again in Part 1')}</span><div class="recall-list">` +
         r.items.map((it) => `<a class="recall-item" href="${esc(base + '#' + it.id)}" target="_blank" rel="noopener">${ic('open')}<span>${inline(it.title)}</span></a>`).join('') +
         '</div></div>';
@@ -620,6 +640,24 @@
       ).join('') + '</div>' + b.tabs.map((t, i) =>
         `<div class="tabpanel" role="tabpanel" data-panel="${i}"${i ? ' hidden' : ''}>${t.link ? `<p class="b-p">Open ${linkChip(t.link)} in Cameo.</p>` : ''}${(t.blocks || []).map((x, xi) => renderBlock(x, scene, path + '.' + i + '.' + xi)).join('')}</div>`
       ).join('') + '</div>';
+    }
+    if (b.byChoice) {
+      /* Blocks that depend on an earlier choice: the variant chosen, or all of them in tabs until the choice is made.
+         { byChoice: { q: "q-arch", change?: true, variants: { "1": { label?, tab?, blocks }, "2": {…} } } } */
+      const c = b.byChoice;
+      const keys = Object.keys(c.variants);
+      const i = choiceIndex(c.q, keys);
+      const qs = (questionById(c.q) || {}).scene;
+      const qt = esc(byId[qs] ? byId[qs].title : 'the choice');
+      if (i >= 0) {
+        const v = c.variants[keys[i]];
+        const inner = (v.blocks || []).map((x, xi) => renderBlock(x, scene, path + '.' + i + '.' + xi)).join('');
+        if (!v.label && !inner) return '';
+        /* change: true adds the way back to the choice, once, where it makes sense */
+        return `<div class="by-choice">${v.label ? `<p class="by-choice-head">${ic('check')}<span>${inline(v.label)}</span>${c.change && qs ? `<button type="button" class="btn ghost small" data-goto="${esc(qs)}">Pick another architecture</button>` : ''}</p>` : ''}${inner}</div>`;
+      }
+      return `<div class="callout tone-warn"><span class="callout-ico">${ic('alert')}</span><div><strong class="callout-title">Make your choice first</strong><p>This part depends on it. Until then, every variant is shown.</p>${qs ? `<button type="button" class="btn ghost small" data-goto="${esc(qs)}" style="margin-top:.5rem">${ic('pencil')}Go to ${qt}</button>` : ''}</div></div>` +
+        renderBlock({ tabs: keys.map((k) => ({ label: c.variants[k].tab || c.variants[k].label, blocks: c.variants[k].blocks })) }, scene, path);
     }
     if (b.fromAnswer) {
       const f = b.fromAnswer;
