@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- **Part 3, played end to end in Cameo, and corrected**: four versioned starting models in `part3/assets/models/`, built by
+  `scripts/make-part3-inits.py` and `scripts/build-part3-models.mjs`: one for Mission Configuration, then one per
+  architecture, without the crash, ports named after their partner. The ports of Mission Configuration are merged with
+  *Merge Ports*, the verdict on a port of its own (`p_Verdict`), the start order on `p_StartOrder`; *Propagate Interface*
+  is gone from the guide. *Validate in Cameo* waits for the states of each step played as a precondition (a fixed 2 s
+  gave false reds on a correct model) and also checks the messages the states do not show (alerts, bursts, verdict), with
+  `simtest/trace` on the relay. The do activity of the orchestrator in architecture 3 is `Start And Relay Tracking`: two
+  activities shared the name `Track predator`. `scripts/make-part3-archs.py` follows the current specs. Author mode off.
 - **Part 3, the links follow the model**: every link and Validate point at `TP - Logical Architecture`, its IBD
   `TP Logical SOI` and `TP1 SOI Simulation`, one package whatever the architecture; a state machine link opens its
   diagram; the functional mission is at the root of the model; the links to the correction packages are gone. The caption

@@ -16,6 +16,27 @@ const FILES = {
   arch3: 'UAV_Part3_Init_Arch3_CentralOrchestrator.mdzip'
 };
 const OLD_PACKAGES = ['3 - Centralized orchestrator', 'TP - Logical Architecture'];
+/* The ports come out as P_<block>_<spec name>: here they are named after the partner, as in the guide. */
+const PORTS = {
+  mc: 'p_MissionConfiguration', bsrc: 'p_BaseStation', ap: 'p_AutoPilot', orch: 'p_Orchestrator', zs: 'p_ZoneSurveillance', zp: 'p_ZonePatrolling',
+  sm: 'p_SheepMonitoring', pm: 'p_PredatorManagement', sg: 'p_SheepGuard', pd: 'p_PredatorDefense', trk: 'p_Tracking', init: 'p_Init', verdict: 'p_Verdict',
+  notification: 'p_Verdict', operator: 'p_Operator', power: 'p_Power', link: 'p_OperatorLink', op_link: 'p_OperatorLink', camera: 'p_Camera',
+  camera_feed: 'p_CameraFeed', vision: 'p_Vision', light: 'p_Light', sound: 'p_Sound', light_effect: 'p_LightEffect', sound_effect: 'p_SoundEffect',
+  strong_light: 'p_StrongLight', loud_sound: 'p_LoudSound'
+};
+async function namePorts(blocks) {
+  for (const b of blocks) {
+    for (const e of await call('model', 'vertical', [ref(b)])) {
+      if (e.metaclass !== 'Port') continue;
+      const key = e.name.slice(`P_${b.name}_`.length);
+      let name = PORTS[key];
+      if (!name) throw new Error(`no name for port ${e.name}`);
+      /* Who starts the mission: the same port in every architecture. */
+      if (b.name === 'Mission Configuration' && (key === 'ap' || key === 'orch')) name = 'p_StartOrder';
+      await call('model', 'set', [ref(e), 'name', name]);
+    }
+  }
+}
 
 async function call(category, name, args) {
   const r = await fetch('http://127.0.0.1:9851/mcp', {
@@ -59,6 +80,7 @@ async function build(key, base) {
     });
     if (!built) await new Promise((res) => setTimeout(res, 3000));
   }
+  await namePorts(built.blocks);
   const soi = await call('model', 'getByQualifiedName', ['3 - Logical Analysis::TP - Logical Architecture::Contexts::TP Logical SOI']);
   const flow = await call('analysis', 'signalFlowCheck', [ref(soi)]);
   console.log(key, 'blocks', built.blocks.length, 'functions', built.functions, 'flow', JSON.stringify(flow.summary));

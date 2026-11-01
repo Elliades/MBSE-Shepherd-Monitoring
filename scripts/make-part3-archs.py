@@ -67,6 +67,7 @@ CRASH_SIGNALS = {"Crash Alert", "Emergency Landing", "Crashed Detected"}
 CRASH_STATES = {"Mission Aborted", "Emergency Mode"}
 CRASH_FUNCTIONS = {"Abort Mission", "Emergency Landing Procedure"}
 CRASH_BLOCK = "System Monitoring Safety"
+ORCH_TRACK = "Start And Relay Tracking"
 CRASH_ENDS = {"sms", "health"}  # the part of that block, and the port of the SOI that feeds it
 CRASH_DOCS = [
     ("(readiness, sheep exit, predator, crash)", "(readiness, sheep exit, predator)"),
@@ -139,6 +140,20 @@ def walk_stm(region):
         yield from walk_stm(st)
     for sub in region.get("regions", []):
         yield from walk_stm(sub)
+
+
+def rename_homonyms(spec):
+    """In architecture 3 the do activity of the orchestrator has the name of a function of Predator Management: two
+    `Track predator` in the Functions package, and students drag the wrong one. It takes a name of its own."""
+    for b in spec["blocks"]:
+        if b["name"] != "Mission Orchestrator":
+            continue
+        for f in b.get("functions", []):
+            if f["name"] == "Track predator":
+                f["name"] = ORCH_TRACK
+        for r in walk_stm(b["stm"]):
+            if r.get("do") == "Track predator":
+                r["do"] = ORCH_TRACK
 
 
 def split_verdict_port(spec):
@@ -269,6 +284,7 @@ def main(src):
         scen = read_json(src / f"{stem}.scenario.json")
         soi, ctx = spec["contexts"][0], spec["contexts"][1]
         remove_crash(spec, scen)
+        rename_homonyms(spec)
         split_verdict_port(spec)
         flight_plan_ports(spec)
         flight_plan_for_simulator(spec)

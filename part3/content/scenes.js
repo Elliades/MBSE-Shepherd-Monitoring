@@ -129,11 +129,12 @@ window.COURSE = {
     {
       id: "load-model", ch: "setup", kind: "do",
       title: "Open the starting model",
-      lead: "The functional mission is done, and the technical part of the drone is ready.",
+      lead: "The functional mission is done, and the power-on and the base station are ready. This first model is for Mission Configuration; after your choice, you will open the model of your architecture.",
       blocks: [
+        { download: { label: "Starting model", file: "UAV_Part3_Init_MissionConfiguration.mdzip", src: "assets/models/UAV_Part3_Init_MissionConfiguration.mdzip", size: "1.2 MB" } },
         {
           steps: [
-            "Download the starting model and open it ({{File > Open Project}}). Keep the profile file next to it; do not unzip the .mdzip.",
+            "Download the model above and open it ({{File > Open Project}}). Do not unzip the .mdzip.",
             "Open [[la-pkg]], then **TP - Logical Architecture**: its technical blocks are already wired.",
             "Link this guide to Cameo with the **Cameo** button at the top: the chips show the elements in your model, and the **Validate in Cameo** buttons run the scenarios for you."
           ]
@@ -141,17 +142,7 @@ window.COURSE = {
         {
           callout: {
             tone: "goal", title: "Given, and to do",
-            text: "Given: power-on, base station link, AutoPilot, the simulation drivers, and the mission subsystems. You build Mission Configuration, then the logic of the architecture you choose, and you connect the rest."
-          }
-        },
-        {
-          placeholder: {
-            kind: "link", title: "The starting model",
-            todo: [
-              "Build the blank starting models: the technical part only, without the mission features nor Mission Configuration (handoff, to do #1), parts unnamed, without the crash (no System Monitoring Safety, port health, Emergency Mode, Crash Alert)",
-              "Choose: ports of the technical blocks given (architecture imposed) or not (architecture free)",
-              "Put the .mdzip on the LMS or in part3/assets/models/ and add a download block here"
-            ]
+            text: "Given here: power-on, base station link, the simulation drivers. You build Mission Configuration. In chapter 6, the model of your architecture gives you Mission Configuration ready, the AutoPilot and the mission subsystems: you make the logic of your choice, and you connect."
           }
         }
       ]
@@ -241,8 +232,8 @@ window.COURSE = {
     },
 
     /* ───────────────────────── 3 · One subsystem by hand: Mission Configuration ─────────────────────────
-       It comes before the choice of an architecture, so it is done once, in architecture 3. Chapter 6 says what
-       to change in the others. */
+       It comes before the choice of an architecture, so it has its own starting model, without the AutoPilot. The
+       model of each architecture, in chapter 6, gives it ready. */
     {
       id: "mission", ch: "example", kind: "read", mark: "intro",
       title: "The starting point: the functional mission",
@@ -400,14 +391,15 @@ window.COURSE = {
     },
     {
       id: "mc-ports", ch: "example", kind: "do",
-      title: "Ports: group what belongs together",
+      title: "Ports: merge what belongs together",
       lead: "The plugin made one port per signal; you decide which signals form one exchange.",
       blocks: [
         { widget: "mcPorts" },
         {
           steps: [
-            "Put the signals of one exchange on one port, named after the partner: <<p_Init>>, <<p_BaseStation>>, <<p_Orchestrator>>.",
-            "Connect the part to Manual Initialization and to the base station link, then {{Propagate Interface To Connected Port}} on the port in front."
+            "Select `flight_plan`, `flightplan_correct`, `flightplan_incorrect` and `start_sheep_guard` → {{Merge Ports}}. Rename the port <<p_BaseStation>>.",
+            "Same gesture on `ready_mission_ext` and `flightplan_check_failed_ext`: <<p_Verdict>>. Rename `start_soi` <<p_Init>>, and `start_sheep_guard_mission_ext` <<p_StartOrder>>.",
+            "Connect `p_Init` to Manual Initialization. Connect `p_BaseStation` and `p_Verdict` to the two ports of the base station link that face them. `p_StartOrder` waits for your architecture."
           ]
         },
         {
@@ -640,20 +632,23 @@ window.COURSE = {
             q: "q-arch", change: true,
             variants: {
               "1": { label: "You are building **architecture 1**, the feature orchestrator.", tab: "Arch. 1", blocks: [
+                { download: { label: "Your starting model", file: "UAV_Part3_Init_Arch1_FeatureOrchestrator.mdzip", src: "assets/models/UAV_Part3_Init_Arch1_FeatureOrchestrator.mdzip", size: "1.3 MB" } },
                 { cards: [
-                  { n: "✓", icon: "check", title: "Ready in the model", text: "**Sheep Guard**, **Zone Surveillance**, **Predator Defense**: states, functions and ports. The **Mission Orchestrator**: its ports and functions, with an empty state machine." },
+                  { n: "✓", icon: "check", title: "Ready in the model", text: "**Mission Configuration**, connected. **Sheep Guard**, **Zone Surveillance**, **Predator Defense**: states, functions and ports. The **Mission Orchestrator**: its ports and functions, with an empty state machine." },
                   { n: "→", icon: "bulb", tone: "tip", title: "Yours", text: "The **states and transitions** of the orchestrator, and the **connectors**." }
                 ] }
               ] },
               "2": { label: "You are building **architecture 2**, the patch.", tab: "Arch. 2", blocks: [
+                { download: { label: "Your starting model", file: "UAV_Part3_Init_Arch2_Patch.mdzip", src: "assets/models/UAV_Part3_Init_Arch2_Patch.mdzip", size: "1.3 MB" } },
                 { cards: [
-                  { n: "✓", icon: "check", title: "Ready in the model", text: "**Zone Surveillance**, **SheepMonitoring**, **Predator Management**: states, functions and ports. They do not know about each other's conflicts yet." },
+                  { n: "✓", icon: "check", title: "Ready in the model", text: "**Mission Configuration**, connected. **Zone Surveillance**, **SheepMonitoring**, **Predator Management**: states, functions and ports. They do not know about each other's conflicts yet." },
                   { n: "→", icon: "bulb", tone: "tip", title: "Yours", text: "The **connectors**, then **the patch**: you design it." }
                 ] }
               ] },
               "3": { label: "You are building **architecture 3**, the central orchestrator.", tab: "Arch. 3", blocks: [
+                { download: { label: "Your starting model", file: "UAV_Part3_Init_Arch3_CentralOrchestrator.mdzip", src: "assets/models/UAV_Part3_Init_Arch3_CentralOrchestrator.mdzip", size: "1.3 MB" } },
                 { cards: [
-                  { n: "✓", icon: "check", title: "Ready in the model", text: "**Zone Patrolling**, **SheepMonitoring**, **Predator Management**, **Tracking**: states, functions and ports. The **Mission Orchestrator**: its ports and functions, with an empty state machine." },
+                  { n: "✓", icon: "check", title: "Ready in the model", text: "**Mission Configuration**, connected. **Zone Patrolling**, **SheepMonitoring**, **Predator Management**, **Tracking**: states, functions and ports. The **Mission Orchestrator**: its ports and functions, with an empty state machine." },
                   { n: "→", icon: "bulb", tone: "tip", title: "Yours", text: "The **states and transitions** of the orchestrator, and the **connectors**." }
                 ] }
               ] }
@@ -664,18 +659,6 @@ window.COURSE = {
           callout: {
             tone: "note", title: "State names matter",
             text: "Type the state names exactly as given: the validation checks them."
-          }
-        },
-        {
-          placeholder: {
-            kind: "text", title: "Starting models of chapter 6",
-            todo: [
-              "One package whatever the architecture: TP - Logical Architecture (Components, Contexts, blocks TP Logical SOI and TP1 SOI Simulation). All the links and Validate point there. If the technical ports differ per architecture, one package is not enough: then they each need their own.",
-              "Architectures 1 and 3: Mission Orchestrator with its ports and its effect and do functions (Send To Safe Area, Start Patrol or Start Guard…, each send with its On Port), its state machine empty and named Mission Orchestrator.",
-              "Blocks ready, with states, functions and ports. Arch. 1: Sheep Guard, Zone Surveillance, Predator Defense. Arch. 3: Zone Patrolling, SheepMonitoring, Predator Management, Tracking.",
-              "Architecture 2: Zone Surveillance, SheepMonitoring without Deactivated, Predator Management with Bear Detected and Bear Gone that only tell the operator. The AutoPilot accepts Tracking orders and Resume Patrolling.",
-              "The AutoPilot of architecture 2 and the Mission Orchestrator must fire on Start Sheep Guard Mission_ext, the signal Mission Configuration sends."
-            ]
           }
         }
       ]
@@ -703,9 +686,9 @@ window.COURSE = {
                 { h: "Connect" },
                 { widget: "stageIbd", opts: { arch: "1", stage: "start" } },
                 { steps: [
-                  "Open [[tp1-ibd]]: Mission Configuration is already on it, from chapter 3. Drag [[tp1-orch]] on it. Do not create a part by hand.",
+                  "Open [[tp1-ibd]]: Mission Configuration is on it, connected. Drag [[tp1-orch]] on it. Do not create a part by hand.",
                   "Show its ports: right-click the part → **Display > Display Parts/Ports**.",
-                  "Draw one connector per line under the drawing. On the one that comes from Mission Configuration, {{Propagate Interface To Connected Port}}."
+                  "Draw one connector per line under the drawing."
                 ] }
               ] },
               "2": { label: "Architecture 2", tab: "Arch. 2", blocks: [
@@ -713,8 +696,8 @@ window.COURSE = {
                 { h: "Connect" },
                 { widget: "stageIbd", opts: { arch: "2", stage: "start" } },
                 { steps: [
-                  "Open [[tp2-ibd]]: Mission Configuration is already on it, from chapter 3.",
-                  "Connect its start-order port to the AutoPilot, then {{Propagate Interface To Connected Port}}."
+                  "Open [[tp2-ibd]]: Mission Configuration is on it, connected to the power-on and the base station.",
+                  "Connect its port `p_StartOrder` to the AutoPilot."
                 ] }
               ] },
               "3": { label: "Architecture 3", tab: "Arch. 3", blocks: [
@@ -728,9 +711,9 @@ window.COURSE = {
                 { h: "Connect" },
                 { widget: "stageIbd", opts: { arch: "3", stage: "start" } },
                 { steps: [
-                  "Open [[tp3-ibd]]: Mission Configuration is already on it, from chapter 3.",
+                  "Open [[tp3-ibd]]: Mission Configuration is on it, connected.",
                   "Drag [[tp3-orch]] on the diagram. Show its ports: right-click the part → **Display > Display Parts/Ports**.",
-                  "Draw one connector per line under the drawing. On the one that comes from Mission Configuration, {{Propagate Interface To Connected Port}}."
+                  "Draw one connector per line under the drawing."
                 ] }
               ] }
             }
@@ -912,7 +895,8 @@ window.COURSE = {
                   { steps: [
                     "In [[tp2-sm-stm|the state machine of SheepMonitoring]]: the new state, and its two transitions.",
                     "In [[tp2-pm-stm|the state machine of Predator Management]]: the effects of the transitions of `Predator Detected`, `Bear Detected` and `Bear Gone`, send your signals.",
-                    "On the IBD, right-click each of the two parts → {{Create All Missing Signal Ports}}, then connect the new ports."
+                    "On the IBD, right-click each of the two parts → {{Create All Missing Signal Ports}}, then connect the new ports.",
+                    "On Predator Management, `resume_patrolling` talks to the AutoPilot like `p_AutoPilot`: select both → {{Merge Ports}}, or Check Signal Flow will report it."
                   ] }
                 ] } },
                 { solution: { label: "Show our patch", blocks: [
@@ -924,7 +908,7 @@ window.COURSE = {
                 { h: "The result to reach" },
                 { widget: "deciderStm", opts: { arch: "3", stage: "bear" } },
                 { steps: [
-                  "In [[tp3-orch-stm|the state machine of Mission Orchestrator]], in the first region of Mission, create <<Predator tracking>>. Drag the activity `Relay tracking orders` on it → {{Do Activity}}.",
+                  "In [[tp3-orch-stm|the state machine of Mission Orchestrator]], in the first region of Mission, create <<Predator tracking>>. Drag the activity `Start And Relay Tracking` on it → {{Do Activity}}.",
                   "Draw the transition from `Patrolling` to it: **Trigger** `Predator Tracking Request`, **Effect** `Grant Tracking`.",
                   "And the way back: **Trigger** `Predator Tracking Release`, **Effect** `Resume Patrol`."
                 ] },
@@ -1007,7 +991,7 @@ window.COURSE = {
         { widget: "tidyDemo" },
         {
           steps: [
-            "On the IBD of the SOI: {{Show Port Type Only}}, then {{Show STM Overview in Parts}}.",
+            "On the IBD of the SOI: {{Show Port Type Only}}, then {{Show STM Overview in Parts}}. The parts grow and overlap: lay the diagram out again ({{Layout > Quick Diagram Layout}}).",
             "On the package of the layer: {{Apply Layer Stereotypes}}, then {{Logical Organizer}}.",
             "On the IBD: {{Check Signal Flow}}, until nothing is reported."
           ]
@@ -1080,7 +1064,7 @@ window.COURSE = {
     { scene: "three-archs", text: "The simulation runs part3/content/archs.js (written by scripts/make-part3-archs.py) with js/logical-engine.js. Captions, message labels, the highlighted patch exchange and the refused plan left out: config archs.story, archs.badges, archs[\"2\"].highlight, archs.leaveOut." },
     { scene: "build-plan", text: "Stages: config archs.stages. Each simulates only the parts built so far, and the states of the decider made so far. Validate in Cameo sends the signals to the simulation over the relay (simtest/start, send, states, stop: allow-list of RpcDispatcher) and reads the states back; parts are addressed by the name of their type. If the plugin is too old, the button offers the scenario file." },
     { scene: "an-perf", text: "The latencies (8 ms per interface, 4 ms per subsystem) are illustrative, not measured." },
-    { scene: "load-model", text: "The ids in part3/content/model-links.js come from the correction project; the starting model must be cut from it (handoff README §4) for them to hold. Otherwise the chips fall back to the names." },
+    { scene: "load-model", text: "Four starting models in part3/assets/models/, built from the drone-archs specs by scripts/make-part3-inits.py and scripts/build-part3-models.mjs. All have the same package, so the links and Validate in Cameo hold in each." },
     { scene: "trade-off", text: "The scores of the star diagram (config archs.*.score, axes in archs.axes) are a reading of the three fiches, not measured. Adjust them." },
     { scene: "start-build", text: "The drawings and the gestures of the states: config archs[k].target. What each stage adds: config archs.stages. The connectors under the IBD come from archs.js. State and function names are kept as in the model, typos included (Perimiter, surounding)." }
   ]

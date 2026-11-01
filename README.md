@@ -356,6 +356,8 @@ no crash, so no System Monitoring Safety (`remove_crash`).
 
 ```bash
 python -I scripts/make-part3-archs.py <path to OMF_Private/docs/pasture-sentinel/drone-archs>
+python -I scripts/make-part3-inits.py <same path>
+node scripts/build-part3-models.mjs <base .mdzip>   # MagicDraw running with the OMF plugin
 ```
 
 ## Part 4: the swarm

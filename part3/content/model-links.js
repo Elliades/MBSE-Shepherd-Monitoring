@@ -1,7 +1,8 @@
 /* Every place of the Cameo model that the Part 3 guide points to, defined once.
    Same format as content/model-links.js of Part 1 (see there for the fields).
-   The paths are those of the starting model (3 - Logical Analysis > TP - Logical Architecture). If an id no longer
-   holds, the button finds the element by name.
+   The paths are those of the starting models (part3/assets/models/): all four have 3 - Logical Analysis > TP - Logical
+   Architecture, built by scripts/build-part3-models.mjs, so they have no fixed id. Elsewhere, if an id no longer holds,
+   the button finds the element by name.
    The feature blocks are created by the students (made: true): found by name only.
    strict: the corrections hold copies with the same names, so only the exact path counts. */
 window.MODEL_LINKS = {
@@ -33,7 +34,6 @@ window.MODEL_LINKS = {
   "tp-components": {
     name: "Components",
     type: "package",
-    id: "_2026x_1_1fda04ff_1793227710558_927283_30285",
     path: ["3 - Logical Analysis", "TP - Logical Architecture", "Components"],
     strict: true,
     url: ""
@@ -41,7 +41,6 @@ window.MODEL_LINKS = {
   "tp-soi-ibd": {
     name: "TP Logical SOI",
     type: "ibd",
-    id: "_2026x_1_1fda04ff_1793227710817_391999_31206",
     path: ["3 - Logical Analysis", "TP - Logical Architecture", "Contexts", "TP Logical SOI", "TP Logical SOI"],
     kinds: ["package", "package", "package", "block", "ibd"],
     strict: true,
@@ -58,8 +57,8 @@ window.MODEL_LINKS = {
   }
 };
 
-/* The starting model: one package whatever the architecture, with the blocks of chapter 6 ready in it. A block holds its
-   state machine, which holds its diagram, all three with the same name. */
+/* The starting models of chapter 6: one per architecture, with the same package, its blocks ready in it. A block holds
+   its state machine, which holds its diagram, all three with the same name. */
 [
   ["1", { orch: "Mission Orchestrator", sg: "Sheep Guard", zs: "Zone Surveillance", pd: "Predator Defense" }, ["orch"]],
   ["2", { zs: "Zone Surveillance", sm: "SheepMonitoring", pm: "Predator Management" }, ["sm", "pm"]],

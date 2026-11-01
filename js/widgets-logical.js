@@ -389,6 +389,33 @@
     return o;
   };
   const wantOk = (want, have) => window.LogicalEngine.wantOk(want, have);
+  /* A step played only to get somewhere: wait for its expected states, then a little more. A signal sent before the
+     part that takes it is ready is lost for good, and how long that takes grows with the model. */
+  async function reached(B, expect, where, alive) {
+    const pause = (ms) => new Promise((res) => setTimeout(res, ms));
+    const paths = Object.keys(expect);
+    for (let waited = 0; waited < 20000 && alive(); waited += 500) {
+      let ok = true;
+      for (const p of paths) {
+        const addr = where(p);
+        let have = null;
+        try { have = (((await B.call('simtest', 'states', [{ paths: [addr] }])) || {}).states || {})[addr] || []; } catch (err) { have = null; }
+        if (!have || !wantOk([].concat(expect[p]), have)) ok = false;
+      }
+      if (ok) break;
+      await pause(500);
+    }
+    await pause(2000);
+  }
+  /* The messages of a step (COURSE_CONFIG.archs.messages) that were seen since the last read; null when the plugin
+     cannot say (it does not allow simtest/trace yet). */
+  async function messagesSeen(B, since) {
+    try {
+      const t = await B.call('simtest', 'trace', [{ since, methods: ['eventTriggered'] }]);
+      const names = ((t && t.events) || []).map((e) => { const m = /obj<(.+)>@/.exec(String((e.args || [])[0])); return m ? m[1] : ''; });
+      return { next: t.next, names };
+    } catch (err) { return null; }
+  }
   const wantText = (want) => [].concat(want).map((w) => (w.charAt(0) === '!' ? 'not ' + w.slice(1) : w)).join(', ');
   /* The scenario file of one stage, in the format of MBSE Shepherd > Simulation Scenarios: the steps of
      the earlier stages as preconditions (setup, not measured), then the steps of this stage, each expecting
@@ -496,8 +523,11 @@
           if (!alive) return;
           out.textContent = `Getting there: ${every[i].signal}…`;
           await B.call('simtest', 'send', [every[i].signal, where(every[i].into)]);
-          await pause(SETTLE);
+          await reached(B, stageExpect(key, st, i, every[i]), where, () => alive);
         }
+        let since = 0;
+        const first = await messagesSeen(B, 0);
+        if (first) since = first.next;
         for (const i of st.steps) {
           if (!alive) return;
           const step = every[i];
@@ -528,6 +558,26 @@
               li.className = ok ? 'ok' : 'no';
               li.innerHTML = `${ok ? '✓' : '✗'} <b>${esc(lab(path))}</b> ${esc(wantText(want))}${ok ? '' : ` <span class="lg-validate-have">${have ? `is in ${esc(have.join(', ') || 'no state')}` : 'not found in your model'}</span>`}`;
               res.appendChild(li);
+            }
+          }
+          /* The states do not say everything: an alert or a burst leaves them as they are. */
+          const told = (AC.messages || {})[step.signal] || [];
+          if (told.length && first) {
+            let seen = await messagesSeen(B, since);
+            for (let waited = 0; seen && told.some((m) => seen.names.indexOf(m) < 0) && waited < PATIENCE && alive; waited += POLL) {
+              await pause(POLL);
+              seen = await messagesSeen(B, since);
+            }
+            if (seen) {
+              since = seen.next;
+              told.forEach((m) => {
+                const ok = seen.names.indexOf(m) >= 0;
+                if (ok) right += 1; else wrong += 1;
+                const li = document.createElement('li');
+                li.className = ok ? 'ok' : 'no';
+                li.innerHTML = `${ok ? '✓' : '✗'} message <b>${esc(m)}</b>${ok ? '' : ' <span class="lg-validate-have">never received: a send, a port or a connector is missing</span>'}`;
+                res.appendChild(li);
+              });
             }
           }
         }
@@ -640,7 +690,7 @@
         for (const i of (stage ? stage.setup : [])) {
           liveSay(`Cameo: getting there, ${esc(every[i].signal)}…`);
           await B.call('simtest', 'send', [every[i].signal, where(every[i].into)]);
-          await lpause(2000);
+          await reached(B, stageExpect(key, stage, i, every[i]), where, () => !!liveRun);
         }
       }
       liveSay(`Cameo: sending <b>${esc(st.signal)}</b>…`);
@@ -1145,11 +1195,11 @@
     root.innerHTML = `<table class="lg-table"><thead><tr>${(opts.head || []).map((h) => `<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${(opts.rows || []).map((r) => `<tr>${r.map((c) => `<td>${api.inline(c)}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
   };
 
-  /* Guided example, part 2: the plugin made one port per signal; you group the signals that make one
-     exchange with one partner, then connect and propagate. */
+  /* Guided example, part 2: the plugin made one port per signal; you merge the signals that make one exchange with
+     one partner, one way, then connect. */
   W.mcPorts = function (root) {
     root.className = 'w lg-mcp';
-    const s = svg('0 0 380 270', 'A part typed Mission Configuration has one port per signal: start_soi, flight_plan, start_sheep_guard in, and ready_mission_ext, flightplan_check_failed_ext, start_sheep_guard_mission_ext out. The signals of one exchange are grouped on one port: p_Init with Manual Initialization, p_BaseStation with the base station link (FlightPlan, Ready for mission_ext, FlightPlan Check Failed_ext, Start Sheep Guard Mission), p_Orchestrator with the decider. Connectors join them, and Propagate gives the port in front the same interface, conjugated.');
+    const s = svg('0 0 380 270', 'A part typed Mission Configuration has one port per signal: start_soi, flight_plan, flightplan_correct, flightplan_incorrect, start_sheep_guard in, and ready_mission_ext, flightplan_check_failed_ext, start_sheep_guard_mission_ext out. The signals of one exchange are merged on one port: p_Init with Manual Initialization, p_BaseStation for what comes from the base station link, p_Verdict for what goes to it, p_StartOrder for who starts the mission. Connectors join them to their partners.');
     root.appendChild(s);
     /* partners */
     const partner = (x, y, w, name, type, cls) => {
@@ -1161,20 +1211,20 @@
     };
     partner(6, 4, 96, 'Manual Init.', 'power-on');
     partner(6, 226, 96, 'Base station', 'and the operator');
-    partner(300, 226, 76, 'Orchestrator', 'the decider, later', 'lg-ghosted');
+    partner(300, 226, 76, 'Who starts', 'your choice, later', 'lg-ghosted');
     /* mc */
     el('rect', { x: 140, y: 30, width: 160, height: 190, rx: 6, class: 's-box lg-box lg-mcp-mc' }, s);
-    txt(s, 220, 52, ': Mission Configuration', 's-name', 'middle');
+    txt(s, 220, 47, ': Mission Configuration', 's-name', 'middle');
     /* stage 1: one port per signal */
     const one = el('g', { class: 'lg-fade', 'data-only': 1 }, s);
-    const sig = [['start_soi', 'in', 'L', 76], ['flight_plan', 'in', 'L', 104], ['start_sheep_guard', 'in', 'L', 132], ['ready_mission_ext', 'out', 'L', 160], ['flightplan_check_failed_ext', 'out', 'L', 188], ['start_sheep_guard_mission_ext', 'out', 'R', 110]];
+    const sig = [['start_soi', 'in', 'L', 62], ['flight_plan', 'in', 'L', 84], ['flightplan_correct', 'in', 'L', 106], ['flightplan_incorrect', 'in', 'L', 128], ['start_sheep_guard', 'in', 'L', 150], ['ready_mission_ext', 'out', 'L', 172], ['flightplan_check_failed_ext', 'out', 'L', 194], ['start_sheep_guard_mission_ext', 'out', 'R', 110]];
     sig.forEach(([n, dir, side, y]) => {
       const x = side === 'L' ? 140 : 300;
       el('rect', { x: x - 5, y: y - 5, width: 10, height: 10, class: 'lg-port-sq' }, one);
       txt(one, side === 'L' ? x - 9 : x - 9, y + 3, `${n} ${dir === 'in' ? '◂' : '▸'}`, 'lg-mcp-t', 'end');
     });
-    txt(one, 220, 262, '6 ports: one per signal', 'lg-do', 'middle');
-    /* stage 2+: grouped */
+    txt(one, 220, 262, '8 ports: one per signal', 'lg-do', 'middle');
+    /* stage 2+: merged */
     const grp = el('g', { class: 'lg-fade', 'data-from': 2 }, s);
     const gp = (x, y, name, lines, side) => {
       const tx = x + (side === 'L' ? 11 : -11);
@@ -1183,18 +1233,20 @@
       txt(grp, tx, y - 4, name, 'lg-mcp-name', an);
       lines.forEach((l, i) => txt(grp, tx, y + 9 + i * 11, l, 'lg-mcp-t', an));
     };
-    gp(140, 76, 'p_Init', ['◂ Start SOI'], 'L');
-    gp(140, 136, 'p_BaseStation', ['◂ FlightPlan Correct', '◂ FlightPlan Incorrect', '▸ Ready for mission_ext', '▸ FlightPlan Check Failed_ext', '◂ Start Sheep Guard Mission'], 'L');
-    gp(300, 110, 'p_Orchestrator', ['▸ Start Sheep Guard Mission_ext'], 'R');
-    /* stage 3: connected and propagated */
+    gp(140, 72, 'p_Init', ['◂ Start SOI'], 'L');
+    gp(140, 106, 'p_BaseStation', ['◂ FlightPlan', '◂ FlightPlan Correct', '◂ FlightPlan Incorrect', '◂ Start Sheep Guard Mission'], 'L');
+    gp(140, 172, 'p_Verdict', ['▸ Ready for mission_ext', '▸ FlightPlan Check Failed_ext'], 'L');
+    gp(300, 72, 'p_StartOrder', ['▸ Start Sheep Guard', '    Mission_ext'], 'R');
+    /* stage 3: connected */
     const con = el('g', { class: 'lg-fade', 'data-from': 3 }, s);
-    el('path', { d: 'M102,24 H118 V76 H134', class: 's-line lg-mcp-c' }, con);
-    el('path', { d: 'M102,246 H118 V136 H134', class: 's-line lg-mcp-c' }, con);
-    el('path', { d: 'M306,110 H338 V226', class: 's-line lg-ghosted' }, con);
+    el('path', { d: 'M102,24 H118 V72 H134', class: 's-line lg-mcp-c' }, con);
+    el('path', { d: 'M102,240 H112 V106 H134', class: 's-line lg-mcp-c' }, con);
+    el('path', { d: 'M102,252 H124 V172 H134', class: 's-line lg-mcp-c' }, con);
+    el('path', { d: 'M306,72 H338 V226', class: 's-line lg-ghosted' }, con);
     return stager(root, s, [
       { label: 'One port per signal', text: 'Where you stand: <b>Create All Missing Signal Ports</b> made one port per signal coming in, <b>Delegate to external systems</b> one per signal going out. A self-send has no port: it stays inside.' },
-      { label: 'Group what belongs together', text: 'One port = one <b>exchange with one partner</b>. Everything said with the base station (the plan, the verdict, the start order) is one dialogue: one port <b>p_BaseStation</b>. Power-on is <b>p_Init</b>; the hand-over is <b>p_Orchestrator</b>.', dwell: 5.2 },
-      { label: 'Connect, propagate', text: 'Connect each port to its partner, then <b>Propagate Interface To Connected Port</b>: the port in front gets the same interface, conjugated, and the connector its item flows. <b>p_Orchestrator</b> waits for the decider.', dwell: 5 }
+      { label: 'Merge what belongs together', text: 'One port = one <b>exchange with one partner, one way</b>. Select the ports, <b>Merge Ports</b>, and rename: what comes from the base station is <b>p_BaseStation</b>, what goes back to it is <b>p_Verdict</b>. Power-on is <b>p_Init</b>; the start order is <b>p_StartOrder</b>.', dwell: 5.2 },
+      { label: 'Connect', text: 'Connect each port to its partner. <b>p_StartOrder</b> waits: who starts the mission depends on the architecture you will choose.', dwell: 5 }
     ]);
   };
 
@@ -1251,7 +1303,7 @@
      port comes wired to its interface, its signal and the transition that waits for it. */
   W.mcPortsMagic = function (root) {
     root.className = 'w lg-mc';
-    const s = svg('0 0 420 244', 'The block Mission Configuration is dragged from the Model Browser and dropped on the IBD, which makes the part. The part is right-clicked, then MBSE Shepherd, Create All Missing Signal Ports. Three ports appear: start_soi, flight_plan and start_sheep_guard. Each is typed by an interface whose flow property carries the signal, which fires a transition of the state machine. Ready for mission and FlightPlan Check Failed get no port: they are internal.');
+    const s = svg('0 0 420 244', 'The block Mission Configuration is dragged from the Model Browser and dropped on the IBD, which makes the part. The part is right-clicked, then MBSE Shepherd, Create All Missing Signal Ports. Five ports appear: start_soi, flight_plan, flightplan_correct, flightplan_incorrect and start_sheep_guard. Each is typed by an interface whose flow property carries the signal, which fires a transition of the state machine. Ready for mission and FlightPlan Check Failed get no port: they are internal.');
     root.appendChild(s);
     txt(s, 6, 13, 'IBD · TP Logical SOI', 'lg-tag');
     /* the drop */
@@ -1268,9 +1320,11 @@
     el('rect', { x: 150, y: 22, width: 262, height: 130, rx: 6, class: 's-box lg-box' }, partG);
     txt(partG, 281, 40, ': Mission Configuration', 's-name', 'middle');
     const ROWS = [
-      ['start_soi', 'Start SOI', 'Off → Unconfigured', 66],
-      ['flight_plan', 'FlightPlan Correct', 'Unconfigured → Configured', 96],
-      ['start_sheep_guard', 'Start Sheep Guard Mission', 'Ready for Mission → Deployed', 126]
+      ['start_soi', 'Start SOI', 'Off → Unconfigured', 58],
+      ['flight_plan', 'FlightPlan', 'Unconfigured → Configured', 78],
+      ['flightplan_correct', 'FlightPlan Correct', 'Unconfigured → Configured', 98],
+      ['flightplan_incorrect', 'FlightPlan Incorrect', 'Unconfigured → Configured', 118],
+      ['start_sheep_guard', 'Start Sheep Guard Mission', 'Ready for Mission → Deployed', 138]
     ];
     const rows = ROWS.map(([, sig, tr, y]) => {
       const g = el('g', { class: 'lg-mp-row' }, partG);
@@ -1290,8 +1344,8 @@
     });
     /* everything linked, on one port */
     const chain = el('g', { class: 'lg-fade', 'data-only': 5 }, s);
-    txt(chain, 6, 172, 'WHAT flight_plan COMES WITH', 'lg-tag');
-    const CH = [['port', 'flight_plan'], ['interface', 'IF_flight_plan'], ['flow property, in', 'FlightPlan Correct'], ['signal', 'FlightPlan Correct']];
+    txt(chain, 6, 172, 'WHAT flightplan_correct COMES WITH', 'lg-tag');
+    const CH = [['port', 'flightplan_correct'], ['interface', 'IF_flightplan_c…'], ['flow property, in', 'FlightPlan Correct'], ['signal', 'FlightPlan Correct']];
     CH.forEach(([k, v], i) => {
       const x = 6 + i * 104;
       el('rect', { x, y: 180, width: 92, height: 36, rx: 5, class: 'lg-ab-note' }, chain);
@@ -1300,7 +1354,7 @@
       if (i < 3) arrow(chain, [[x + 92, 198], [x + 104, 198]]);
     });
     txt(chain, 6, 234, '✓ Same for each port, and each one reaches the transition that waits for its signal.', 'lg-do');
-    const route = el('path', { d: 'M126,96 H156', class: 'lg-mp-route' }, s);
+    const route = el('path', { d: 'M126,98 H156', class: 'lg-mp-route' }, s);
     const tok = el('circle', { r: 5, class: 'lg-token' }, s);
     /* what is still missing */
     const miss = el('g', { class: 'lg-fade', 'data-only': 6 }, s);
@@ -1321,7 +1375,7 @@
       onTick(at, t) {
         const k = reduced() ? 1 : ease(Math.min(1, t / 2.4));
         chip.setAttribute('transform', `translate(${6 + 210 * k},${52 + 28 * k})`);
-        rows.forEach((r, i) => r.classList.toggle('lg-mp-on', at === 5 && i === 1));
+        rows.forEach((r, i) => r.classList.toggle('lg-mp-on', at === 5 && i === 2));
         const on = at === 5 && !reduced();
         tok.style.display = on ? '' : 'none';
         if (on) { const p = along(route, ease(Math.min(1, (t % 2.4) / 1.2))); tok.setAttribute('cx', p[0]); tok.setAttribute('cy', p[1]); }

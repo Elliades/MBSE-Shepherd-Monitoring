@@ -13,7 +13,7 @@ window.COURSE_CONFIG = {
   /* Author mode shows every placeholder with its to-do list, the "link not set"
      tags and the Authoring to-do board. Set to false before sharing with students
      (it can also be forced with ?author=1 or ?author=0 in the URL). */
-  authorMode: true,
+  authorMode: false,
 
   /* Progress, ticks and answers are kept in the browser under this key.
      It must differ from the keys of the other parts: the guides are served from the same site. */
@@ -209,7 +209,7 @@ window.COURSE_CONFIG = {
           { t: "dot", x: 170, y: 378, s: "sheep", g: 2 },
           { t: "arrow", pts: [[175, 378], [186, 378]], s: "sheep", g: 2 },
           { t: "state", x: 186, y: 360, w: 214, name: "Dispatching", do: "Dispatch observations", s: "sheep", g: 2 },
-          { t: "state", x: 176, y: 206, w: 224, name: "Predator tracking", do: "Relay tracking orders", s: "bear" },
+          { t: "state", x: 176, y: 206, w: 224, name: "Predator tracking", do: "Start And Relay Tracking", s: "bear" },
           { t: "arrow", pts: [[190, 148], [190, 206]], s: "bear", g: 2 },
           { t: "on", x: 196, y: 170, text: "Predator Tracking Request", s: "bear", g: 2 },
           { t: "eff", x: 196, y: 182, text: "/ Grant Tracking", s: "bear", g: 2 },
@@ -231,21 +231,21 @@ window.COURSE_CONFIG = {
             { label: "Its effect", text: "Effect: **Send To Safe Area**, ready in the model. It sends **Go To Safe Area** to the AutoPilot." }
           ],
           patrol: [
-            { label: "The state", text: "Inside Mission: **Patrolling**. Its do activity, **Supervise Patrol**, passes the watch path on to the AutoPilot." },
+            { label: "The state", text: "Inside Mission: **Patrolling**. Its do activity, **Supervise Patrol**, starts Zone Patrolling and passes the watch path on to the AutoPilot." },
             { label: "The transition", text: "From **Transit** to **Patrolling**. Trigger: **Arrived At Safe Area**, from the AutoPilot." },
-            { label: "Its effect", text: "Effect: **Start Patrol**. It sends **Start Patrolling** to Zone Patrolling." }
+            { label: "Its effect", text: "Effect: **Start Patrol**. It tells SheepMonitoring and Predator Management that the patrol is on." }
           ],
           sheep: [
             { label: "A second region", text: "Mission gets a **second region**: the dispatch runs at the same time as the mission, whatever its state." },
             { label: "The state", text: "One state, **Dispatching**, with its initial state. Its do activity, **Dispatch observations**, passes each observation on to who needs it." }
           ],
           bear: [
-            { label: "The state", text: "In the first region: **Predator tracking**. Its do activity, **Relay tracking orders**, passes the orders on to the AutoPilot." },
-            { label: "Go", text: "From **Patrolling**. Trigger: **Predator Tracking Request**. Effect: **Grant Tracking**: stop the patrol, pause the sheep watch, start tracking, alert the operator." },
+            { label: "The state", text: "In the first region: **Predator tracking**. Its do activity, **Start And Relay Tracking**, starts Tracking and passes its orders on to the AutoPilot." },
+            { label: "Go", text: "From **Patrolling**. Trigger: **Predator Tracking Request**. Effect: **Grant Tracking**: stop the patrol, pause the sheep watch, alert the operator." },
             { label: "Back", text: "To **Patrolling**. Trigger: **Predator Tracking Release**. Effect: **Resume Patrol**: the reverse." }
           ],
           deter: [
-            { label: "The state", text: "**Predator counteraction**, same do activity: the drone keeps following the bear." },
+            { label: "The state", text: "**Predator counteraction**. Its do activity, **Relay tracking orders**, keeps the drone following the bear." },
             { label: "Engage", text: "From **Predator tracking**. Trigger: **Predator Engage Request**. Effect: **Grant Engagement**: it orders the deterrence." },
             { label: "Disengage", text: "And back. Trigger: **Predator Disengage Request**. Effect: **Grant Disengagement**." }
           ]
@@ -307,6 +307,16 @@ window.COURSE_CONFIG = {
         },
         { id: "full", title: "The whole scenario", event: "Preparation, patrol, sheep, bear, back to patrol", steps: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], setup: [] }
       ]
+    },
+
+    /* What the states cannot show: per injected signal, the messages Validate in Cameo must also see go by. */
+    messages: {
+      "FlightPlan Incorrect": ["FlightPlan Check Failed"],
+      "FlightPlan Correct": ["Ready for mission"],
+      "Sheep Out Of Zone": ["Sheep Exit Alert"],
+      "Predator Detected inside tracking perimeter": ["Predator Alert"],
+      "Predator entering safe perimiter": ["Light burst", "Sound burst"],
+      "Predator leaving tracking perimiter": ["Predator Cleared"]
     },
 
     /* Scenario steps the overview animation leaves out: the refused plan is for Mission Configuration. */

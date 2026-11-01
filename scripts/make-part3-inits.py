@@ -48,6 +48,7 @@ def base(stem, src):
     spec = archs.read_json(src / f"{stem}.json")
     scen = archs.read_json(src / f"{stem}.scenario.json")
     archs.remove_crash(spec, scen)
+    archs.rename_homonyms(spec)
     archs.split_verdict_port(spec)
     archs.flight_plan_ports(spec)
     spec["name"] = PACKAGE
