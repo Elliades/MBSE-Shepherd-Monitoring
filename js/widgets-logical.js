@@ -281,7 +281,7 @@
     const g = geometry(key, o.only);
     const arch = g.arch;
     el('rect', { x: VB.x0, y: VB.y0, width: VB.x1 - VB.x0, height: VB.y1 - VB.y0, rx: 8, class: 's-frame lg-soi' }, s);
-    txt(s, VB.x0 + 10, VB.y1 - 8, arch.soi.name, 'lg-tag');
+    txt(s, VB.x0 + 10, VB.y1 - 8, o && 'built' in o ? 'TP Logical SOI' : arch.soi.name, 'lg-tag');
     const lines = el('g', {}, s);
     const conn = {};
     const norm = (e) => { e = e.replace(/^soi\./, ''); return e.indexOf('.') < 0 ? e : e.split('.')[0]; };
@@ -407,6 +407,23 @@
     }
     await pause(2000);
   }
+  /* Just started, the simulation is not listening yet: a first signal sent too early is lost, and then everything
+     is red. Wait until the power-on part and the driver that takes the first signal have a state. */
+  async function listening(B, where, alive) {
+    const pause = (ms) => new Promise((res) => setTimeout(res, ms));
+    const paths = [where('soi.mi'), where('operator')];
+    for (let waited = 0; waited < 20000 && alive(); waited += 500) {
+      let ok = true;
+      for (const addr of paths) {
+        let have = null;
+        try { have = (((await B.call('simtest', 'states', [{ paths: [addr] }])) || {}).states || {})[addr] || []; } catch (err) { have = null; }
+        if (!have || !have.length) ok = false;
+      }
+      if (ok) break;
+      await pause(500);
+    }
+    await pause(1500);
+  }
   /* The messages of a step (COURSE_CONFIG.archs.messages) that were seen since the last read; null when the plugin
      cannot say (it does not allow simtest/trace yet). */
   async function messagesSeen(B, since) {
@@ -518,7 +535,7 @@
         if (!ctx) { out.innerHTML = `<b class="lg-red-t">Your model has no block named “${esc(ctxName)}”.</b>`; return; }
         await B.call('simtest', 'start', [{ elementId: ctx.id }], 30000);
         started = true;
-        await pause(1000);
+        await listening(B, where, () => alive);
         for (const i of st.setup) {
           if (!alive) return;
           out.textContent = `Getting there: ${every[i].signal}…`;
@@ -678,7 +695,7 @@
       if (!ctx) throw new Error(`no block named “${ctxName}” in your model`);
       await B.call('simtest', 'start', [{ elementId: ctx.id }], 30000);
       liveRun = { setupDone: false };
-      await lpause(1000);
+      await listening(B, (p) => cameoPath(key, p, cameo()), () => !!liveRun);
     }
     async function liveSend(st, res, idx) {
       const B = window.Bridge;

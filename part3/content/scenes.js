@@ -132,9 +132,10 @@ window.COURSE = {
       lead: "The functional mission is done, and the power-on and the base station are ready. This first model is for Mission Configuration; after your choice, you will open the model of your architecture.",
       blocks: [
         { download: { label: "Starting model", file: "UAV_Part3_Init_MissionConfiguration.mdzip", src: "assets/models/UAV_Part3_Init_MissionConfiguration.mdzip", size: "1.2 MB" } },
+        { download: { label: "Its profile", file: "ISAE-Profile.mdzip", src: "assets/models/ISAE-Profile.mdzip", size: "160 KB" } },
         {
           steps: [
-            "Download the model above and open it ({{File > Open Project}}). Do not unzip the .mdzip.",
+            "Download both files **into the same folder**, then open the model ({{File > Open Project}}). Without the profile next to it, Cameo stops on a dialog. Do not unzip the .mdzip.",
             "Open [[la-pkg]], then **TP - Logical Architecture**: its technical blocks are already wired.",
             "Link this guide to Cameo with the **Cameo** button at the top: the chips show the elements in your model, and the **Validate in Cameo** buttons run the scenarios for you."
           ]
@@ -142,7 +143,7 @@ window.COURSE = {
         {
           callout: {
             tone: "goal", title: "Given, and to do",
-            text: "Given here: power-on, base station link, the simulation drivers. You build Mission Configuration. In chapter 6, the model of your architecture gives you Mission Configuration ready, the AutoPilot and the mission subsystems: you make the logic of your choice, and you connect."
+            text: "Given here: power-on, base station link, the simulation drivers. You build Mission Configuration. In chapter 6, the model of your architecture (in the same folder as the profile) gives you Mission Configuration ready, the AutoPilot and the mission subsystems: you make the logic of your choice, and you connect."
           }
         }
       ]
@@ -160,7 +161,7 @@ window.COURSE = {
             "**Abstract**: a subsystem says what it does, not how it is built. No brand, no part number.",
             "**One level only**: the drone and its subsystems.",
             "**Behaviour allocated**: each subsystem gets part of the state machine, and the functions those states run.",
-            "**Interfaces defined**: ports, and connectors whose item flows say what travels."
+            "**Interfaces defined**: ports, and the connectors that carry the signals."
           ]
         }
       ]
@@ -633,6 +634,7 @@ window.COURSE = {
             variants: {
               "1": { label: "You are building **architecture 1**, the feature orchestrator.", tab: "Arch. 1", blocks: [
                 { download: { label: "Your starting model", file: "UAV_Part3_Init_Arch1_FeatureOrchestrator.mdzip", src: "assets/models/UAV_Part3_Init_Arch1_FeatureOrchestrator.mdzip", size: "1.3 MB" } },
+                { p: "Download it next to `ISAE-Profile.mdzip`, then open it." },
                 { cards: [
                   { n: "✓", icon: "check", title: "Ready in the model", text: "**Mission Configuration**, connected. **Sheep Guard**, **Zone Surveillance**, **Predator Defense**: states, functions and ports. The **Mission Orchestrator**: its ports and functions, with an empty state machine." },
                   { n: "→", icon: "bulb", tone: "tip", title: "Yours", text: "The **states and transitions** of the orchestrator, and the **connectors**." }
@@ -640,6 +642,7 @@ window.COURSE = {
               ] },
               "2": { label: "You are building **architecture 2**, the patch.", tab: "Arch. 2", blocks: [
                 { download: { label: "Your starting model", file: "UAV_Part3_Init_Arch2_Patch.mdzip", src: "assets/models/UAV_Part3_Init_Arch2_Patch.mdzip", size: "1.3 MB" } },
+                { p: "Download it next to `ISAE-Profile.mdzip`, then open it." },
                 { cards: [
                   { n: "✓", icon: "check", title: "Ready in the model", text: "**Mission Configuration**, connected. **Zone Surveillance**, **SheepMonitoring**, **Predator Management**: states, functions and ports. They do not know about each other's conflicts yet." },
                   { n: "→", icon: "bulb", tone: "tip", title: "Yours", text: "The **connectors**, then **the patch**: you design it." }
@@ -647,6 +650,7 @@ window.COURSE = {
               ] },
               "3": { label: "You are building **architecture 3**, the central orchestrator.", tab: "Arch. 3", blocks: [
                 { download: { label: "Your starting model", file: "UAV_Part3_Init_Arch3_CentralOrchestrator.mdzip", src: "assets/models/UAV_Part3_Init_Arch3_CentralOrchestrator.mdzip", size: "1.3 MB" } },
+                { p: "Download it next to `ISAE-Profile.mdzip`, then open it." },
                 { cards: [
                   { n: "✓", icon: "check", title: "Ready in the model", text: "**Mission Configuration**, connected. **Zone Patrolling**, **SheepMonitoring**, **Predator Management**, **Tracking**: states, functions and ports. The **Mission Orchestrator**: its ports and functions, with an empty state machine." },
                   { n: "→", icon: "bulb", tone: "tip", title: "Yours", text: "The **states and transitions** of the orchestrator, and the **connectors**." }

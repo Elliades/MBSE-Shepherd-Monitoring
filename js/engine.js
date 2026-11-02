@@ -245,7 +245,7 @@
     const [key, label] = spec.split('|');
     const L = LINKS[key];
     if (!L) return `<mark>[[${esc(spec)}]]</mark>`;
-    const unset = !L.url && !L.id && !L.made ? '<span class="unset author-only">no link</span>' : '';
+    const unset = !L.url && !L.id && !L.made && !L.path ? '<span class="unset author-only">no link</span>' : '';
     return `<button type="button" class="mlink" data-link="${esc(key)}" title="Where is it in the model?">${ic(L.type)}<span>${esc(label || L.name)}</span>${unset}</button>`;
   }
 
