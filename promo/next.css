@@ -1,0 +1,115 @@
+/* The film of Parts 3 and 4 (next.js), on top of promo.css: captions, the windows of the guides, stamps,
+   the right-click of Cameo, the mission board, the fleets and the outro. */
+:root { --danger-soft: #3b1a18; --r-sm: 10px; --r: 14px; --surface-2: #1d2f26; }
+
+.nx-tracker { z-index: 30; }
+.nx-tracker span.on { border-color: var(--ph-lg); background: var(--ph-lg); }
+.nx-tracker span[data-p="sw"].on { border-color: var(--ph-fn); background: var(--ph-fn); }
+.nx-tracker span.done { border-color: var(--ph-lg); color: var(--ph-lg); background: rgba(14, 24, 20, 0.85); }
+
+/* the title */
+.nx-brand { left: 0; right: 0; top: 150px; text-align: center; z-index: 22; }
+.nx-brand b { display: block; font: 800 120px/1 var(--font-display); letter-spacing: -0.03em; }
+.nx-brand span { display: block; margin-top: 18px; font: 600 42px/1.2 var(--font-body); color: var(--ink-2); }
+.nx-brand em { font-style: normal; color: var(--route); }
+.nx-band { top: 470px; }
+
+/* captions, left of the windows */
+.nx-cap { z-index: 16; }
+.nx-k { margin: 0 0 18px; font: 700 24px/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--pc); }
+.nx-cap h2 { margin: 0; font: 800 68px/1.04 var(--font-display); letter-spacing: -0.02em; text-wrap: balance; }
+.nx-t { margin: 26px 0 0; font: 400 30px/1.42 var(--font-body); color: var(--ink-2); text-wrap: pretty; }
+.nx-t b { color: var(--ink); }
+.nx-list { list-style: none; margin: 34px 0 0; padding: 0; display: grid; gap: 14px; }
+.nx-list li {
+  display: grid; grid-template-columns: 34px 1fr; align-items: center; column-gap: 16px;
+  padding: 14px 20px; border-radius: 16px; border: 2px solid var(--line); background: rgba(14, 24, 20, 0.85);
+  color: var(--ink-3); transition: border-color 0.3s, color 0.3s, background 0.3s;
+}
+.nx-list li i { width: 26px; height: 26px; border-radius: 50%; border: 3px solid currentColor; box-sizing: border-box; }
+.nx-list li span { font: 700 30px/1.15 var(--font-display); }
+.nx-list li small { grid-column: 2; margin-top: 4px; font: 400 21px/1.3 var(--font-body); color: var(--ink-3); }
+.nx-list li.on { border-color: var(--pc); color: var(--ink); background: color-mix(in srgb, var(--pc) 16%, rgba(14, 24, 20, 0.9)); }
+.nx-list li.on i { background: var(--pc); border-color: var(--pc); box-shadow: 0 0 0 6px color-mix(in srgb, var(--pc) 30%, transparent); }
+.nx-list li.on small { color: var(--ink-2); }
+.nx-list li.done { color: var(--ink-2); border-color: color-mix(in srgb, var(--grass) 50%, var(--line)); }
+.nx-list li.done i { border-color: var(--grass); background: var(--grass); position: relative; }
+.nx-list li.done i::after { content: "✓"; position: absolute; inset: 0; display: grid; place-items: center; font: 800 16px/1 var(--font-body); color: #10140f; }
+
+/* the windows: the guide, cut down to one widget */
+.nx-win {
+  z-index: 12; border-radius: 18px; overflow: hidden; background: var(--bg);
+  border: 2px solid var(--line); box-shadow: 0 40px 90px -30px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+.nx-bar { height: 46px; display: flex; align-items: center; gap: 9px; padding: 0 18px; background: #132019; border-bottom: 1px solid var(--line); }
+.nx-bar i { width: 13px; height: 13px; border-radius: 50%; background: #2f4439; }
+.nx-bar i:nth-child(1) { background: #ff8f85; }
+.nx-bar i:nth-child(2) { background: #f2c12e; }
+.nx-bar i:nth-child(3) { background: #8ad48f; }
+.nx-bar span { margin-left: 10px; font: 700 19px/1 var(--font-mono); color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nx-clip { position: absolute; left: 0; right: 0; top: 46px; bottom: 0; overflow: hidden; }
+.nx-frame { position: absolute; left: 0; top: 0; border: 0; transform-origin: 0 0; background: transparent; pointer-events: none; }
+
+/* a stamp */
+.nx-stamp {
+  z-index: 40; display: flex; align-items: center; gap: 14px; white-space: nowrap;
+  padding: 16px 30px 16px 18px; border-radius: 18px; border: 5px solid #16a34a; background: #dcfce7; color: #14532d;
+  font: 800 46px/1 var(--font-display); box-shadow: 0 0 0 10px rgba(22, 163, 74, 0.22), 0 30px 60px -20px rgba(0, 0, 0, 0.85);
+}
+.nx-stamp b { width: 54px; height: 54px; border-radius: 50%; background: #16a34a; color: #fff; display: grid; place-items: center; font-size: 34px; }
+
+/* the right-click of Cameo */
+.nx-menu {
+  z-index: 40; width: 300px; padding: 6px 0; background: #f4f5f7; color: #1b2231; border: 1px solid #9aa3b2; border-radius: 6px;
+  box-shadow: 0 24px 50px -12px rgba(0, 0, 0, 0.8); font: 22px/1.2 "Segoe UI", system-ui, sans-serif; transform-origin: 0 0;
+}
+.nx-menu-i { position: relative; padding: 9px 22px; }
+.nx-menu-i.on { background: #dce7fe; }
+.nx-menu-i b { float: right; font-weight: 400; }
+.nx-sub {
+  position: absolute; left: 100%; top: -6px; width: 420px; padding: 6px 0; background: #f4f5f7; border: 1px solid #9aa3b2; border-radius: 6px;
+  box-shadow: 0 24px 50px -12px rgba(0, 0, 0, 0.8);
+}
+.nx-sub div { padding: 9px 22px; }
+.nx-sub .hot { background: #dce7fe; font-weight: 700; }
+.nx-menu.press .nx-sub .hot { background: #2563eb; color: #fff; }
+
+/* the mission board */
+.nx-board { z-index: 16; padding: 22px 24px; border-radius: 20px; background: var(--surface); border: 2px solid var(--line); box-shadow: 0 30px 70px -20px rgba(0, 0, 0, 0.85); display: grid; gap: 10px; }
+.nx-board-h { margin: 0 0 4px; font: 700 20px/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); }
+.nx-m { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-radius: 12px; background: var(--surface-2); border: 2px solid transparent; font: 700 27px/1 var(--font-display); }
+.nx-m b { font: 700 19px/1 var(--font-mono); padding: 8px 12px; border-radius: 8px; border: 1.5px solid var(--line); color: var(--ink-3); }
+.nx-m.run { border-color: #fbbf24; }
+.nx-m.run b { color: #fbbf24; border-color: #fbbf24; }
+.nx-m.run b::before { content: "● "; }
+.nx-m.ok { border-color: color-mix(in srgb, var(--grass) 55%, var(--line)); }
+.nx-m.ok b { color: #10140f; background: var(--grass); border-color: var(--grass); font-size: 0; padding: 8px 14px; }
+.nx-m.ok b::after { content: "✓ passes"; font-size: 19px; }
+.nx-m.ko { border-color: color-mix(in srgb, var(--danger) 60%, var(--line)); }
+.nx-m.ko b { color: #2a0b08; background: var(--danger); border-color: var(--danger); font-size: 0; padding: 8px 14px; }
+.nx-m.ko b::after { content: "✗ nobody answers"; font-size: 19px; }
+
+/* the fleets */
+.nx-fleet { z-index: 12; grid-template-rows: auto 1fr auto; box-sizing: border-box; }
+.nx-fleet .simcard-head { font-size: 22px; white-space: nowrap; overflow: hidden; }
+.nx-fleet .simcard-head small { flex: none; padding: 6px 10px; border-radius: 8px; background: var(--surface-2); color: var(--ph-fn); }
+.nx-fleet .sim-host { border-radius: 12px; overflow: hidden; }
+.nx-rule { margin: 0; min-height: 2.5em; padding: 10px 14px; border-radius: 10px; background: var(--surface-2); font: 600 21px/1.25 var(--font-body); color: var(--ink-2); }
+.nx-rule[data-tone="ok"] { color: #bbf7d0; background: rgba(22, 163, 74, 0.18); }
+.nx-rule[data-tone="alarm"] { color: #fecaca; background: rgba(220, 38, 38, 0.2); }
+
+/* the outro */
+.nx-out { left: 0; right: 0; top: 130px; z-index: 22; text-align: center; display: grid; justify-items: center; }
+.nx-out > b { font: 800 128px/1 var(--font-display); letter-spacing: -0.03em; }
+.nx-out > span { margin-top: 22px; font: 600 44px/1.2 var(--font-body); color: var(--ink-2); }
+.nx-out > span em { font-style: normal; color: var(--route); }
+.nx-route { list-style: none; margin: 90px 0 0; padding: 0; display: flex; gap: 26px; }
+.nx-route li {
+  display: flex; align-items: center; gap: 16px; padding: 18px 30px 18px 18px; border-radius: 999px;
+  border: 3px solid var(--line); color: var(--ink-3); font: 800 40px/1 var(--font-display); transition: all 0.4s var(--ease);
+}
+.nx-route li i { width: 54px; height: 54px; border-radius: 50%; display: grid; place-items: center; background: var(--line); color: var(--bg); font: 800 30px/1 var(--font-display); font-style: normal; transition: background 0.4s; }
+.nx-route li.on { border-color: var(--pc); color: var(--ink); transform: translateY(-6px); }
+.nx-route li.on i { background: var(--pc); }
+.nx-url { margin: 70px 0 0; font: 700 40px/1 var(--font-mono); color: var(--route); }
+.nx-credit { margin: 26px 0 0; font: 600 26px/1.5 var(--font-mono); color: var(--ink-3); }

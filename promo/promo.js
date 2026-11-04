@@ -1,5 +1,5 @@
 /* The promo film of MBSE Shepherd: a ~30 s animation made of the site's own pieces.
-   - the real guide, in a laptop and a phone (iframes of ../index.html, driven through their DOM);
+   - the real guide, in a laptop and a phone (iframes of ../part1/index.html, driven through their DOM);
    - the diagrams of the demo tool (tool/diagrams.js), lit and animated here;
    - the pasture of the simulation panel (js/sim-scene.js), driven by the state machine.
 
@@ -948,8 +948,8 @@
     }
     if (!code) console.warn('promo: the tool got no pairing code; the guides open unpaired');
     const qs = code ? `?code=${code}&relay=${encodeURIComponent(RELAY)}` : '';
-    lapFrame.src = `../index.html${qs}#welcome`;
-    phnFrame.src = `../index.html${qs}#a-lifelines`;
+    lapFrame.src = `../part1/index.html${qs}#welcome`;
+    phnFrame.src = `../part1/index.html${qs}#a-lifelines`;
     await Promise.all([loaded(lapFrame), loaded(phnFrame), document.fonts.ready]);
     liveOn = true;
   }

@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>MBSE Shepherd — Promo, Parts 3 and 4</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:ital,wght@0,400;0,600;0,700;1,400&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:wght@400;700&display=swap">
+  <link rel="stylesheet" href="../css/sim-fleet.css">
+  <link rel="stylesheet" href="promo.css">
+  <link rel="stylesheet" href="next.css">
+</head>
+<body>
+  <!-- The film of Parts 3 and 4: a 1920 x 1080 stage, scaled to the window. The guides play live in the windows. -->
+  <div class="viewport" id="viewport">
+    <div class="stage" id="stage">
+      <div class="screen" id="screen"></div>
+    </div>
+  </div>
+
+  <div class="hud" id="hud">
+    <button type="button" id="hud-play" aria-label="Play or pause">Play</button>
+    <span class="hud-time" id="hud-time">0.0 s</span>
+    <input type="range" id="hud-seek" min="0" max="1000" value="0" aria-label="Position in the film">
+    <button type="button" id="hud-rec" title="Record the stage to a video file (Chrome)">● Record</button>
+    <span class="hud-keys">Space play · ← → seek · Home restart · H hide · R record</span>
+    <span class="hud-err" id="hud-err" hidden></span>
+  </div>
+  <script>/* Any error is shown in the controls, so a frozen film says why. */
+    function report(err) {
+      var n = document.getElementById('hud-err');
+      n.hidden = false;
+      n.textContent = '⚠ ' + ((err && (err.message || err.reason || err)) || 'error');
+    }
+    window.addEventListener('error', function (e) { report(e.error || e.message); });
+    window.addEventListener('unhandledrejection', function (e) { report(e.reason); });
+  </script>
+
+  <!-- The fleet of Part 4 (its config gives the roles and the steps of the drones) -->
+  <script src="../part4/content/config.js"></script>
+  <script src="../js/sim-fleet-core.js"></script>
+  <script src="../js/sim-fleet-scene.js"></script>
+  <script src="next.js"></script>
+</body>
+</html>
