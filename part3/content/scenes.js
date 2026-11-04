@@ -19,6 +19,38 @@
    Source: the TP handoff of the OMF plugin docs (docs/pasture-sentinel/tp/) and the correction specs
    (drone-archs/). Figures: part3/assets/img/. Widgets: js/widgets-logical.js. Architectures:
    part3/content/archs.js and `archs` in part3/content/config.js. */
+/* Two gestures of every build scene, given once here and repeated as tips: students looked for them elsewhere. */
+const TIP_TRIGGER = {
+  tip: {
+    label: "How to: a trigger, an effect",
+    blocks: [
+      { list: [
+        "The **trigger** is the signal that fires the transition: the arrow is followed when this signal arrives.",
+        "The **effect** is the function run while the transition is followed, before the next state is entered: here, it sends the signals that tell the others."
+      ] },
+      { list: [
+        "**Trigger, by name**: select the transition on the diagram, press **F2**, type the start of the signal name, then **Ctrl+Space**: pick the signal in the list.",
+        "**Trigger, by drag and drop**: drag the signal from the Model Browser and drop it on the transition.",
+        "**Effect**: drag the function (an activity) from the Model Browser and drop it on the transition; the label becomes `Trigger / Effect`.",
+        "Check: double-click the transition; **Trigger** and **Effect** are filled in its specification."
+      ] }
+    ]
+  }
+};
+const TIP_PORTS = {
+  tip: {
+    label: "How to: show the ports of a part",
+    blocks: [
+      { list: [
+        "On the IBD, right-click the part → {{Display > Display Parts/Ports}}.",
+        "In the dialog, tick the ports you need, then **OK**: they appear on the border of the part.",
+        "Drag each port to the side of its partner: the connectors stay short and readable.",
+        "To draw a connector, pick **Connector** in the palette, click one port, then the other."
+      ] }
+    ]
+  }
+};
+
 window.COURSE = {
   /* The four levels of the method; Parts 1 and 2 show the three others. Colour of lg: css/logical.css. */
   phases: [
@@ -102,27 +134,76 @@ window.COURSE = {
     {
       id: "plugin", ch: "setup", kind: "do",
       title: "Install the latest MBSE Shepherd plugin",
-      lead: "This part uses the logical commands of the plugin. Install it again, even if you already have one.",
+      lead: "This part uses the logical commands of the plugin. Install version 1.2.0 again, even if you already have one.",
       blocks: [
-        { download: { label: "Plugin to install", file: "com.elliades.isae.mbseShepherd_1.1.1.zip", src: "../assets/plugins/com.elliades.isae.mbseShepherd_1.1.1.zip", size: "18 MB" } },
         {
-          steps: [
-            "In Cameo, choose {{Help > Resource & Plugin Manager}}, click {{Import}} and pick the file.",
-            "Restart Cameo.",
-            "Right-click a state in any state machine: the menu has {{MBSE Shepherd}}, with **Logical Transition**, **Signal Ports**, **Simulation Scenarios**…"
+          tabs: [
+            {
+              label: "Standard", sub: "Cameo's plugin manager",
+              blocks: [
+                { download: { label: "Plugin to install", file: "com.elliades.isae.mbseShepherd_1.2.0.zip", src: "../assets/plugins/com.elliades.isae.mbseShepherd_1.2.0.zip", size: "21 MB" } },
+                {
+                  steps: [
+                    "In Cameo, choose {{Help > Resource & Plugin Manager}}, then click {{Import}}.",
+                    "Select the plugin file you downloaded."
+                  ]
+                },
+                {
+                  callout: {
+                    tone: "warn", title: "Restart MagicDraw",
+                    text: "Close and restart Cameo (MagicDraw) once the plugin is imported. The plugin is only loaded at startup."
+                  }
+                }
+              ]
+            },
+            {
+              label: "No admin rights", sub: "a script, no installer",
+              blocks: [
+                { download: { label: "Plugin archive", file: "com.elliades.isae.mbseShepherd_1.2.0.zip", src: "../assets/plugins/com.elliades.isae.mbseShepherd_1.2.0.zip", size: "21 MB" } },
+                { download: { label: "Install script", file: "install-plugin.ps1", src: "../assets/plugins/install-plugin.ps1", size: "2 KB" } },
+                {
+                  steps: [
+                    "Save both files in the same folder, for example your Downloads folder.",
+                    "Close Cameo (MagicDraw) if it is open.",
+                    "Open the folder, right-click **install-plugin.ps1** and choose **Run with PowerShell**.",
+                    "Wait for the line **Plugin installed**, then press Enter to close the window."
+                  ]
+                },
+                {
+                  copy: { label: "If Windows refuses to run the script, run this in that folder", value: "powershell -ExecutionPolicy Bypass -File .\\install-plugin.ps1" }
+                },
+                {
+                  callout: {
+                    tone: "tip", title: "No administrator rights needed",
+                    text: "The script copies the plugin into your own user folder: %LOCALAPPDATA%\\.magic.systems.of.systems.architect\\2026x. Nothing is written to Program Files."
+                  }
+                },
+                {
+                  callout: {
+                    tone: "warn", title: "Restart MagicDraw",
+                    text: "Start Cameo (MagicDraw) after the script has finished. The plugin is only loaded at startup."
+                  }
+                }
+              ]
+            },
+            {
+              label: "No script", sub: "3 steps, by hand",
+              blocks: [
+                { download: { label: "Plugin archive", file: "com.elliades.isae.mbseShepherd_1.2.0.zip", src: "../assets/plugins/com.elliades.isae.mbseShepherd_1.2.0.zip", size: "21 MB" } },
+                {
+                  copy: { label: "Your Cameo folder (no 2026x folder? create it)", value: "%LOCALAPPDATA%\\.magic.systems.of.systems.architect\\2026x" }
+                },
+                {
+                  steps: [
+                    "Close Cameo. Open a Windows Explorer window, **paste the path above** in its address bar and press Enter.",
+                    "**Move the zip there**, then right-click it and choose **Extract here** (or **Extract All…** and give the same path).",
+                    "Check that **data**, **plugins** and **profiles** are there, then start Cameo."
+                  ]
+                },
+                { widget: "pluginExtract", opts: { path: "%LOCALAPPDATA%\\.magic.systems.of.systems.architect\\2026x" } }
+              ]
+            }
           ]
-        },
-        {
-          recall: {
-            label: "No admin rights, or stuck? See Part 1",
-            items: [{ id: "install-plugin", title: "Install the plugin" }]
-          }
-        },
-        {
-          placeholder: {
-            kind: "text", title: "Plugin version of Part 3",
-            todo: ["The plugin release with Logical Transition matching by «refine», the allocations, and simtest on the relay (Validate in Cameo): file name and size"]
-          }
         }
       ]
     },
@@ -140,11 +221,40 @@ window.COURSE = {
             "Link this guide to Cameo with the **Cameo** button at the top: the chips show the elements in your model, and the **Validate in Cameo** buttons run the scenarios for you."
           ]
         },
+        { pair: true },
         {
           callout: {
             tone: "goal", title: "Given, and to do",
             text: "Given here: power-on, base station link, the simulation drivers. You build Mission Configuration. In chapter 6, the model of your architecture (in the same folder as the profile) gives you Mission Configuration ready, the AutoPilot and the mission subsystems: you make the logic of your choice, and you connect."
           }
+        }
+      ]
+    },
+
+    {
+      id: "commands", ch: "setup", kind: "read",
+      title: "The commands we added",
+      lead: "The plugin adds {{MBSE Shepherd}} to the right-click menu. Three commands help at any time, so try them whenever you want. The others are explained when you need them.",
+      blocks: [
+        {
+          widget: "signalTable", opts: {
+            head: ["At any time", "Right-click", "What it does"],
+            rows: [
+              ["{{Show STM Overview in Parts}}", "An IBD, or a part on it", "Draws its state machine inside each part: you see who does what. {{Hide STM Overview in Parts}} removes it."],
+              ["{{Simulation Scenarios}}", "Anywhere in the model", "Opens the panel that plays a scenario step by step, and shows the states it goes through."],
+              ["{{Check Signal Flow}}", "An IBD, its block, or a part", "Checks that the signals reach someone, and lists what is wrong. It changes nothing in the model."]
+            ]
+          }
+        },
+        { h: "Explained later" },
+        {
+          list: [
+            "{{Logical Transition}}: chapter 3, in **By hand, or with Logical Transition**.",
+            "{{Create All Missing Signal Ports}}: chapter 3, in **Ports: the magic button**.",
+            "{{Delegate to external systems}}: chapter 3, in **The verdict is not on a port**.",
+            "{{Merge Ports}} and {{Show Port Type Only}}: chapter 3, in **Ports: merge what belongs together**.",
+            "{{Apply Layer Stereotypes}} and {{Logical Organizer}}: in the debrief, in **Tidy up**."
+          ]
         }
       ]
     },
@@ -262,7 +372,13 @@ window.COURSE = {
       title: "Same states, different behaviour",
       lead: "Copy the states, and the behaviour is not complete yet: in a subsystem, some messages come from, or go to, other subsystems. Follow the lit state.",
       blocks: [
-        { widget: "behaviourAB" }
+        { widget: "behaviourAB" },
+        {
+          callout: {
+            tone: "note", title: "Two layers, two colours",
+            text: "**A**, in blue, is the functional level: the function of the mission. **B**, in green, is the logical level: a function of the subsystem. Same name, **not the same function**: the logical `Load Flight Plan` belongs to Mission Configuration, and refines the functional one («refine»)."
+          }
+        }
       ]
     },
     {
@@ -296,6 +412,7 @@ window.COURSE = {
       lead: "By hand, you would redraw the states, copy the functions and link each copy. The plugin does the copying; the thinking stays yours.",
       blocks: [
         { widget: "mcTransition" },
+        { path: "tp-components" },
         {
           callout: {
             tone: "warn", title: "A simplified method, with home-made tools",
@@ -317,13 +434,7 @@ window.COURSE = {
             "In [[fa-mission]], select `Undeployed`, then {{MBSE Shepherd > Logical Transition}} and pick **Mission Configuration**."
           ]
         },
-        { figure: { src: "assets/img/mc-1-apres-logical-transition.png", w: 585, h: 430, size: "sm", alt: "State machine Mission Configuration after Logical Transition: Undeployed with Off, Unconfigured, Configured, Ready for Mission, and a transition Start Sheep Guard Mission to off-TO RENAME.", caption: "What you get: the copy, and off-TO RENAME where a transition left Undeployed." } },
-        {
-          placeholder: {
-            kind: "text", title: "Figures to export again",
-            todo: ["Screenshot: creating a logical component (a block with its stereotype). To place above the steps of this scene.", "From the corrected Undeployed and the model without part names: the state machine after Logical Transition (mc-1), after the rework and with its effects, the IBD with the grouped ports. They were removed or are out of date. The target figures of the architectures (IBDs, Mission Orchestrator, AutoPilot) must also be exported again without the crash."]
-          }
-        }
+        { figure: { src: "assets/img/mc-stm-correction.png", w: 621, h: 430, size: "sm", alt: "State machine Mission Configuration. Undeployed: initial state to Off; Off, on Start SOI, to Unconfigured; Unconfigured, on FlightPlan, FlightPlan Correct or FlightPlan Incorrect, to Configured, which runs Load Flight Plan; FlightPlan Check Failed back to Unconfigured; Ready for mission to Ready for Mission, which runs Start subsystems. Then Start Sheep Guard Mission to Deployed.", caption: "The correction. For now, Deployed is still off-TO RENAME in your model and the initial state is missing: the next scene finishes them." } }
       ]
     },
     {
@@ -675,6 +786,7 @@ window.COURSE = {
       lead: "Mission Configuration says go. The drone must hear it, and fly to the safe area.",
       blocks: [
         { widget: "scenarioGrow", opts: { stage: "start" } },
+        TIP_TRIGGER, TIP_PORTS,
         {
           byChoice: {
             q: "q-arch",
@@ -685,14 +797,14 @@ window.COURSE = {
                 { steps: [
                   "Open [[tp1-orch-stm|the state machine of Mission Orchestrator]]: it is empty.",
                   "Create the states <<Idle>> and <<Mission>>; inside Mission, <<Transit>>. Add the two initial states.",
-                  "Draw the transition from `Idle` to `Mission`. Double-click it: **Trigger** `Start Sheep Guard Mission_ext`, **Effect** `Send To Safe Area`."
+                  "Draw the transition from `Idle` to `Mission`. Double-click it: **Trigger** `Start Sheep Guard Mission_ext`. **Effect**: drag [[tp1-fn-send-to-safe-area|Send To Safe Area]] on the transition."
                 ] },
                 { h: "Connect" },
                 { widget: "stageIbd", opts: { arch: "1", stage: "start" } },
                 { steps: [
                   "Open [[tp1-ibd]]: Mission Configuration is on it, connected. Drag [[tp1-orch]] on it. Do not create a part by hand.",
                   "Show its ports: right-click the part → **Display > Display Parts/Ports**.",
-                  "Draw one connector per line under the drawing."
+                  "Draw only the connectors listed under the drawing: the other ports wait for later stages."
                 ] }
               ] },
               "2": { label: "Architecture 2", tab: "Arch. 2", blocks: [
@@ -710,14 +822,14 @@ window.COURSE = {
                 { steps: [
                   "Open [[tp3-orch-stm|the state machine of Mission Orchestrator]]: it is empty.",
                   "Create the states <<Idle>> and <<Mission>>; inside Mission, <<Transit>>. Add the two initial states.",
-                  "Draw the transition from `Idle` to `Mission`. Double-click it: **Trigger** `Start Sheep Guard Mission_ext`, **Effect** `Send To Safe Area`."
+                  "Draw the transition from `Idle` to `Mission`. Double-click it: **Trigger** `Start Sheep Guard Mission_ext`. **Effect**: drag [[tp3-fn-send-to-safe-area|Send To Safe Area]] on the transition."
                 ] },
                 { h: "Connect" },
                 { widget: "stageIbd", opts: { arch: "3", stage: "start" } },
                 { steps: [
                   "Open [[tp3-ibd]]: Mission Configuration is on it, connected.",
                   "Drag [[tp3-orch]] on the diagram. Show its ports: right-click the part → **Display > Display Parts/Ports**.",
-                  "Draw one connector per line under the drawing."
+                  "Draw only the connectors listed under the drawing: the other ports wait for later stages."
                 ] }
               ] }
             }
@@ -741,6 +853,7 @@ window.COURSE = {
       lead: "The drone has arrived: now it must follow its watch path. The subsystem that computes the path is ready: it only has to be started, and connected.",
       blocks: [
         { widget: "scenarioGrow", opts: { stage: "patrol" } },
+        TIP_TRIGGER, TIP_PORTS,
         {
           byChoice: {
             q: "q-arch",
@@ -750,13 +863,13 @@ window.COURSE = {
                 { widget: "deciderStm", opts: { arch: "1", stage: "patrol" } },
                 { steps: [
                   "In [[tp1-orch-stm|the state machine of Mission Orchestrator]], inside Mission, create <<Sheep Guard Active>>.",
-                  "Draw the transition from `Transit` to `Sheep Guard Active`: **Trigger** `Arrived At Safe Area`, **Effect** `Start Guard`."
+                  "Draw the transition from `Transit` to `Sheep Guard Active`: **Trigger** `Arrived At Safe Area`. **Effect**: drag [[tp1-fn-start-guard|Start Guard]] on the transition."
                 ] },
                 { h: "Connect" },
                 { widget: "stageIbd", opts: { arch: "1", stage: "patrol" } },
                 { steps: [
                   "In [[tp1-ibd]], drag [[tp1-sg]] on the diagram and show its ports. It is ready: states, functions, ports.",
-                  "Draw one connector per line under the drawing."
+                  "Draw only the connectors listed under the drawing: the other ports wait for later stages."
                 ] }
               ] },
               "2": { label: "Architecture 2", tab: "Arch. 2", blocks: [
@@ -764,21 +877,21 @@ window.COURSE = {
                 { widget: "stageIbd", opts: { arch: "2", stage: "patrol" } },
                 { steps: [
                   "In [[tp2-ibd]], drag [[tp2-zs]] on the diagram and show its ports. It is ready: states, functions, ports.",
-                  "Draw one connector per line under the drawing."
+                  "Draw only the connectors listed under the drawing: the other ports wait for later stages."
                 ] }
               ] },
               "3": { label: "Architecture 3", tab: "Arch. 3", blocks: [
                 { h: "The result to reach" },
                 { widget: "deciderStm", opts: { arch: "3", stage: "patrol" } },
                 { steps: [
-                  "In [[tp3-orch-stm|the state machine of Mission Orchestrator]], inside Mission, create <<Patrolling>>. Drag the activity `Supervise Patrol` on it → {{Do Activity}}.",
-                  "Draw the transition from `Transit` to `Patrolling`: **Trigger** `Arrived At Safe Area`, **Effect** `Start Patrol`."
+                  "In [[tp3-orch-stm|the state machine of Mission Orchestrator]], inside Mission, create <<Patrolling>>. Drag [[tp3-fn-supervise-patrol|Supervise Patrol]] on it → {{Do Activity}}.",
+                  "Draw the transition from `Transit` to `Patrolling`: **Trigger** `Arrived At Safe Area`. **Effect**: drag [[tp3-fn-start-patrol|Start Patrol]] on the transition."
                 ] },
                 { h: "Connect" },
                 { widget: "stageIbd", opts: { arch: "3", stage: "patrol" } },
                 { steps: [
                   "In [[tp3-ibd]], drag [[tp3-zp]] on the diagram and show its ports. It is ready: states, functions, ports.",
-                  "Draw one connector per line under the drawing."
+                  "Draw only the connectors listed under the drawing: the other ports wait for later stages."
                 ] }
               ] }
             }
@@ -802,6 +915,7 @@ window.COURSE = {
       lead: "The camera sees the flock, then a sheep outside the zone: the operator must be warned.",
       blocks: [
         { widget: "scenarioGrow", opts: { stage: "sheep" } },
+        TIP_PORTS, TIP_TRIGGER,
         {
           byChoice: {
             q: "q-arch",
@@ -812,7 +926,7 @@ window.COURSE = {
                 { widget: "stageIbd", opts: { arch: "1", stage: "sheep" } },
                 { steps: [
                   "In [[tp1-ibd]], drag [[tp1-zs]] on the diagram and show its ports.",
-                  "Draw one connector per line under the drawing."
+                  "Draw only the connectors listed under the drawing: the other ports wait for later stages."
                 ] }
               ] },
               "2": { label: "Architecture 2", tab: "Arch. 2", blocks: [
@@ -820,21 +934,21 @@ window.COURSE = {
                 { widget: "stageIbd", opts: { arch: "2", stage: "sheep" } },
                 { steps: [
                   "In [[tp2-ibd]], drag [[tp2-sm]] on the diagram and show its ports.",
-                  "Draw one connector per line under the drawing."
+                  "Draw only the connectors listed under the drawing: the other ports wait for later stages."
                 ] }
               ] },
               "3": { label: "Architecture 3", tab: "Arch. 3", blocks: [
                 { h: "The result to reach" },
                 { widget: "deciderStm", opts: { arch: "3", stage: "sheep" } },
                 { steps: [
-                  "In [[tp3-orch-stm|the state machine of Mission Orchestrator]], add a **second region** to `Mission`.",
-                  "In it, create <<Dispatching>> and its initial state. Drag the activity `Dispatch observations` on it → {{Do Activity}}."
+                  "In [[tp3-orch-stm|the state machine of Mission Orchestrator]], right-click `Mission` → {{Add New Region}}: it now has a **second region**.",
+                  "In it, create <<Dispatching>> and its initial state. Drag [[tp3-fn-dispatch-observations|Dispatch observations]] on it → {{Do Activity}}."
                 ] },
                 { h: "Connect" },
                 { widget: "stageIbd", opts: { arch: "3", stage: "sheep" } },
                 { steps: [
                   "In [[tp3-ibd]], drag [[tp3-sm]] on the diagram and show its ports.",
-                  "Draw one connector per line under the drawing."
+                  "Draw only the connectors listed under the drawing: the other ports wait for later stages."
                 ] }
               ] }
             }
@@ -858,6 +972,7 @@ window.COURSE = {
       lead: "A bear enters the tracking zone: the drone follows it and the sheep watch pauses. When it leaves, everything goes back as it was.",
       blocks: [
         { widget: "scenarioGrow", opts: { stage: "bear" } },
+        TIP_TRIGGER, TIP_PORTS,
         {
           byChoice: {
             q: "q-arch",
@@ -867,14 +982,14 @@ window.COURSE = {
                 { widget: "deciderStm", opts: { arch: "1", stage: "bear" } },
                 { steps: [
                   "In [[tp1-orch-stm|the state machine of Mission Orchestrator]], inside Mission, create <<Predator Defense Active>>.",
-                  "Draw the transition from `Sheep Guard Active` to it: **Trigger** `Takeover Request`, **Effect** `Hand Over To Predator Defense`.",
-                  "And the way back: **Trigger** `Feature Done`, **Effect** `Hand Back To Sheep Guard`."
+                  "Draw the transition from `Sheep Guard Active` to it: **Trigger** `Takeover Request`. **Effect**: drag [[tp1-fn-hand-over-to-predator-defense|Hand Over To Predator Defense]] on the transition.",
+                  "And the way back: **Trigger** `Feature Done`. **Effect**: drag [[tp1-fn-hand-back-to-sheep-guard|Hand Back To Sheep Guard]] on the transition."
                 ] },
                 { h: "Connect" },
                 { widget: "stageIbd", opts: { arch: "1", stage: "bear" } },
                 { steps: [
                   "In [[tp1-ibd]], drag [[tp1-pd]] on the diagram and show its ports. It already decides how to track the bear.",
-                  "Draw one connector per line under the drawing."
+                  "Draw only the connectors listed under the drawing: the other ports wait for later stages."
                 ] }
               ] },
               "2": { label: "Architecture 2", tab: "Arch. 2", blocks: [
@@ -882,7 +997,7 @@ window.COURSE = {
                 { widget: "stageIbd", opts: { arch: "2", stage: "raw" } },
                 { steps: [
                   "In [[tp2-ibd]], drag [[tp2-pm]] on the diagram and show its ports.",
-                  "Draw one connector per line under the drawing."
+                  "Draw only the connectors listed under the drawing: the other ports wait for later stages."
                 ] },
                 { h: "Play it: what goes wrong?" },
                 { p: "It works on its own, but nobody told the others. Press **Next step**, twice: each time, one check stays red. Find out why." },
@@ -912,15 +1027,15 @@ window.COURSE = {
                 { h: "The result to reach" },
                 { widget: "deciderStm", opts: { arch: "3", stage: "bear" } },
                 { steps: [
-                  "In [[tp3-orch-stm|the state machine of Mission Orchestrator]], in the first region of Mission, create <<Predator tracking>>. Drag the activity `Start And Relay Tracking` on it → {{Do Activity}}.",
-                  "Draw the transition from `Patrolling` to it: **Trigger** `Predator Tracking Request`, **Effect** `Grant Tracking`.",
-                  "And the way back: **Trigger** `Predator Tracking Release`, **Effect** `Resume Patrol`."
+                  "In [[tp3-orch-stm|the state machine of Mission Orchestrator]], in the first region of Mission, create <<Predator tracking>>. Drag [[tp3-fn-start-and-relay-tracking|Start And Relay Tracking]] on it → {{Do Activity}}.",
+                  "Draw the transition from `Patrolling` to it: **Trigger** `Predator Tracking Request`. **Effect**: drag [[tp3-fn-grant-tracking|Grant Tracking]] on the transition.",
+                  "And the way back: **Trigger** `Predator Tracking Release`. **Effect**: drag [[tp3-fn-resume-patrol|Resume Patrol]] on the transition."
                 ] },
                 { h: "Connect" },
                 { widget: "stageIbd", opts: { arch: "3", stage: "bear" } },
                 { steps: [
                   "In [[tp3-ibd]], drag [[tp3-pm]] and [[tp3-trk]] on the diagram and show their ports.",
-                  "Draw one connector per line under the drawing."
+                  "Draw only the connectors listed under the drawing: the other ports wait for later stages."
                 ] }
               ] }
             }
@@ -944,6 +1059,7 @@ window.COURSE = {
       lead: "The bear comes too close to the flock: the drone flashes its light and sounds its horn. When it backs off, back to tracking.",
       blocks: [
         { widget: "scenarioGrow", opts: { stage: "deter" } },
+        TIP_TRIGGER, TIP_PORTS,
         {
           byChoice: {
             q: "q-arch",
@@ -952,25 +1068,25 @@ window.COURSE = {
                 { p: "No state to add: Predator Defense decides this on its own, and the orchestrator does not move. That is the point of this architecture." },
                 { h: "Connect" },
                 { widget: "stageIbd", opts: { arch: "1", stage: "deter" } },
-                { steps: ["In [[tp1-ibd]], draw one connector per line under the drawing."] }
+                { steps: ["In [[tp1-ibd]], draw only the connectors listed under the drawing."] }
               ] },
               "2": { label: "Architecture 2", tab: "Arch. 2", blocks: [
                 { p: "No state to add: Predator Management decides this on its own, and your patch does not change." },
                 { h: "Connect" },
                 { widget: "stageIbd", opts: { arch: "2", stage: "deter" } },
-                { steps: ["In [[tp2-ibd]], draw one connector per line under the drawing."] }
+                { steps: ["In [[tp2-ibd]], draw only the connectors listed under the drawing."] }
               ] },
               "3": { label: "Architecture 3", tab: "Arch. 3", blocks: [
                 { h: "The result to reach" },
                 { widget: "deciderStm", opts: { arch: "3", stage: "deter" } },
                 { steps: [
-                  "In [[tp3-orch-stm|the state machine of Mission Orchestrator]], in the first region of Mission, create <<Predator counteraction>>. Drag the activity `Relay tracking orders` on it → {{Do Activity}}.",
-                  "Draw the transition from `Predator tracking` to it: **Trigger** `Predator Engage Request`, **Effect** `Grant Engagement`.",
-                  "And the way back: **Trigger** `Predator Disengage Request`, **Effect** `Grant Disengagement`."
+                  "In [[tp3-orch-stm|the state machine of Mission Orchestrator]], in the first region of Mission, create <<Predator counteraction>>. Drag [[tp3-fn-relay-tracking-orders|Relay tracking orders]] on it → {{Do Activity}}.",
+                  "Draw the transition from `Predator tracking` to it: **Trigger** `Predator Engage Request`. **Effect**: drag [[tp3-fn-grant-engagement|Grant Engagement]] on the transition.",
+                  "And the way back: **Trigger** `Predator Disengage Request`. **Effect**: drag [[tp3-fn-grant-disengagement|Grant Disengagement]] on the transition."
                 ] },
                 { h: "Connect" },
                 { widget: "stageIbd", opts: { arch: "3", stage: "deter" } },
-                { steps: ["In [[tp3-ibd]], draw one connector per line under the drawing."] }
+                { steps: ["In [[tp3-ibd]], draw only the connectors listed under the drawing."] }
               ] }
             }
           }

@@ -23,7 +23,7 @@ window.COURSE_CONFIG = {
   sharedBase: "../",
 
   /* Where the Part 1 guide is, seen from this page. "Forgot how?" boxes link to its scenes. */
-  recallBase: "../index.html",
+  recallBase: "../part1/index.html",
 
   /* Not a marked guide: the panels have their preview buttons. */
   simPreview: true,
@@ -69,6 +69,13 @@ window.COURSE_CONFIG = {
       trk: { label: "Tracking", color: "#9333ea" }
     },
     ports: { power: "L", op_link: "L", camera: "R", strong_light: "R", loud_sound: "R" },
+    /* The name in the starting models of a port of archs.js: PORTS of scripts/build-part3-models.mjs. */
+    portNames: {
+      mc: "p_MissionConfiguration", bsrc: "p_BaseStation", ap: "p_AutoPilot", orch: "p_Orchestrator", zs: "p_ZoneSurveillance", zp: "p_ZonePatrolling",
+      sm: "p_SheepMonitoring", pm: "p_PredatorManagement", sg: "p_SheepGuard", pd: "p_PredatorDefense", trk: "p_Tracking", init: "p_Init", verdict: "p_Verdict",
+      notification: "p_Verdict", operator: "p_Operator", power: "p_Power", link: "p_OperatorLink", op_link: "p_OperatorLink", camera: "p_Camera",
+      vision: "p_Vision", light: "p_Light", sound: "p_Sound", strong_light: "p_StrongLight", loud_sound: "p_LoudSound"
+    },
     axes: ["Rules in one place", "Cheap to change", "Room for new features", "Few messages", "No single point of failure", "Simple components"],
 
     "1": {
@@ -236,7 +243,7 @@ window.COURSE_CONFIG = {
             { label: "Its effect", text: "Effect: **Start Patrol**. It tells SheepMonitoring and Predator Management that the patrol is on." }
           ],
           sheep: [
-            { label: "A second region", text: "Mission gets a **second region**: the dispatch runs at the same time as the mission, whatever its state." },
+            { label: "A second region", text: "Right-click Mission, **Add New Region**: the dispatch runs at the same time as the mission, whatever its state." },
             { label: "The state", text: "One state, **Dispatching**, with its initial state. Its do activity, **Dispatch observations**, passes each observation on to who needs it." }
           ],
           bear: [
@@ -266,8 +273,8 @@ window.COURSE_CONFIG = {
          short, icon: its chip in scenarioGrow (none: no chip; growAs: the chip it counts as). */
     stages: {
       tech: ["mi", "mc", "bsrc", "ap"],
-      /* A connector that does not come with its part: the stage where it is drawn. */
-      connAt: { strong_light: "deter", loud_sound: "deter", "mc.ap": "start", "pm.sm": "bear" },
+      /* A connector that does not come with its part: the stage where it is drawn, per architecture if it differs. */
+      connAt: { strong_light: "deter", loud_sound: "deter", "mc.ap": "start", "pm.sm": "bear", "orch.bsrc": { "1": "bear", "3": "sheep" } },
       list: [
         { id: "prep", short: "Preparation", icon: "📋", title: "Preparation", event: "Power on, a wrong flight plan, a good one", steps: [0, 1, 2], setup: [] },
         {
@@ -307,6 +314,21 @@ window.COURSE_CONFIG = {
         },
         { id: "full", title: "The whole scenario", event: "Preparation, patrol, sheep, bear, back to patrol", steps: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], setup: [] }
       ]
+    },
+
+    /* What happens in the pasture moves the drone panel too, when the guide sends it to Cameo (Validate, Play in
+       Cameo too): injected signal -> step of the panel (js/sim-core.js). */
+    simFollow: {
+      "Start SOI": "Unconfigured",
+      "FlightPlan Correct": "Ready for Mission",
+      "FlightPlan Incorrect": "Unconfigured",
+      "Start Sheep Guard Mission": "Going to Safe Area",
+      "Sheep Signature": "Patrolling",
+      "Sheep Out Of Zone": "Patrolling",
+      "Predator Detected inside tracking perimeter": "Predator tracking",
+      "Predator entering safe perimiter": "Predator counteraction",
+      "Predator leaving safe perimiter": "Predator tracking",
+      "Predator leaving tracking perimiter": "Patrolling"
     },
 
     /* What the states cannot show: per injected signal, the messages Validate in Cameo must also see go by. */

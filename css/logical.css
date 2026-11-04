@@ -294,6 +294,16 @@
 @media (prefers-reduced-motion: reduce) { .lg-conn-line.fresh { animation: none; } }
 .lg-conn-list { margin: 0.6rem 0 0; padding: 0; list-style: none; display: grid; gap: 0.3rem; }
 .lg-conn-list li { padding: 0.35rem 0.7rem; border-radius: 8px; border-left: 4px solid var(--grass); background: var(--surface-2); }
+.lg-conn-hl { margin-top: 0.6rem; }
 .lg-conn-list small { display: block; margin-top: 0.15rem; line-height: 1.7; color: var(--ink-3); }
 .w svg text.lg-ms { font-family: var(--font-mono); font-size: 13px; font-weight: 700; fill: var(--danger); }
 .w svg text.lg-ms.ok { fill: var(--grass); }
+
+/* behaviourAB: the functional mission in the colour of the functional level, the subsystem in the logical one;
+   the same name, Load Flight Plan, is not the same function: the logical one refines the functional one. */
+.w svg text.lg-tag-fn { fill: var(--ph-fn); }
+.w svg text.lg-tag-lg { fill: var(--ph-lg); }
+.lg-ab-fr { stroke: var(--ph-fn); }
+.lg-mst-lg .lg-st-box { fill: color-mix(in srgb, var(--ph-lg) 10%, var(--surface)); stroke: var(--ph-lg); }
+.w svg .lg-mst-fn text.lg-do { fill: var(--ph-fn); font-weight: 700; }
+.w svg .lg-mst-lg text.lg-do { fill: var(--ph-lg); font-weight: 700; }

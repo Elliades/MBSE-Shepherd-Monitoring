@@ -28,6 +28,11 @@
     const L = life();
     const bar = document.createElement('div');
     bar.className = 'chips lg-chips';
+    /* An animation only explains: say it, so it is not taken for gestures to make (those are the steps). */
+    const watch = document.createElement('p');
+    watch.className = 'watch-tag';
+    watch.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.8"/></svg>' + esc(o.watch || 'Explanation: watch, nothing to do in Cameo yet');
+    root.prepend(watch);
     bar.innerHTML = stages.map((st, i) => `<button type="button" class="chip" aria-pressed="false" data-st="${i + 1}"><b class="lg-chip-n">${i + 1}</b>${esc(st.label)}</button>`).join('') +
       '<button type="button" class="chip lg-auto" aria-pressed="true" data-auto>▶ Auto</button>';
     const live = document.createElement('p');
@@ -389,6 +394,13 @@
     return o;
   };
   const wantOk = (want, have) => window.LogicalEngine.wantOk(want, have);
+  /* The drone panel follows the step Cameo publishes, found by state name; a logical model rarely has the names of
+     the functional mission (Patrolling, Predator tracking), so the bear never showed. What happens in the pasture
+     is known here: each event sent to Cameo moves the panel too (config simFollow: signal -> step of the panel). */
+  const pasture = (signal) => {
+    const to = (AC.simFollow || {})[signal];
+    try { if (to && window.Sim && window.Sim.pilot) window.Sim.pilot.jumpTo(to); } catch (err) { /* no panel on this page */ }
+  };
   /* A step played only to get somewhere: wait for its expected states, then a little more. A signal sent before the
      part that takes it is ready is lost for good, and how long that takes grows with the model. */
   async function reached(B, expect, where, alive) {
@@ -539,7 +551,7 @@
         for (const i of st.setup) {
           if (!alive) return;
           out.textContent = `Getting there: ${every[i].signal}…`;
-          await B.call('simtest', 'send', [every[i].signal, where(every[i].into)]);
+          await B.call('simtest', 'send', [every[i].signal, where(every[i].into)]); pasture(every[i].signal);
           await reached(B, stageExpect(key, st, i, every[i]), where, () => alive);
         }
         let since = 0;
@@ -549,7 +561,7 @@
           if (!alive) return;
           const step = every[i];
           out.textContent = `Sending ${step.signal}…`;
-          await B.call('simtest', 'send', [step.signal, where(step.into)]);
+          await B.call('simtest', 'send', [step.signal, where(step.into)]); pasture(step.signal);
           await pause(SETTLE);
           const expect = stageExpect(key, st, i, step);
           for (const path of Object.keys(expect)) {
@@ -706,12 +718,12 @@
         liveRun.setupDone = true;
         for (const i of (stage ? stage.setup : [])) {
           liveSay(`Cameo: getting there, ${esc(every[i].signal)}…`);
-          await B.call('simtest', 'send', [every[i].signal, where(every[i].into)]);
+          await B.call('simtest', 'send', [every[i].signal, where(every[i].into)]); pasture(every[i].signal);
           await reached(B, stageExpect(key, stage, i, every[i]), where, () => !!liveRun);
         }
       }
       liveSay(`Cameo: sending <b>${esc(st.signal)}</b>…`);
-      await B.call('simtest', 'send', [st.signal, where(st.into)]);
+      await B.call('simtest', 'send', [st.signal, where(st.into)]); pasture(st.signal);
       await lpause(2000);
       const seen = {};
       const paths = Object.keys(st.expect);
@@ -1025,14 +1037,14 @@
     root.className = 'w lg-mc lg-ab';
     const s = svg('0 0 440 300', 'Left, in the functional mission: the state Configured runs Load Flight Plan, which acquires and checks the plan, decides, and sends Ready for mission to itself, on no port; that signal fires its transition to Ready for Mission. Right, in the subsystem Mission Configuration: from Unconfigured, FlightPlan comes in from the base station, the state becomes Configured. Load Flight Plan still sends Ready for mission to itself, the state becomes Ready for Mission, and its effect tells the operator through the base station, on Ready for mission_ext. The operator then sends Start Sheep Guard Mission: the state becomes Deployed and its effect passes the order on to the orchestrator.');
     root.appendChild(s);
-    txt(s, 108, 14, 'A · IN THE MISSION', 'lg-tag', 'middle');
-    txt(s, 331, 14, 'B · IN THE SUBSYSTEM', 'lg-tag', 'middle');
+    txt(s, 108, 14, 'A · FUNCTIONAL MISSION', 'lg-tag lg-tag-fn', 'middle');
+    txt(s, 331, 14, 'B · LOGICAL SUBSYSTEM', 'lg-tag lg-tag-lg', 'middle');
 
     /* A: the functional mission, talking to itself */
     const a = el('g', { class: 'lg-ab-a' }, s);
-    el('rect', { x: 6, y: 22, width: 204, height: 272, rx: 8, class: 's-frame' }, a);
+    el('rect', { x: 6, y: 22, width: 204, height: 272, rx: 8, class: 's-frame lg-ab-fr' }, a);
     txt(a, 14, 36, 'SOI - Pasture Sentinel', 's-name');
-    const aConf = mstate(a, 20, 46, 176, 'Configured', 'Load Flight Plan');
+    const aConf = mstate(a, 20, 46, 176, 'Configured', 'Load Flight Plan', 'lg-mst-fn');
     const flow = el('g', {}, a);
     const node = (x, y, w, t, cls) => { el('rect', { x, y, width: w, height: 20, rx: 5, class: 'lg-act ' + (cls || '') }, flow); txt(flow, x + w / 2, y + 14, t, 'lg-act-t', 'middle'); };
     node(22, 94, 62, 'Acquire');
@@ -1044,7 +1056,7 @@
     txt(flow, 118, 148, 'send Ready for mission', 'lg-act-t', 'middle');
     arrow(flow, [[168, 114], [168, 124], [130, 124], [130, 134]]);
     txt(flow, 176, 166, 'to itself', 'lg-trig lg-red', 'end');
-    const aReady = mstate(a, 40, 222, 140, 'Ready for Mission', 'Start subsystems');
+    const aReady = mstate(a, 40, 222, 140, 'Ready for Mission', 'Start subsystems', 'lg-mst-fn');
     arrow(a, [[110, 170], [110, 222]]);
     txt(a, 116, 200, 'Ready for mission', 'lg-trig');
     const loop = el('path', { d: 'M74,144 C30,150 30,196 104,196', class: 'lg-ab-loop' }, a);
@@ -1052,12 +1064,12 @@
 
     /* B: the subsystem, between the base station and the decider */
     const b = el('g', { class: 'lg-fade', 'data-from': 2 }, s);
-    el('rect', { x: 228, y: 22, width: 206, height: 214, rx: 6, class: 's-box lg-box' }, b);
+    el('rect', { x: 228, y: 22, width: 206, height: 214, rx: 6, class: 's-box lg-box lg-ab-b' }, b);
     txt(b, 236, 36, 'Mission Configuration', 's-name');
-    const bUnc = mstate(b, 272, 40, 120, 'Unconfigured');
-    const bConf = mstate(b, 272, 76, 150, 'Configured', 'Load Flight Plan');
-    const bReady = mstate(b, 272, 146, 150, 'Ready for Mission', 'Start subsystems');
-    const bDep = mstate(b, 272, 208, 90, 'Deployed');
+    const bUnc = mstate(b, 272, 40, 120, 'Unconfigured', null, 'lg-mst-lg');
+    const bConf = mstate(b, 272, 76, 150, 'Configured', 'Load Flight Plan', 'lg-mst-lg');
+    const bReady = mstate(b, 272, 146, 150, 'Ready for Mission', 'Start subsystems', 'lg-mst-lg');
+    const bDep = mstate(b, 272, 208, 90, 'Deployed', null, 'lg-mst-lg');
     arrow(b, [[300, 64], [300, 76]]);
     txt(b, 306, 73, 'FlightPlan Correct', 'lg-trig');
     arrow(b, [[300, 112], [300, 146]]);
@@ -1079,10 +1091,6 @@
     const outside = (x, w, t1, t2) => { el('rect', { x, y: 262, width: w, height: 32, rx: 5, class: 's-box lg-box lg-ab-out' }, b); txt(b, x + w / 2, 275, t1, 's-name', 'middle'); txt(b, x + w / 2, 288, t2, 'lg-do', 'middle'); };
     outside(228, 104, 'Base station', 'and the operator');
     outside(348, 86, 'Orchestrator', 'the decider');
-    const t6 = el('g', { class: 'lg-fade', 'data-from': 6 }, s);
-    el('rect', { x: 14, y: 236, width: 190, height: 40, rx: 6, class: 'lg-ab-note' }, t6);
-    txt(t6, 22, 252, 'Ready for mission_ext…:', 'lg-eff');
-    txt(t6, 22, 266, 'signals of their own, to the outside', 'lg-do');
 
     /* the messages of each stage */
     const routes = {
@@ -1103,8 +1111,7 @@
       { label: 'Who gives the plan?', text: 'In the subsystem the plan is not there: **FlightPlan Correct comes in** from the operator, through the base station. The state goes from Unconfigured to **Configured**.', dwell: 3.6 },
       { label: 'Who fires the transition?', text: 'Load Flight Plan still decides, and **still tells itself**: this is internal, it stays as it is. The state becomes **Ready for Mission**.', dwell: 3.6 },
       { label: 'Who else wants to know?', text: 'The **operator** must know the plan is good. So the effect of that transition also sends a signal out, **Ready for mission_ext**, through the base station.', dwell: 3.6 },
-      { label: 'Who starts the mission?', text: 'A new message, not the same one: the operator now answers **Start Sheep Guard Mission**. The state becomes **Deployed**, and the effect of that transition passes the order on to the decider.', dwell: 4.4 },
-      { label: 'So: more behaviour', text: 'Same states, **more behaviour**: what only concerns the subsystem stays a self-send; what others need goes through a port, on a signal of its own, marked **_ext**.', dwell: 5 }
+      { label: 'Who starts the mission?', text: 'A new message, not the same one: the operator now answers **Start Sheep Guard Mission**. The state becomes **Deployed**, and the effect of that transition passes the order on to the decider.', dwell: 4.4 }
     ].map((x) => Object.assign(x, { text: x.text.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/`([^`]+)`/g, '<code>$1</code>') }));
     return stager(root, s, stages, {
       onTick(at, t) {
@@ -1114,9 +1121,9 @@
         nowIs(bUnc, at === 2 && !moved);
         nowIs(bConf, (at === 2 && moved) || (at === 3 && !moved));
         nowIs(bReady, (at === 3 && moved) || at === 4 || (at === 5 && !moved));
-        nowIs(bDep, (at === 5 && moved) || at === 6);
+        nowIs(bDep, at === 5 && moved);
         Object.keys(lines).forEach((k) => lines[k].forEach((p) => p.classList.toggle('on', +k === at)));
-        a.classList.toggle('lg-dim', at > 1 && at < 6);
+        a.classList.toggle('lg-dim', at > 1);
         const self = (at === 1 || at === 3) && t < PER && !reduced();
         selfTok.style.display = self ? '' : 'none';
         if (self) { const p = along(at === 1 ? loop : selfB, t / PER); selfTok.setAttribute('cx', p[0]); selfTok.setAttribute('cy', p[1]); }
@@ -1216,11 +1223,14 @@
      one partner, one way, then connect. */
   W.mcPorts = function (root) {
     root.className = 'w lg-mcp';
-    const s = svg('0 0 380 270', 'A part typed Mission Configuration has one port per signal: start_soi, flight_plan, flightplan_correct, flightplan_incorrect, start_sheep_guard in, and ready_mission_ext, flightplan_check_failed_ext, start_sheep_guard_mission_ext out. The signals of one exchange are merged on one port: p_Init with Manual Initialization, p_BaseStation for what comes from the base station link, p_Verdict for what goes to it, p_StartOrder for who starts the mission. Connectors join them to their partners.');
+    const s = svg('0 0 380 270', 'A part typed Mission Configuration has one port per signal: start_soi, flight_plan, flightplan_correct, flightplan_incorrect, start_sheep_guard in, and ready_mission_ext, flightplan_check_failed_ext, start_sheep_guard_mission_ext out. Once merged, Cameo shows the part with its state machine inside, and fewer ports: start_soi, flight_plan, ready_mission_ext. Then each port of an exchange is renamed: p_Init with Manual Initialization, p_BaseStation for what comes from the base station link, p_Verdict for what goes to it, p_StartOrder for who starts the mission. Connectors join them to their partners.');
     root.appendChild(s);
+    /* stage 2: what Cameo shows once merged */
+    el('image', { href: 'assets/img/mc-ibd-merged.png', x: 0, y: 30, width: 380, height: 210, class: 'lg-fade', 'data-only': 2 }, s);
+    const base = el('g', { class: 'lg-fade' }, s);
     /* partners */
     const partner = (x, y, w, name, type, cls) => {
-      const g = el('g', { class: cls || '' }, s);
+      const g = el('g', { class: cls || '' }, base);
       el('rect', { x, y, width: w, height: 40, rx: 5, class: 's-box lg-box' }, g);
       txt(g, x + w / 2, y + 17, name, 's-name', 'middle');
       txt(g, x + w / 2, y + 31, type, 'lg-do', 'middle');
@@ -1230,8 +1240,8 @@
     partner(6, 226, 96, 'Base station', 'and the operator');
     partner(300, 226, 76, 'Who starts', 'your choice, later', 'lg-ghosted');
     /* mc */
-    el('rect', { x: 140, y: 30, width: 160, height: 190, rx: 6, class: 's-box lg-box lg-mcp-mc' }, s);
-    txt(s, 220, 47, ': Mission Configuration', 's-name', 'middle');
+    el('rect', { x: 140, y: 30, width: 160, height: 190, rx: 6, class: 's-box lg-box lg-mcp-mc' }, base);
+    txt(base, 220, 47, ': Mission Configuration', 's-name', 'middle');
     /* stage 1: one port per signal */
     const one = el('g', { class: 'lg-fade', 'data-only': 1 }, s);
     const sig = [['start_soi', 'in', 'L', 62], ['flight_plan', 'in', 'L', 84], ['flightplan_correct', 'in', 'L', 106], ['flightplan_incorrect', 'in', 'L', 128], ['start_sheep_guard', 'in', 'L', 150], ['ready_mission_ext', 'out', 'L', 172], ['flightplan_check_failed_ext', 'out', 'L', 194], ['start_sheep_guard_mission_ext', 'out', 'R', 110]];
@@ -1241,8 +1251,8 @@
       txt(one, side === 'L' ? x - 9 : x - 9, y + 3, `${n} ${dir === 'in' ? '◂' : '▸'}`, 'lg-mcp-t', 'end');
     });
     txt(one, 220, 262, '8 ports: one per signal', 'lg-do', 'middle');
-    /* stage 2+: merged */
-    const grp = el('g', { class: 'lg-fade', 'data-from': 2 }, s);
+    /* stage 3+: merged */
+    const grp = el('g', { class: 'lg-fade', 'data-from': 3 }, s);
     const gp = (x, y, name, lines, side) => {
       const tx = x + (side === 'L' ? 11 : -11);
       const an = side === 'L' ? 'start' : 'end';
@@ -1254,17 +1264,18 @@
     gp(140, 106, 'p_BaseStation', ['◂ FlightPlan', '◂ FlightPlan Correct', '◂ FlightPlan Incorrect', '◂ Start Sheep Guard Mission'], 'L');
     gp(140, 172, 'p_Verdict', ['▸ Ready for mission_ext', '▸ FlightPlan Check Failed_ext'], 'L');
     gp(300, 72, 'p_StartOrder', ['▸ Start Sheep Guard', '    Mission_ext'], 'R');
-    /* stage 3: connected */
-    const con = el('g', { class: 'lg-fade', 'data-from': 3 }, s);
+    /* stage 4: connected */
+    const con = el('g', { class: 'lg-fade', 'data-from': 4 }, s);
     el('path', { d: 'M102,24 H118 V72 H134', class: 's-line lg-mcp-c' }, con);
     el('path', { d: 'M102,240 H112 V106 H134', class: 's-line lg-mcp-c' }, con);
     el('path', { d: 'M102,252 H124 V172 H134', class: 's-line lg-mcp-c' }, con);
     el('path', { d: 'M306,72 H338 V226', class: 's-line lg-ghosted' }, con);
     return stager(root, s, [
       { label: 'One port per signal', text: 'Where you stand: <b>Create All Missing Signal Ports</b> made one port per signal coming in, <b>Delegate to external systems</b> one per signal going out. A self-send has no port: it stays inside.' },
-      { label: 'Merge what belongs together', text: 'One port = one <b>exchange with one partner, one way</b>. Select the ports, <b>Merge Ports</b>, and rename: what comes from the base station is <b>p_BaseStation</b>, what goes back to it is <b>p_Verdict</b>. Power-on is <b>p_Init</b>; the start order is <b>p_StartOrder</b>.', dwell: 5.2 },
+      { label: 'Merge what belongs together', text: 'One port = one <b>exchange with one partner, one way</b>. Select the ports, <b>Merge Ports</b>: one port remains, with one of their names, and it carries all their signals. In Cameo, with <b>Show STM Overview in Parts</b>, it looks like this.', dwell: 5.2 },
+      { label: 'Rename', text: 'Give each port the name of its exchange: what comes from the base station is <b>p_BaseStation</b>, what goes back to it is <b>p_Verdict</b>. Power-on is <b>p_Init</b>; the start order is <b>p_StartOrder</b>.', dwell: 5 },
       { label: 'Connect', text: 'Connect each port to its partner. <b>p_StartOrder</b> waits: who starts the mission depends on the architecture you will choose.', dwell: 5 }
-    ]);
+    ], { onStage(k) { base.classList.toggle('on', k !== 2); } });
   };
 
   /* A mouse pointer, for the animations that show a gesture. */
@@ -1835,7 +1846,7 @@
     const rank = stageRank(stage.def.id);
     const inner = (e) => (e.indexOf('.') < 0 ? null : e.split('.')[0]);
     return ARCHS[key].soi.connectors.filter(([a, b]) => {
-      const later = [a, b].some((e) => { const at = (ST.connAt || {})[e]; return at && stageRank(at) > rank; });
+      const later = [a, b].some((e) => { const c = (ST.connAt || {})[e]; const at = c && c[key] ? c[key] : c; return typeof at === 'string' && stageRank(at) > rank; });
       if (later) return false;
       return [a, b].every((e) => !inner(e) || !stage.built || stage.built.indexOf(inner(e)) >= 0);
     });
@@ -1853,6 +1864,30 @@
       ((sp || {}).out || []).forEach((sig) => out.push(`${sig}${type === 'Mission Configuration' && to.split('.')[0] !== 'bsrc' ? '_ext' : ''}`));
     });
     return [...new Set(out)];
+  }
+  /* The id of the port at the end of a connector, in the starting model of the architecture (content/model-ids.js). */
+  function portId(key, e) {
+    const IDS = (window.MODEL_IDS || {})[key] || {};
+    const N = AC.portNames || {};
+    if (e.indexOf('.') < 0) return IDS[`Contexts/TP Logical SOI/${N[e]}`];
+    const [p, port] = e.split('.');
+    const type = (ARCHS[key].soi.parts.find((x) => x.name === p) || {}).type;
+    const name = type === 'Mission Configuration' && (port === 'ap' || port === 'orch') ? 'p_StartOrder' : N[port];
+    return IDS[`Components/${type}/${name}`];
+  }
+  /* Colours the ports of these connectors in yellow on the IBD of the student. */
+  function highlightPorts(key, connectors, api) {
+    const B = window.Bridge;
+    if (!(B && B.state().status === 'connected')) { api.toast('Link this guide to Cameo first: the Cameo button at the top.', 5000, 'bad'); return; }
+    const diagram = ((window.MODEL_IDS || {})[key] || {})['Contexts/TP Logical SOI/TP Logical SOI'];
+    const ports = [...new Set(connectors.flat().map((e) => portId(key, e)).filter(Boolean))];
+    B.call('color', 'setElementFillColor', [{ elementId: diagram }, ports.map((id) => ({ elementId: id })), '#ffe600']).then(
+      (r) => {
+        const missing = ((r || {}).missing || []).length;
+        api.toast(missing ? `Ports in yellow. ${missing} not drawn yet: show the ports of the part, then try again.` : 'Ports in yellow. Ctrl+Z in Cameo removes it.', 5000);
+      },
+      (err) => api.toast(err && err.message === 'unknown-method' ? 'Your plugin is too old for this button: install the latest one.' : `Cameo could not do it. Is the starting model of architecture ${key} open?`, 7000, 'bad')
+    );
   }
   const endLabel = (e) => (e.indexOf('.') < 0 ? `the ${e.replace('_', ' ')} port of the drone` : lab(e.split('.')[0]));
 
@@ -1886,6 +1921,14 @@
       return `<li><b>${esc(endLabel(a))}</b> <span aria-hidden="true">↔</span> <b>${esc(endLabel(b))}</b>${sig.length ? `<small>${sig.map((x) => `<code>${esc(x)}</code>`).join(' · ')}</small>` : ''}</li>`;
     }).join('') || '<li>Nothing to connect at this stage.</li>';
     root.appendChild(ul);
+    if (fresh.length) {
+      const hl = document.createElement('button');
+      hl.type = 'button';
+      hl.className = 'btn small lg-conn-hl';
+      hl.textContent = 'Highlight these ports in Cameo';
+      hl.addEventListener('click', () => highlightPorts(k, fresh, api));
+      root.appendChild(hl);
+    }
   };
   /* The keys, in drawIbd, of the connectors not there yet at this stage. */
   function connectorsOff(key, stage) {
@@ -2064,13 +2107,13 @@
     ];
     const EVENTS = ['Sheep leaves the zone', 'Sheep back', 'Predator detected', 'Predator in safe zone', 'Predator gone'];
     root.className = 'w lg-par';
-    root.innerHTML = `<div class="chips" data-mode><button type="button" class="chip" aria-pressed="true" data-v="par">Parallel regions</button><button type="button" class="chip" aria-pressed="false" data-v="seq">One region</button></div>
+    root.innerHTML = `<div class="chips" data-mode><button type="button" class="chip" aria-pressed="true" data-v="seq">One region</button><button type="button" class="chip" aria-pressed="false" data-v="par">Parallel regions</button></div>
       <div class="lg-par-art"></div>
       <div><span class="mono-label">Send an event</span><div class="chips lg-par-ev">${EVENTS.map((e) => `<button type="button" class="chip" data-ev="${esc(e)}">${esc(e)}</button>`).join('')}</div></div>
       <p class="w-live" aria-live="polite"></p>`;
     const art = root.querySelector('.lg-par-art');
     const live = root.querySelector('.w-live');
-    let mode = 'par';
+    let mode = 'seq';
     let cur = REG.map(() => 0);
     let seq = 'Patrolling';
     const SEQ = { Patrolling: { 'Sheep leaves the zone': 'Tracking stray sheep', 'Predator detected': 'Predator tracking' }, 'Tracking stray sheep': { 'Sheep back': 'Patrolling' }, 'Predator tracking': { 'Predator in safe zone': 'Predator counteraction', 'Predator gone': 'Patrolling' }, 'Predator counteraction': { 'Predator gone': 'Patrolling' } };
@@ -2121,11 +2164,11 @@
       mode = c.dataset.v;
       root.querySelectorAll('[data-mode] .chip').forEach((x) => x.setAttribute('aria-pressed', String(x === c)));
       cur = REG.map(() => 0); seq = 'Patrolling';
-      live.innerHTML = mode === 'par' ? 'Three regions, three active states at the same time. Send events.' : 'One region: one active state for the whole mission. Send events.';
+      live.innerHTML = mode === 'par' ? 'Three regions, three active states at the same time. Send events.' : 'One region: one active state for the whole mission. Send a sheep, then a bear, then try <b>Parallel regions</b>.';
       draw();
     }));
     root.querySelectorAll('[data-ev]').forEach((c) => c.addEventListener('click', () => send(c.dataset.ev)));
-    live.innerHTML = 'Three regions, three active states at the same time. Send events.';
+    live.innerHTML = 'One region: one active state for the whole mission. Send a sheep, then a bear, then try <b>Parallel regions</b>.';
     draw();
   };
 
