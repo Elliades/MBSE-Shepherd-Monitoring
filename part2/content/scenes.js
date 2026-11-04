@@ -76,7 +76,7 @@ window.COURSE = {
       title: "Keep Part 1 at hand",
       lead: "You will need Part 1 to remember certain manipulations: use cases, sequence diagrams, and so on.",
       blocks: [
-        { p: "Keep the [Part 1 guide](../index.html) open in another tab, or your Part 1 handout." },
+        { p: "Keep the [Part 1 guide](../part1/index.html) open in another tab, or your Part 1 handout." },
         {
           callout: {
             tone: "note", title: "Package numbers may change",
@@ -670,7 +670,7 @@ window.COURSE = {
         { call: "Done? Raise your hand and show this question to a teacher." },
         { h: "Optional: watch the drone" },
         { p: "If the OMF-ISAE plugin of Part 1 is installed in your Cameo, pair this guide with Cameo: the drone of the **Simulation** panel, at the top of the page, follows the states of your simulation." },
-        { widget: "linkStatus" },
+        { pair: "How to pair this guide with Cameo" },
         { widget: "simHint" }
       ]
     },

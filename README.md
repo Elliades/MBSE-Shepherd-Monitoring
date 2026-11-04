@@ -1,10 +1,15 @@
 # MBSE Shepherd
 
-Interactive guide for **BE Cameo · Part 1 · Discover** (DSAT301 Systèmes Embarqués).
-It replaces the Word handout with 50 short scenes, one idea per scene, that students follow
-on a laptop next to Cameo or on their phone.
+Interactive guides for **BE Cameo** (DSAT301 Systèmes Embarqués). They replace the Word handouts with short
+scenes, one idea per scene, that students follow on a laptop next to Cameo or on their phone.
 
 No build step and no dependency: plain HTML, CSS and JavaScript.
+
+**The home page** of the site, `index.html` with `home/`, presents the lab: the film, how the guide and Cameo talk
+to each other, the mission, the method, the real simulation panel to try, and the links to the parts. See [The home page](#the-home-page) below.
+
+**Part 1**, the guided exercise (BE Cameo · Part 1 · Discover), is in `part1/`, served at `/part1/` (online:
+`https://shepherd.chaos-art.fr/part1/`). The tables below describe it; the other parts share its `js/`, `css/` and `assets/`.
 
 **Part 2**, the marked seminar (BE Cameo · Part 2 · Marked), is a second guide in `part2/`, served at
 `/part2/` (online: `https://shepherd.chaos-art.fr/part2/`). See [Part 2](#part-2-the-marked-seminar) below.
@@ -17,7 +22,7 @@ No build step and no dependency: plain HTML, CSS and JavaScript.
 
 ## Run it
 
-- **Quick look:** double-click `index.html`.
+- **Quick look:** double-click `part1/index.html`.
 - **Like students will see it:** serve the folder and open the address on any device of the same network.
 
 ```bash
@@ -32,9 +37,10 @@ Fonts come from Google Fonts. Without Internet the guide falls back to system fo
 
 | File | What it holds |
 | --- | --- |
-| `content/scenes.js` | Every chapter and scene, the FAQ, and the notes for the author. **This is the file to edit.** |
-| `content/model-links.js` | Every place of the Cameo model the guide points to, defined once. |
-| `content/config.js` | Course title, authors, author mode, inline toolbar icons. |
+| `index.html`, `home/` | The home page of the site (see below). |
+| `part1/content/scenes.js` | Every chapter and scene, the FAQ, and the notes for the author. **This is the file to edit.** Paths to the shared assets start with `../assets/`. |
+| `part1/content/model-links.js` | Every place of the Cameo model the guide points to, defined once. |
+| `part1/content/config.js` | Course title, authors, author mode, inline toolbar icons. |
 | `assets/img/` | Screenshots taken from the Word handout. |
 | `assets/models/` | Cameo model files students download from the guide (`{download: …}` block). |
 | `js/engine.js` | Navigation, progress, answers, overlays. |
@@ -46,6 +52,28 @@ Fonts come from Google Fonts. Without Internet the guide falls back to system fo
 | `css/sim.css` | The simulation panel and its pasture. |
 | `assets/sim/` | The drone, sheep, bear and base of the pasture. |
 | `promo/` | A promo film of the site (~70 s), played in the browser (see below). Online at `/promo/`, with the demo tool it drives at `/tool/`. |
+
+### The home page
+
+`https://shepherd.chaos-art.fr/`, or `http://localhost:5178/`. No Cameo and no relay: it only tells the story.
+
+| File | What it holds |
+| --- | --- |
+| `index.html` | The texts and the diagrams of the four layers (inline SVG, animated with SMIL). Its first script sends the old links of Part 1 (`?code=`, `?teacher=`, `#c-state`, anything but its own anchors) on to `part1/`. |
+| `home/home.js` | The pasture of the hero (sheep, drone, bear, all in JavaScript), the film, the diagram that follows the text, the real simulation panel (`js/sim-core.js`, `js/sim-scene.js`) and the chart of the scenes. `PARTS` at the top holds the counts of that chart: count again when scenes are added. |
+| `home/home.css` | The landscape, day and night, on top of the tokens of `css/app.css`. |
+| `home/lamb.svg` | The sheep of the film (`LAMB` in `promo/promo.js`). The guides keep `assets/sim/sheep.svg`. |
+| `assets/video/promo-en.mp4`, `assets/img/promo-poster.jpg` | The film as a file: the recording of `/promo/`, in 1080p at 30 images per second. |
+| `promo/next.html`, `promo/next.js`, `promo/next.css` | The second film, Parts 3 and 4 (~2 min 20), at `/promo/next.html` (see below). Its file: `assets/video/promo-parts34-en.mp4`, poster `assets/img/promo-parts34-poster.jpg`. |
+
+To change the film, record `/promo/` (see below), then:
+
+```bash
+ffmpeg -y -i <recording> -an -vf "scale=1920:-2,fps=30" -c:v libx264 -preset slow -crf 26 -pix_fmt yuv420p -movflags +faststart assets/video/promo-en.mp4
+```
+
+The panel to try stops at *Predator tracking*, and the home page names no predator transition or signal after it: they are
+marked questions of Part 2.
 
 ### The promo film (`promo/`)
 
@@ -60,6 +88,27 @@ signals and the activity diagrams are marked questions of Part 2, so the film ne
 To make a video file: full screen (F11) on a 1080p screen, then **● Record** (Chrome, saves a `.webm`), or any
 screen recorder (Win+Alt+R, OBS). The pace of each part is `K` at the top of `promo/promo.js`; the live part is
 the `LIVE` list (one click per line, at its time).
+
+### The second film, Parts 3 and 4 (`promo/next.html`)
+
+`/promo/next.html` plays the sequel: the logical architecture (approach, several versions and one choice, the commands
+Logical Transition, Create All Missing Signal Ports and Delegate to external systems, the build one event at a time with
+its validation, the whole mission), then the swarm (one level up, the dilemma, who decides, the box of Lego, the missions,
+three architectures side by side). Each window is the real guide (`../part3/#scene` or `../part4/#scene` in an iframe),
+cut down to one widget by a style the film injects, and driven by clicks at the times of the film (`cues` in
+`promo/next.js`); the pastures of the end are `js/sim-fleet-scene.js` mounted in the page. The times of the parts are
+`T` at the top of `promo/next.js`. The guides open unpaired and untracked, and the film puts the `mbse-shepherd:` keys of
+the browser back as they were when it is closed. The bear's windows hide the messages and the injected signals: Part 2
+is marked. Same controls and **● Record** as the first film; it needs no relay.
+
+To make the file without a screen recorder, `node scripts/record-promo-next.mjs "http://localhost:5180/promo/next.html?hud=0&autoplay=0" <empty folder> rec`
+plays it in a headless Chrome and keeps the frames of its screencast (1920 × 1080), then, in that folder:
+
+```bash
+ffmpeg -y -f concat -safe 0 -i frames.txt -vf "fps=30,scale=1920:1080,format=yuv420p" -c:v libx264 -preset slow -crf 24 -movflags +faststart assets/video/promo-parts34-en.mp4
+```
+
+`frames.txt` lists each frame with its duration (the time between two frames of the screencast).
 
 ## Simulation panel
 
@@ -128,7 +177,7 @@ last change and the newest wins (`js/engine.js`, "shared with the other pages").
 It goes through the relay as a frame `{"peer":{...}}`, handed as `{"type":"info","event":"peer","data":{...}}`
 to the other browsers of the room and to the plugin (which ignores it), at most 16 KB. A `{"peer"}` sent
 by the plugin goes to every browser. Both relays do it: the Node one (`relay/src/relay.js`, `sharePeer`)
-and the one inside Cameo (`LocalRelay.kt` of the plugin, in the version after 1.1.1). In Local mode the browser bridge page
+and the one inside Cameo (`LocalRelay.kt` of the plugin, in the version after 1.1.1, so 1.2.0). In Local mode the browser bridge page
 (`bridge/bridge.js`) carries these frames between the relay inside Cameo and the online code of the phone.
 
 ### School networks (WebSocket blocked)
@@ -211,7 +260,7 @@ A scene is an object in `content/scenes.js`:
 ```
 
 `kind` is `read`, `do`, `answer` or `try`. The id is also the address of the scene:
-`index.html#c-state` opens it directly, which is handy to send a whole class to the same place.
+`part1/#c-state` opens it directly, which is handy to send a whole class to the same place.
 
 Marks you can use inside any text:
 
@@ -245,7 +294,7 @@ To replace a placeholder, swap its block for the real thing:
 
 ### Model links
 
-Each entry of `content/model-links.js` has an empty `url`. As soon as it is filled, the chip and
+Each entry of `part1/content/model-links.js` has an empty `url`. As soon as it is filled, the chip and
 the path card get an **Open in Cameo** button and a **Copy link** button. Paths are written once
 there, so fixing a path fixes it in every scene.
 
@@ -292,7 +341,7 @@ and only has its own content and images:
 
 | File | What it holds |
 | --- | --- |
-| `part2/index.html` | The page. Same as `index.html`, with `../` in front of `css/` and `js/`. |
+| `part2/index.html` | The page. Same as `part1/index.html`. |
 | `part2/content/scenes.js` | The tasks and questions of the marked seminar, the FAQ, the author notes. |
 | `part2/content/model-links.js` | The places of the model it points to. |
 | `part2/content/config.js` | Its own title, `storageKey`, and the settings below. |
@@ -313,7 +362,7 @@ solution block. Keep it that way when editing it. What it adds:
   signals.
 - `sharedBase: "../"` tells the simulation panel where the shared `assets/` folder is.
 
-Open it locally at `http://localhost:5178/part2/` (same server as Part 1). Both guides keep their progress
+Open it locally at `http://localhost:5178/part2/` (same server as the other parts). Both guides keep their progress
 under different `storageKey`s; the Cameo pairing code and the relay address are shared.
 
 ## Part 3: the logical architecture
@@ -363,8 +412,43 @@ node scripts/build-part3-models.mjs <base .mdzip>   # MagicDraw running with the
 
 ## Part 4: the swarm
 
-`part4/` is a fourth guide, same layout as `part2/` (served at `/part4/`; `part4/lab/`, a drone-assembly
-proof of concept, is not published by the Dockerfile).
+`part4/` is a fourth guide, same layout as `part2/` (served at `/part4/`; of `part4/lab/`, a drone-assembly
+proof of concept, the Dockerfile only publishes the 3D drone: `catalog.js`, `drone3d.js`, `drone3d.css`).
+
+The first chapters state the problem and turn the mission of the first parts into parallel regions: in `SOI - Pasture Sentinel`,
+a stray sheep leaves `Patrolling` as `Predator Detected` does, so that the two exclude each other, and that is what the students
+solve. The bear gives its position by a signal (`Bear Position` and its specializations): the mission decides on the type of the
+signal, as Load Flight Plan does on `FlightPlan`, so the simulation asks nothing in a pop-up. The exercise is a box of Lego: a
+**brick** per concern of the mission (Zone Surveillance, Flock Watching, Sheep Tracking, Predator Management), where the drone
+waits (Base Standby) and the intelligence (Swarm Master, once, in the base station or in a drone; or Swarm Reflex, one per drone).
+Students drag them from the `Library` onto the IBD of a drone, connect by hand or with {{MBSE Shepherd > Auto Connect}}, watch
+the drones build themselves in the guide, play the missions, unplug and try again. A bonus scene runs the same rules for four
+hours with batteries, chargers and the way to the field, computed in the page, and compares the trade-offs.
+
+The mission and the operational context are the author's, by hand, in two base models that the generator copies:
+`instructor-only/UAV_Part4_Base.mdzip` and `UAV_Part4_Base_Solved.mdzip` (regions done). Not in the repository. Only `TP - Swarm`
+is generated.
+
+```bash
+python -I scripts/make-part4-model.py                               # specs: scripts/part4-model/*.json
+node scripts/build-part4-model.mjs [--solved]                       # MagicDraw running with the OMF plugin
+node scripts/build-part4-model.mjs --keep-open                      # then, to check it:
+node scripts/check-part4-solutions.mjs [solutions] [--missions=sheep,both]
+```
+
+| Where | What |
+| --- | --- |
+| `part4/content/lego.js` | the bricks, what they bring to the 3D drone, the prices, the missions and their checks |
+| `js/lego-run.js` | plays a mission on what is assembled; the guide and `check-part4-solutions.mjs` run the same code |
+| `js/widgets-lego.js`, `css/lego.css` | `legoBay` (follows the assembly in Cameo), `missionBoard`, `missionCheck`, `enduranceLab` |
+| `js/lego-endurance.js` | the bonus: the four hours computed in the page, without Cameo; its events and settings are `day` in `lego.js` |
+| plugin, `features/assembly/` | MCP `assembly/autoConnect, read, plug, unplug`, right click *Auto Connect*; the relay allows `read` and `autoConnect` |
+
+Why the blocks plug without being changed: a port may reach several parts (Cameo delivers to all of them), a Flight
+Orchestrator never asks its components anything, and a component only asks for a job and waits. The Swarm Master knows
+which drone asked by the port of the trigger (`via` in the spec of `buildArchitecture`, UML `Trigger.port`), and answers it
+alone.
+
 What is new is its simulation panel: several drones instead of one. It loads `js/sim-fleet-core.js`,
 `js/sim-fleet-scene.js`, `js/sim-fleet.js` and `css/sim-fleet.css` **instead of** `js/sim-core.js`,
 `js/sim-motion.js`, `js/sim-scene.js` and `js/sim.js`. Part 1 and Part 2 do not load the fleet files, and
@@ -372,8 +456,8 @@ the one-drone files were not changed, so they behave as before.
 
 What the panel shows:
 
-- One drone per drone of the fleet, each with a **role** (`fleet.roles` in `part4/content/config.js`:
-  drone shepherd, sheep guard, anti-predator) and its own step.
+- One drone per drone of the fleet, each with a **role** (`fleet.roles` in `part4/content/config.js`: Warden, Sheep
+  Guard, Scout, Herder, Ranger, named after what it carries) and its own step.
 - The **master**: the base station (it pilots every drone), one drone (the lead of the swarm), or none.
   Dashed lines go from the master to the drones it pilots.
 - The use case of Part 4: a drone may **follow a stray sheep or the predator out of the field as long as
@@ -398,9 +482,11 @@ The state frame of the plugin gains two optional fields (the relay keeps them, `
 
 `id` and `step` are required, `role` and `name` optional; at most 16 drones; `master` is `"base"` or the
 `id` of a drone. `step` stays: it is what Part 1 and Part 2 read. A frame without `drones` shows one drone
-of `fleet.defaultRole` in Part 4.
+of `fleet.defaultRole`, or nothing with `fleet.dronesOnly` (Part 4 today: its mission board feeds the panel).
 
-Plugin side, still to do: today `PastureSimulationEngine` merges the active states of every object into one
-step; it must keep them per drone instance to fill `drones`. `LocalRelay.kt` (the relay inside Cameo)
-rebuilds the state frame with `status` and `step` only, so it must copy `drones` and `master` too.
+The missions of the guide do not wait for this: `missionBoard` reads the states of each drone with `simtest/states` and
+feeds the panel itself. Plugin side, for a simulation started from Cameo, still to do: today `PastureSimulationEngine`
+merges the active states of every object into one step; it must keep them per drone instance to fill `drones`.
+`LocalRelay.kt` (the relay inside Cameo) rebuilds the state frame with `status` and `step` only, so it must copy
+`drones` and `master` too.
 

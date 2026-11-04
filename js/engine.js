@@ -565,7 +565,8 @@
     if (b.list) return '<ul class="b-list">' + b.list.map((x) => `<li>${inline(x)}</li>`).join('') + '</ul>';
     if (b.steps) {
       const start = b.start || 1;
-      return '<ol class="steps">' + b.steps.map((it, i) => stepHTML(stepId(scene, path, i), start + i, it)).join('') + '</ol>';
+      // Steps are what the student does: tagged, in the colour of "Do", so they stand apart from what only explains.
+      return `<div class="steps-wrap"><span class="steps-tag">${ic('cursor')}${esc(b.label || 'Your turn')}</span><ol class="steps">` + b.steps.map((it, i) => stepHTML(stepId(scene, path, i), start + i, it)).join('') + '</ol></div>';
     }
     if (b.figure) return figureHTML(b.figure);
     if (b.video) return videoHTML(b.video);
@@ -616,6 +617,17 @@
     }
     if (b.tip) {
       return `<div class="reveal tip-toggle"><button type="button" class="btn ghost small" data-reveal aria-expanded="false">${ic('bulb')}<span>${esc(b.tip.label)}</span></button><div class="reveal-body"><div><div class="tip-body">${(b.tip.blocks || []).map((x, xi) => renderBlock(x, scene, path + '.tip.' + xi)).join('')}</div></div></div></div>`;
+    }
+    if (b.pair) {
+      // The same reminder in every part: how to pair this guide with Cameo (the dialog of js/cameo-dialog.js).
+      const label = typeof b.pair === 'string' ? b.pair : 'Reminder: pair this guide with Cameo';
+      const how = [
+        'Cameo is open, with the plugin installed and a project open.',
+        'In Cameo, open the menu {{OMF > Relay pairing code}}: it shows a code of 6 letters.',
+        'In this guide, click the **Cameo** button at the top right, type the code, and confirm.',
+        'Its dot turns green once linked. Still waiting? In the same dialog, open **Relay**: Cameo and the guide must use the same relay address.'
+      ];
+      return `<div class="reveal tip-toggle pair-tip"><button type="button" class="btn ghost small" data-reveal aria-expanded="false">${ic('chain')}<span>${esc(label)}</span></button><div class="reveal-body"><div><div class="tip-body"><ol class="b-list pair-how">${how.map((x) => `<li>${inline(x)}</li>`).join('')}</ol><div data-widget="linkStatus" data-opts="{}"></div></div></div></div></div>`;
     }
     if (b.call) return `<div class="q-call">${ic('hand')}<span>${inline(b.call)}</span></div>`;
     if (b.recall) {

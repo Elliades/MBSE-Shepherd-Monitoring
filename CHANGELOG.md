@@ -2,6 +2,32 @@
 
 ## Unreleased
 
+- **A second promo film, Parts 3 and 4** (`/promo/next.html`, ~2 min 20; the file is `assets/video/promo-parts34-en.mp4`): the logical
+  architecture (the approach, several versions and one choice, the three commands of the plugin that do the repetitive part, the
+  drone built one event at a time and validated each time, the whole mission), then the swarm (one level up, the dilemma, who
+  decides, the box of Lego with its 3D bay and Auto Connect, the missions played, three architectures side by side on the same
+  bad day). Its windows are the guides themselves, cut down to one widget and driven by the film; the film puts the guides'
+  saved progress back when it is closed, and shows no predator transition or signal (Part 2 is marked).
+- **A real home page, and Part 1 moves to `/part1/`**: `https://shepherd.chaos-art.fr/` now presents the lab: the film, the mission, the four
+  layers of the method, the real simulation panel to try, and the links to the four parts at the very top. The sheep of the film graze in the
+  Pyrenees, day or night, run from the mouse, and a bear comes now and then. The guide is in `part1/` (with `part1/content/`); its old links
+  (`?code=`, `?teacher=`, `#scene`) still work: the home page sends them on.
+- **Plugin 1.2.0 for every part**: `assets/plugins/` now holds `com.elliades.isae.mbseShepherd_1.2.0.zip` (the 1.1.1 archive is gone; `install-plugin.ps1` picks the newest). The install scene of Part 1 and the plugin scene of Part 3 (Parts 2 and 4 link to Part 1) have three tabs: Standard, No admin rights (script), and a new **No script** tab (3 steps and a looping CSS mini-Explorer, widget `pluginExtract` in `js/widgets.js`): paste `%LOCALAPPDATA%\.magic.systems.of.systems.architect` in the Explorer address bar, extract the zip into `2026x`, check the three folders. A `file://` link cannot be opened from a web page, hence the path to copy.
+- **Part 4, the exercise becomes a box of Lego**: a starting model (`part4/assets/models/UAV_Part4_Swarm.mdzip`, built by
+  `scripts/make-part4-model.py` and `scripts/build-part4-model.mjs`) where everything technical is given and connected, and a
+  `Library` of bricks: one per region of the mission, and the intelligence (Swarm Master in the base station or in a drone,
+  Swarm Reflex in each drone). Students drag, connect (by hand or with *Auto Connect*), watch the drones build themselves in
+  3D in the guide, play six missions from the guide, and compare the solutions they tried on price and flight time. The
+  mission is the one of the first parts, `SOI - Pasture Sentinel`, with the weather and a stray sheep added: the stray sheep and
+  the predator both leave `Patrolling`, and the students put them in parallel. The bear gives its position by a signal, the
+  pattern of Load Flight Plan, so the simulation opens no pop-up. New in the plugin: `features/assembly`, `addClassifiedChoice`.
+- **Part 4, the sheep split in two**: `Sheep Monitoring` becomes `Flock Watching` (spots a stray, never leaves) and `Sheep Tracking`
+  (takes the job and follows), so that one drone can call another. New brick `Base Standby`: the drone waits docked and takes
+  off when it gets a job. Clearer names: `Mission Started`, `Sheep Job Open`, `Ask Sheep Job`, `Sheep Job Given`, `Sheep Job Taken`.
+  The generator now starts from the author's own models and only builds `TP - Swarm`.
+- **Part 4, bonus "four hours on the pasture"**: a choice of batteries (a bigger one flies longer, weighs more and charges
+  longer), flight speed that costs energy, return threshold, charging places, reaction time, stress on the flock, energy, price
+  and complexity, computed in the page from the bricks, with a table of the trade-offs.
 - **Part 3, played end to end in Cameo, and corrected**: four versioned starting models in `part3/assets/models/`, built by
   `scripts/make-part3-inits.py` and `scripts/build-part3-models.mjs`: one for Mission Configuration, then one per
   architecture, without the crash, ports named after their partner. The ports of Mission Configuration are merged with

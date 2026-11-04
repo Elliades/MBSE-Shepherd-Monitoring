@@ -19,7 +19,7 @@ window.COURSE_CONFIG = {
   sharedBase: "../",
 
   /* Where the Part 1 guide is, seen from this page. "Forgot how?" boxes link to its scenes. */
-  recallBase: "../index.html",
+  recallBase: "../part1/index.html",
 
   /* The marked seminar must not show the expected signals: the simulation panel only follows Cameo. */
   simPreview: false,

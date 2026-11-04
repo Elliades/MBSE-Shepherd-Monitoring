@@ -1,18 +1,18 @@
 ---
 name: sync-word-handout
-description: After the guide (content/scenes.js and related files) is updated, bring the Word handout "BE Cameo - Part 1 - Discover" up to date with the same content. Use whenever a scene, step, note, FAQ entry or author note of the site has been added, changed or removed.
+description: After the guide (part1/content/scenes.js and related files) is updated, bring the Word handout "BE Cameo - Part 1 - Discover" up to date with the same content. Use whenever a scene, step, note, FAQ entry or author note of the site has been added, changed or removed.
 ---
 
 # Sync the Word handout with the site
 
-The site (`index.html`, `content/scenes.js`) is the working version of the Word handout.
+The site (`part1/index.html`, `part1/content/scenes.js`) is the working version of the Word handout.
 Every change made on the site must be reflected in the Word document, so the handout that
 students and the LMS receive never falls behind.
 
 ## Source files
 
-- **Site, source of truth for the change:** `content/scenes.js` (scenes, FAQ, `authorNotes`),
-  `content/model-links.js` (model paths), `content/config.js` (course title and authors).
+- **Site, source of truth for the change:** `part1/content/scenes.js` (scenes, FAQ, `authorNotes`),
+  `part1/content/model-links.js` (model paths), `part1/content/config.js` (course title and authors).
 - **Word handout, to update:** `C:\Users\Quatermaster\Downloads\BE Cameo - Part 1 - Discover -2025 (MAJ).docx`
   (the "(MAJ)" copy is the most recent one; the plain `BE Cameo - Part 1 - Discover -2025.docx`
   in the same folder is the older version, do not edit it).
@@ -27,8 +27,8 @@ author-mode settings) or for placeholders that only the author sees.
 
 ## Procedure
 
-1. **List what changed on the site.** Compare `content/scenes.js` with the last synced state.
-   Keep a copy of the last synced version as `content/.handout-sync.json` (or in the scratchpad
+1. **List what changed on the site.** Compare `part1/content/scenes.js` with the last synced state.
+   Keep a copy of the last synced version as `part1/content/.handout-sync.json` (or in the scratchpad
    if the user prefers not to keep it in the project) so the diff is reliable. For each change,
    note the scene `id`, its chapter (`ch`) and its title.
 

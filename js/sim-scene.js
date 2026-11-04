@@ -106,6 +106,9 @@
       patrolChirp: null,
       bleats: SHEEP.map(() => null),
       actors: { bear: { x: 68, y: 97 }, drone: { x: 70, y: 30 } },
+      /* the bear picture faces right: turn it when it walks left */
+      bearX: 68,
+      bearLeft: false,
       trackTone: 'calm',
       exitFrom: null,
       counterPhase: null,
@@ -178,8 +181,11 @@
       setHidden(el.track, !d.showTrack);
       setClass(el.track, `poc-track${st.trackTone === 'alert' ? ' poc-track--alert' : ''}${st.trackTone === 'blink' ? ' poc-track--blink' : ''}`);
 
+      const walked = st.actors.bear.x - st.bearX;
+      if (Math.abs(walked) > 0.01) st.bearLeft = walked < 0;
+      st.bearX = st.actors.bear.x;
       setHidden(el.bear, !d.showBear);
-      setClass(el.bear, `poc-bear-wrap${d.bearIn ? ' poc-bear-wrap--in-sensor' : ''}${d.bearIn && d.sensorVisual === 'counter' ? ' poc-bear-wrap--danger' : ''}`);
+      setClass(el.bear, `poc-bear-wrap${d.bearIn ? ' poc-bear-wrap--in-sensor' : ''}${d.bearIn && d.sensorVisual === 'counter' ? ' poc-bear-wrap--danger' : ''}${st.bearLeft ? ' poc-bear-wrap--left' : ''}`);
       setStyle(el.bear, 'left', `${st.actors.bear.x}%`);
       setStyle(el.bear, 'top', `${st.actors.bear.y}%`);
 
