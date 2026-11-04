@@ -120,7 +120,7 @@ window.COURSE = {
             label: "Optional: download the handout",
             blocks: [
               { p: "The handout has the same steps as this guide, in full sentences. Nothing here is required to do the exercise." },
-              { download: { label: "Handout", file: "BE Cameo - Part 1 - Discover -2025 (MAJ).docx", src: "assets/docs/BE Cameo - Part 1 - Discover -2025 (MAJ).docx", size: "1.7 MB" } }
+              { download: { label: "Handout", file: "BE Cameo - Part 1 - Discover -2025 (MAJ).docx", src: "../assets/docs/BE Cameo - Part 1 - Discover -2025 (MAJ).docx", size: "1.7 MB" } }
             ]
           }
         }
@@ -164,7 +164,7 @@ window.COURSE = {
         },
         {
           figure: {
-            src: "assets/img/env-selection.png", w: 995, h: 649,
+            src: "../assets/img/env-selection.png", w: 995, h: 649,
             alt: "Cameo environment selection window. The first entry, with the OMG SysML logo, is selected and the Expert checkbox is ticked.",
             caption: "Pick the SysML entry, tick Expert, then continue."
           }
@@ -201,7 +201,7 @@ window.COURSE = {
             {
               label: "Standard", sub: "Cameo's plugin manager",
               blocks: [
-                { download: { label: "Plugin to install", file: "com.elliades.isae.mbseShepherd_1.1.1.zip", src: "assets/plugins/com.elliades.isae.mbseShepherd_1.1.1.zip", size: "18 MB" } },
+                { download: { label: "Plugin to install", file: "com.elliades.isae.mbseShepherd_1.2.0.zip", src: "../assets/plugins/com.elliades.isae.mbseShepherd_1.2.0.zip", size: "21 MB" } },
                 {
                   steps: [
                     "In Cameo, choose {{Help > Resource & Plugin Manager}}, then click {{Import}}.",
@@ -219,8 +219,8 @@ window.COURSE = {
             {
               label: "No admin rights", sub: "a script, no installer",
               blocks: [
-                { download: { label: "Plugin archive", file: "com.elliades.isae.mbseShepherd_1.1.1.zip", src: "assets/plugins/com.elliades.isae.mbseShepherd_1.1.1.zip", size: "18 MB" } },
-                { download: { label: "Install script", file: "install-plugin.ps1", src: "assets/plugins/install-plugin.ps1", size: "2 KB" } },
+                { download: { label: "Plugin archive", file: "com.elliades.isae.mbseShepherd_1.2.0.zip", src: "../assets/plugins/com.elliades.isae.mbseShepherd_1.2.0.zip", size: "21 MB" } },
+                { download: { label: "Install script", file: "install-plugin.ps1", src: "../assets/plugins/install-plugin.ps1", size: "2 KB" } },
                 {
                   steps: [
                     "Save both files in the same folder, for example your Downloads folder.",
@@ -245,6 +245,23 @@ window.COURSE = {
                   }
                 }
               ]
+            },
+            {
+              label: "No script", sub: "3 steps, by hand",
+              blocks: [
+                { download: { label: "Plugin archive", file: "com.elliades.isae.mbseShepherd_1.2.0.zip", src: "../assets/plugins/com.elliades.isae.mbseShepherd_1.2.0.zip", size: "21 MB" } },
+                {
+                  copy: { label: "Your Cameo folder (no 2026x folder? create it)", value: "%LOCALAPPDATA%\\.magic.systems.of.systems.architect\\2026x" }
+                },
+                {
+                  steps: [
+                    "Close Cameo. Open a Windows Explorer window, **paste the path above** in its address bar and press Enter.",
+                    "**Move the zip there**, then right-click it and choose **Extract here** (or **Extract All…** and give the same path).",
+                    "Check that **data**, **plugins** and **profiles** are there, then start Cameo."
+                  ]
+                },
+                { widget: "pluginExtract", opts: { path: "%LOCALAPPDATA%\\.magic.systems.of.systems.architect\\2026x" } }
+              ]
             }
           ]
         }
@@ -255,7 +272,7 @@ window.COURSE = {
       title: "Load the model",
       lead: "The model comes as one archive file. Cameo opens it as it is.",
       blocks: [
-        { download: { label: "File to open", file: "UAV_BE_2026 _V2_Exercice Student.mdzip", src: "assets/models/UAV_BE_2026 _V2_Exercice Student.mdzip", size: "841 KB" } },
+        { download: { label: "File to open", file: "UAV_BE_2026 _V2_Exercice Student.mdzip", src: "../assets/models/UAV_BE_2026 _V2_Exercice Student.mdzip", size: "841 KB" } },
         {
           steps: [
             "Download the model with the button above.",
@@ -311,7 +328,7 @@ window.COURSE = {
         },
         {
           figure: {
-            src: "assets/img/spec-expert.png", w: 838, h: 544,
+            src: "../assets/img/spec-expert.png", w: 838, h: 544,
             alt: "Specification window of the package 1 - Operational Analysis. At the top right, the Properties drop-down list is set to Expert and circled in red.",
             caption: "The Properties list, top right of the Specification window."
           }
@@ -347,7 +364,7 @@ window.COURSE = {
         },
         {
           figure: {
-            src: "assets/img/ibd-operational-context.png",
+            src: "../assets/img/ibd-operational-context.png",
             alt: "The Operational Context diagram, with a red circle around the item flow from the operator to the UAV.",
             caption: "The Operational Context diagram. Circled: the item flow between the operator and the UAV."
           }
@@ -526,7 +543,7 @@ window.COURSE = {
             {
               t: "Click on the port of the operator. In the small toolbar that appears next to it, click {{Connector}}.",
               fig: {
-                src: "assets/img/port-connector-manipulator.png", w: 226, h: 178,
+                src: "../assets/img/port-connector-manipulator.png", w: 226, h: 178,
                 alt: "In Cameo, the port fp : IF_FlightPlan of the operator is selected. A small vertical toolbar next to it shows the Connector button, with its tooltip.",
                 caption: "The Connector button, next to the selected port."
               }
@@ -590,7 +607,7 @@ window.COURSE = {
         },
         {
           figure: {
-            src: "assets/img/uc-parameter-mission-circled.png",
+            src: "../assets/img/uc-parameter-mission-circled.png",
             alt: "The Use Cases and Scenarios diagram. The Parameter Mission use case in the 1. Preparation phase package is circled in red.",
             caption: "The Use Cases and Scenarios diagram. Circled: Parameter Mission."
           }
@@ -615,7 +632,7 @@ window.COURSE = {
               t: "In the *SysML Diagrams* section, select {{SysML Sequence Diagram}}.",
               note: "No result in the list of diagram types? Click the {{Expert}} button below it: the list of available diagrams expands.",
               fig: {
-                src: "assets/img/create-sequence-diagram.gif", thumb: "assets/img/create-sequence-diagram-thumb.gif", w: 260, h: 236,
+                src: "../assets/img/create-sequence-diagram.gif", thumb: "../assets/img/create-sequence-diagram-thumb.gif", w: 260, h: 236,
                 alt: "Right-click on the Parameter Mission use case, choose Create Diagram, then SysML Sequence Diagram, and rename the new diagram."
               }
             },
@@ -646,7 +663,7 @@ window.COURSE = {
         { path: "soi-block" },
         {
           video: {
-            src: "assets/video/lifeline-drag-drop.mp4", w: 1430, h: 598,
+            src: "../assets/video/lifeline-drag-drop.mp4", w: 1430, h: 598,
             alt: "Cameo: the actors are dragged one by one from the Model Browser onto the sequence diagram Parameter Mission, each one creating a lifeline."
           }
         }
@@ -666,7 +683,7 @@ window.COURSE = {
         },
         {
           figure: {
-            src: "assets/img/sig-create-s.png", w: 370, h: 144,
+            src: "../assets/img/sig-create-s.png", w: 370, h: 144,
             alt: "Cameo message name field with a small S button next to the name, used to create a signal on the message.",
             caption: "Click on the S button to create a signal for the message."
           }
@@ -830,7 +847,7 @@ window.COURSE = {
         },
         {
           video: {
-            src: "assets/video/create-function-activity.mp4", w: 460, h: 588,
+            src: "../assets/video/create-function-activity.mp4", w: 460, h: 588,
             alt: "Cameo: right-click on Deployment, Create element, type act, choose Activity, then rename the new activity Parameter Mission."
           }
         }
@@ -921,13 +938,13 @@ window.COURSE = {
             "In the containment tree, unfold the path above down to the block **SOI - Pasture Sentinel**.",
             {
               t: "Open the state machine diagram that sits inside it.",
-              fig: { src: "assets/img/tree-soi-stm.png", w: 197, h: 37, alt: "Containment tree: SOI - Pasture Sentinel state machine, with the diagram SOI - Pasture Sentinel selected under it.", size: "xs" }
+              fig: { src: "../assets/img/tree-soi-stm.png", w: 197, h: 37, alt: "Containment tree: SOI - Pasture Sentinel state machine, with the diagram SOI - Pasture Sentinel selected under it.", size: "xs" }
             }
           ]
         },
         {
           figure: {
-            src: "assets/img/stm-as-found.png", w: 1202, h: 879,
+            src: "../assets/img/stm-as-found.png", w: 1202, h: 879,
             alt: "State machine SOI - Pasture Sentinel as students find it. Undeployed contains Off and Unconfigured; Ready for Mission is in Undeployed, Deployed contains Going to Safe Area, Patrolling and Mission Monitoring, and Crashed is on the right. A TO DO note lists the exercise steps.",
             caption: "The state machine as you find it: no Configured state yet. Click the image to enlarge it."
           }
@@ -948,7 +965,7 @@ window.COURSE = {
         },
         {
           video: {
-            src: "assets/video/create-state.mp4", w: 844, h: 576,
+            src: "../assets/video/create-state.mp4", w: 844, h: 576,
             alt: "Cameo: State is picked in the palette, a click inside Undeployed creates a new state next to Unconfigured, and its name is typed as Configured."
           }
         }
@@ -967,7 +984,7 @@ window.COURSE = {
         },
         {
           video: {
-            src: "assets/video/create-transition.mp4", w: 560, h: 352,
+            src: "../assets/video/create-transition.mp4", w: 560, h: 352,
             alt: "Cameo: the Unconfigured state is selected, its Transition button is clicked on the smart manipulator toolbar, and the transition is drawn to the Configured state."
           }
         },
@@ -983,7 +1000,7 @@ window.COURSE = {
         },
         {
           video: {
-            src: "assets/video/d-g-signal-transition.mp4", w: 1312, h: 546,
+            src: "../assets/video/d-g-signal-transition.mp4", w: 1312, h: 546,
             alt: "Cameo: the FlightPlan signal is dragged from the Model Browser and dropped onto the transition between Unconfigured and Configured."
           }
         }
@@ -1023,7 +1040,7 @@ window.COURSE = {
             "In the Model Browser, expand [[fa-deployment]], then the package <<Parameter Mission>>.",
             {
               t: "Select the [[fn-load-flight-plan|Load Flight Plan]] activity inside <<Parameter Mission>>, drag it onto the [[soi-configured]] state and select {{Do Activity}}.",
-              fig: { src: "assets/img/menu-do-activity.png", w: 172, h: 117, alt: "Small menu that opens on the Configured state with three choices: Entry, Do Activity (highlighted) and Exit.", size: "xs" }
+              fig: { src: "../assets/img/menu-do-activity.png", w: 172, h: 117, alt: "Small menu that opens on the Configured state with three choices: Entry, Do Activity (highlighted) and Exit.", size: "xs" }
             }
           ]
         },
@@ -1032,7 +1049,7 @@ window.COURSE = {
         { h: "What you should get in Cameo" },
         {
           figure: {
-            src: "assets/img/stm-expected.png", w: 1202, h: 851,
+            src: "../assets/img/stm-expected.png", w: 1202, h: 851,
             alt: "State machine SOI - Pasture Sentinel. Inside Undeployed: Off, Unconfigured, Configured with do / Load Flight Plan, and Ready for Mission. Transitions carry Start SOI, FlightPlan, FlightPlan Check Failed and Ready for mission. Below, the Deployed state with Going to Safe Area, Patrolling and Predator Detected, and a Crashed state.",
             caption: "When you are done, your state machine diagram should be very similar to this one."
           }
@@ -1048,7 +1065,7 @@ window.COURSE = {
           steps: [
             {
               t: "Make sure the state machine under SOI - Pasture Sentinel is open: [[soi-stm|3-A-SOI-SOI-SOI]].",
-              fig: { src: "assets/img/tree-soi-stm-selected.png", w: 185, h: 38, alt: "Containment tree with the state machine diagram SOI - Pasture Sentinel selected.", size: "xs" }
+              fig: { src: "../assets/img/tree-soi-stm-selected.png", w: 185, h: 38, alt: "Containment tree with the state machine diagram SOI - Pasture Sentinel selected.", size: "xs" }
             },
             "Click on the Simulation icon ((simulate)) at the top right of the diagram, then {{Run}} ((run)).",
             {
@@ -1060,14 +1077,14 @@ window.COURSE = {
         },
         {
           figure: {
-            src: "assets/img/sim-trigger-list.png", w: 654, h: 280,
+            src: "../assets/img/sim-trigger-list.png", w: 654, h: 280,
             alt: "Simulation panel of Cameo with the Trigger drop-down list open: Crashed Detected, FlightPlan, FlightPlan Check Failed, Predator Detected inside tracking perimeter, Ready for mission, Start Patrolling, Start Sheep Guard Mission, Start SOI.",
             caption: "The Trigger list of the Simulation panel."
           }
         },
         {
           video: {
-            src: "assets/video/run-simulation.mp4", w: 1390, h: 640,
+            src: "../assets/video/run-simulation.mp4", w: 1390, h: 640,
             alt: "Cameo: the state machine SOI - Pasture Sentinel is run from the Simulation panel; Play is clicked, then Start SOI is selected in the Trigger list and the machine leaves Unconfigured."
           }
         }
@@ -1090,7 +1107,8 @@ window.COURSE = {
             { t: "", widget: "linkStatus" },
             { t: "**Try it!** Click the pink drone button at the top of the page, then send the next signal from Cameo: the drone moves in the app.", widget: "simHint" }
           ]
-        }
+        },
+        { pair: "How to pair this guide with Cameo" }
       ]
     },
     {
@@ -1103,7 +1121,7 @@ window.COURSE = {
             "Start a simulation again, as in step 1 of the previous exercise.",
             {
               t: "Inside the state machine diagram, double-click on the **do / Load Flight Plan** label of the *Configured* state. The Activity Diagram of this function appears.",
-              fig: { src: "assets/img/ad-load-flight-plan-initial.png", w: 320, h: 225, alt: "Activity diagram Load Flight Plan with an initial node, one action Load Flight Plan and a final node.", size: "sm" }
+              fig: { src: "../assets/img/ad-load-flight-plan-initial.png", w: 320, h: 225, alt: "Activity diagram Load Flight Plan with an initial node, one action Load Flight Plan and a final node.", size: "sm" }
             },
             "To see both diagrams at once, open them in two tabs: keep the State Machine diagram open in its tab, then switch to the tab of the Activity Diagram *Load Flight Plan* that you just opened. Use the tabs above the diagram to switch from one to the other.",
             "Start the simulation again, with steps 2 to 4 of the previous exercise.",
@@ -1234,7 +1252,7 @@ window.COURSE = {
         },
         {
           figure: {
-            src: "assets/img/send-signal.png", w: 130, h: 75, size: "xs",
+            src: "../assets/img/send-signal.png", w: 130, h: 75, size: "xs",
             alt: "A send signal action, drawn as a box pointed on its right side, named FlightPlan Check Failed.",
             caption: "A send signal action in Cameo."
           }
@@ -1262,7 +1280,7 @@ window.COURSE = {
         },
         {
           figure: {
-            src: "assets/img/decision-example.png", w: 263, h: 135, size: "sm",
+            src: "../assets/img/decision-example.png", w: 263, h: 135, size: "sm",
             alt: "Decision node in Cameo with two output flows: [wind > 50km/h] to the action Emergency landing and [else] to the action Go to next point.",
             caption: "The same example in Cameo."
           }
@@ -1402,7 +1420,7 @@ window.COURSE = {
             "Start the simulation using ((simulate-toolbar)) then ((start)).",
             {
               t: "Use the {{Trigger}} drop-down list to switch from state to state.",
-              fig: { src: "assets/img/sim-trigger-small.png", w: 229, h: 178, alt: "Trigger drop-down list with FlightPlan highlighted.", size: "xs" }
+              fig: { src: "../assets/img/sim-trigger-small.png", w: 229, h: 178, alt: "Trigger drop-down list with FlightPlan highlighted.", size: "xs" }
             },
             "Verify that after entering the [[soi-configured]] state, your activity diagram is triggered.",
             "Verify that if the flight plan is OK, the state machine goes automatically to *Ready for Mission*."
@@ -1434,14 +1452,14 @@ window.COURSE = {
         },
         {
           figure: {
-            src: "assets/img/tip-eye.png", w: 206, h: 125, size: "xs",
+            src: "../assets/img/tip-eye.png", w: 206, h: 125, size: "xs",
             alt: "The Load Flight Plan diagram symbol selected, with a small toolbar next to it whose first button is an eye.",
             caption: "The eye button shows the content of the diagram."
           }
         },
         {
           figure: {
-            src: "assets/img/tip-side-by-side.png", w: 1418, h: 851,
+            src: "../assets/img/tip-side-by-side.png", w: 1418, h: 851,
             alt: "State machine diagram with the Load Flight Plan activity diagram displayed inside it, on the left. The state Configured is active and outlined in red.",
             caption: "The activity diagram shown inside the state machine during a simulation."
           }

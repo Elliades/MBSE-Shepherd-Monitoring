@@ -1,6 +1,8 @@
 /* Course-level settings. Edit freely: nothing here needs a build step. */
 window.COURSE_CONFIG = {
   appName: "MBSE Shepherd",
+  /* Where the shared assets/ folder is, seen from this page. */
+  sharedBase: "../",
   course: "Domaine Systèmes Autonomes · DSAT301 Systèmes Embarqués",
   part: "BE Cameo · Part 1 · Discover",
   authors: ["Quentin Cespèdes", "Janette Cardoso", "Mayssa Chebi", "Mourad Chibane"],
@@ -42,12 +44,12 @@ window.COURSE_CONFIG = {
       svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19 L19 5"/><path d="M9 5 H19 V15"/></svg>',
       alt: "Transition button"
     },
-    run: { src: "assets/img/btn-run.png", alt: "Run button" },
-    simulate: { src: "assets/img/btn-simulate.png", alt: "Simulation button" },
-    "simulate-toolbar": { src: "assets/img/btn-simulate-toolbar.png", alt: "Simulation button in the toolbar" },
-    play: { src: "assets/img/btn-play.png", alt: "Play button (green arrow)" },
-    start: { src: "assets/img/btn-start-f8.png", alt: "Start (F8) button" },
-    package: { src: "assets/img/ico-package.png", alt: "package icon" },
-    "item-flow": { src: "assets/img/ico-item-flow.png", alt: "Item flow arrow" }
+    run: { src: "../assets/img/btn-run.png", alt: "Run button" },
+    simulate: { src: "../assets/img/btn-simulate.png", alt: "Simulation button" },
+    "simulate-toolbar": { src: "../assets/img/btn-simulate-toolbar.png", alt: "Simulation button in the toolbar" },
+    play: { src: "../assets/img/btn-play.png", alt: "Play button (green arrow)" },
+    start: { src: "../assets/img/btn-start-f8.png", alt: "Start (F8) button" },
+    package: { src: "../assets/img/ico-package.png", alt: "package icon" },
+    "item-flow": { src: "../assets/img/ico-item-flow.png", alt: "Item flow arrow" }
   }
 };

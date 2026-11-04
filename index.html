@@ -1,10 +1,21 @@
 <!doctype html>
+<!-- The home page of the site, the shop window of the lab. Its code is in home/. The guides are in part1/ to part4/. -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>MBSE Shepherd</title>
-<meta name="description" content="Interactive guide for BE Cameo, Part 1: specify the functional and physical architecture of a drone in SysML.">
+<script>/* The Part 1 guide used to live here: its old links (?code=ABCDEF of a QR code, ?teacher=, #c-state) go on to it. */
+(function () {
+  var home = /^#?(top|film|link|mission|method|validate|parts)?$/;
+  if (location.search || !home.test(location.hash)) location.replace('part1/' + location.search + location.hash);
+  try { var t = localStorage.getItem('mbse-shepherd:home-theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) { /* not kept */ }
+  document.documentElement.classList.add('js');
+})();</script>
+<title>MBSE Shepherd · Learn MBSE by doing it</title>
+<meta name="description" content="A drone guards a flock from the Pyrenean bear. Model it in SysML with Cameo, part by part, and let the simulation tell you early whether it holds. The Cameo lab of DSAT301, ISAE-SUPAERO.">
+<meta property="og:title" content="MBSE Shepherd · Learn MBSE by doing it">
+<meta property="og:description" content="A drone, a flock, a bear, and a model you can run. The Cameo lab of DSAT301, ISAE-SUPAERO.">
+<meta property="og:image" content="https://shepherd.chaos-art.fr/assets/img/promo-poster.jpg">
 <meta name="theme-color" content="#e8eee1" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0e1814" media="(prefers-color-scheme: dark)">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2315221a'/%3E%3Crect x='11' y='11' width='10' height='10' rx='2' fill='%23fbfdf8'/%3E%3Cg fill='none' stroke='%23fbfdf8' stroke-width='2.4'%3E%3Ccircle cx='9' cy='9' r='4'/%3E%3Ccircle cx='23' cy='9' r='4'/%3E%3Ccircle cx='9' cy='23' r='4'/%3E%3Ccircle cx='23' cy='23' r='4'/%3E%3C/g%3E%3C/svg%3E">
@@ -14,93 +25,359 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:ital,wght@0,400;0,600;0,700;1,400&display=swap">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:wght@400;700&display=swap">
 <link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/logical.css">
 <link rel="stylesheet" href="css/sim.css">
-<link rel="stylesheet" href="css/cameo.css">
+<link rel="stylesheet" href="home/home.css">
 </head>
-<body>
-<a class="skip" href="#stage">Skip to the scene</a>
+<body class="home" id="top">
+<a class="h-skip" href="#parts">Skip to the parts</a>
 
-<svg class="chart-bg" viewBox="0 0 1200 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-  <path class="contour" d="M-40 210 C 160 120, 330 260, 520 190 S 860 60, 1240 170"/>
-  <path class="contour" d="M-40 290 C 180 210, 340 350, 540 270 S 880 150, 1240 250"/>
-  <path class="contour" d="M-40 390 C 200 320, 360 470, 580 380 S 900 270, 1240 360"/>
-  <path class="contour" d="M-40 640 C 220 560, 420 720, 640 640 S 960 520, 1240 620"/>
-  <path class="contour" d="M-40 730 C 240 660, 440 810, 660 730 S 980 620, 1240 710"/>
-  <ellipse class="contour" cx="930" cy="470" rx="210" ry="120"/>
-  <ellipse class="contour" cx="930" cy="470" rx="140" ry="74"/>
-  <ellipse class="contour" cx="930" cy="470" rx="70" ry="32"/>
-  <ellipse class="contour" cx="210" cy="520" rx="150" ry="80"/>
-  <ellipse class="contour" cx="210" cy="520" rx="80" ry="36"/>
-  <path class="patrol" d="M70 -20 V 920 M1130 -20 V 920"/>
-</svg>
-
-<header class="top">
-  <div class="top-row">
-    <button class="brand" data-action="home" aria-label="Back to the first scene">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8.5" y="8.5" width="7" height="7" rx="1.5" fill="currentColor"/><g fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="6.5" cy="6.5" r="3.2"/><circle cx="17.5" cy="6.5" r="3.2"/><circle cx="6.5" cy="17.5" r="3.2"/><circle cx="17.5" cy="17.5" r="3.2"/></g></svg>
-    </button>
-    <div class="crumb" aria-live="polite">
-      <span class="crumb-code" id="crumb-code"></span>
-      <span class="crumb-title" id="crumb-title"></span>
-      <span class="crumb-count" id="crumb-count"></span>
-    </div>
-    <div class="top-actions">
-      <button class="icon-btn" id="sim-btn" aria-expanded="false" aria-controls="sim-drawer" aria-label="Show or hide the drone simulation">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="6" height="6" rx="1.2"/><circle cx="5.5" cy="5.5" r="2.5"/><circle cx="18.5" cy="5.5" r="2.5"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
-        <span class="txt">Simulation</span><i class="news" aria-hidden="true"></i>
-      </button>
-      <button class="icon-btn" id="cameo-btn" data-status="off" aria-label="Connect to Cameo">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>
-        <span class="txt">Cameo</span><i class="dot"></i>
-      </button>
-      <button class="icon-btn" id="theme-btn" data-action="theme" aria-pressed="false" aria-label="Switch theme">
-        <svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
-        <svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
-      </button>
-      <button class="icon-btn" data-action="toc" aria-label="Open the flight plan (all scenes)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5" cy="6" r="2"/><circle cx="19" cy="18" r="2"/><path d="M7 6h7a3 3 0 0 1 0 6h-4a3 3 0 0 0 0 6h7"/></svg>
-        <span class="txt">Flight plan</span>
-      </button>
-    </div>
+<nav class="h-nav" aria-label="The parts of the lab">
+  <a class="h-brand" href="#top" aria-label="MBSE Shepherd, top of the page">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8.5" y="8.5" width="7" height="7" rx="1.5" fill="currentColor"/><g fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="6.5" cy="6.5" r="3.2"/><circle cx="17.5" cy="6.5" r="3.2"/><circle cx="6.5" cy="17.5" r="3.2"/><circle cx="17.5" cy="17.5" r="3.2"/></g></svg>
+    <span>MBSE Shepherd</span>
+  </a>
+  <div class="h-nav-parts">
+    <a href="part1/" style="--c:var(--ph-op)"><b>1</b> Discover</a>
+    <a href="part2/" style="--c:var(--route)"><b>2</b> Marked</a>
+    <a href="part3/" style="--c:var(--ph-lg)"><b>3</b> Logical</a>
+    <a href="part4/" style="--c:var(--ph-fn)"><b>4</b> Swarm</a>
   </div>
-  <button class="route" id="route" data-action="toc" aria-label="Progress. Open the flight plan."></button>
-</header>
-
-<main id="stage" tabindex="-1"></main>
-
-<nav class="dock" aria-label="Scene navigation">
-  <div class="dock-inner">
-    <button class="btn ghost dock-back" data-action="back" aria-label="Previous scene">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
-      <span class="txt">Back</span>
-    </button>
-    <div class="dock-info" id="dock-info"></div>
-    <button class="btn dock-next" data-action="next">
-      <span class="lbl"><span id="next-label">Next</span><small id="next-title"></small></span>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
-    </button>
-  </div>
+  <button class="h-theme h-sound" id="h-sound" type="button" aria-pressed="true" aria-label="Mute the sheep">
+    <svg class="i-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>
+    <svg class="i-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="m16 9 6 6M22 9l-6 6"/></svg>
+  </button>
+  <button class="h-theme" id="h-theme" type="button" aria-label="Switch between day and night">
+    <svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
+    <svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+  </button>
 </nav>
 
-<div id="overlay-root"></div>
-<div id="toast" role="status" aria-live="polite"></div>
+<header class="h-hero" id="h-hero">
+  <div class="h-sky" aria-hidden="true">
+    <i class="h-sun"></i>
+    <div class="h-stars"></div>
+    <i class="h-cloud c1"></i><i class="h-cloud c2"></i><i class="h-cloud c3"></i>
+  </div>
+  <svg class="h-ridge r3" data-depth="0.12" viewBox="0 0 1600 320" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+    <path class="fill" d="M0 320V210L120 130 210 190 340 60 450 170 560 90 690 200 820 40 960 180 1080 80 1210 190 1340 70 1480 180 1600 120V320Z"/>
+    <path class="snow" d="M340 60 303 97 325 92 342 108 358 94 378 106ZM820 40 778 86 803 78 822 98 842 80 866 90ZM1340 70 1302 108 1324 102 1342 118 1360 104 1380 112ZM560 90 530 118 550 114 563 124 582 116Z"/>
+  </svg>
+  <svg class="h-ridge r2" data-depth="0.22" viewBox="0 0 1600 260" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+    <path class="fill" d="M0 260V170C120 110 210 150 330 120S520 60 660 130 880 170 1010 100 1250 80 1380 140 1520 150 1600 120V260Z"/>
+  </svg>
+  <svg class="h-ridge r1" data-depth="0.34" viewBox="0 0 1600 200" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+    <path class="fill" d="M0 200V130C180 80 320 150 520 110S860 60 1040 120 1400 140 1600 90V200Z"/>
+  </svg>
 
-<noscript><p style="padding:2rem">This guide needs JavaScript to run.</p></noscript>
+  <div class="h-hero-text">
+    <p class="h-eyebrow">BE Cameo · DSAT301 · ISAE-SUPAERO</p>
+    <h1><span>Learn</span> <span>MBSE</span> <span>by</span> <span>doing</span> <span>it,</span> <em><span>and</span> <span>validate</span> <span>early.</span></em></h1>
+    <p class="h-lead">A drone guards a flock from the Pyrenean bear. You model it in SysML, layer by layer, and you run your model to see whether the sheep survive.</p>
+    <div class="h-cta">
+      <a class="h-btn primary" href="part1/">Start with Part 1 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></a>
+      <a class="h-btn" href="#film"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l12-7.5z"/></svg> Watch the film</a>
+    </div>
+  </div>
 
-<script src="content/config.js"></script>
-<script src="content/model-links.js"></script>
-<script src="content/scenes.js"></script>
-<script>/* Teacher view: ?teacher=<key> adds the notes of assets/teacher-<key>/ (not linked from the guide, not in the repository). */
-(function () { var m = /[?&]teacher=([a-z0-9]{6,32})(?:&|$)/.exec(location.search); if (m) document.write('<script src="' + (window.COURSE_CONFIG.sharedBase || '') + 'assets/teacher-' + m[1] + '/part1.js"><\/script>'); })();</script>
-<script src="js/widgets.js"></script>
-<script src="js/relay-http.js"></script>
-<script src="js/bridge.js"></script>
-<script src="js/cameo-dialog.js"></script>
+  <div class="h-field" id="h-field" role="img" aria-label="A flock of sheep grazes in a pasture. A drone patrols around it. Now and then a bear comes, and the drone sends it away.">
+    <svg class="h-route" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><ellipse cx="50" cy="56" rx="37" ry="33"/></svg>
+    <div class="h-state" id="h-state" aria-hidden="true"><i></i><span>Patrolling</span></div>
+    <p class="h-tip" aria-hidden="true">Chase the sheep. Click one.</p>
+  </div>
+</header>
+
+<main>
+
+<section class="h-film" id="film">
+  <div class="h-wrap">
+    <p class="h-kicker rv">The film · 71 s, no sound</p>
+    <h2 class="rv">The handout became an app.</h2>
+    <p class="h-sub rv">One minute to see all of it: the guide next to the tool, a click that opens the element, and the simulation that moves the drone.</p>
+    <div class="h-screen rv" id="h-screen">
+      <img class="h-screen-sheep" src="home/lamb.svg" alt="" aria-hidden="true">
+      <video id="h-video" preload="none" playsinline poster="assets/img/promo-poster.jpg" aria-label="Promo film of MBSE Shepherd">
+        <source src="assets/video/promo-en.mp4" type="video/mp4">
+      </video>
+      <button class="h-play" id="h-play" type="button" aria-label="Play the film">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l12-7.5z"/></svg>
+      </button>
+    </div>
+  </div>
+</section>
+
+<section class="h-link" id="link">
+  <div class="h-wrap">
+    <p class="h-kicker rv">The guide and Cameo</p>
+    <h2 class="rv">The page talks to Cameo, and Cameo answers.</h2>
+    <p class="h-sub rv">A plugin in Cameo and the guide in the browser are linked through the site. Whatever happens on one side shows on the other.</p>
+    <div class="h-lk rv" id="h-lk" data-step="pair">
+      <div class="h-lk-tabs" role="tablist" aria-label="What the link does">
+        <button type="button" role="tab" data-go="pair" aria-selected="true">Pair</button>
+        <button type="button" role="tab" data-go="open" aria-selected="false">Open in Cameo</button>
+        <button type="button" role="tab" data-go="sim" aria-selected="false">Simulate</button>
+        <button type="button" role="tab" data-go="check" aria-selected="false">Validate</button>
+        <button type="button" role="tab" data-go="phone" aria-selected="false">From the phone</button>
+      </div>
+      <div class="h-lk-scene" aria-hidden="true">
+        <div class="lk-side lk-guide">
+          <div class="lk-bar"><b>MBSE Shepherd</b><span class="lk-pill"><i></i>Cameo <em>ABCDEF</em></span></div>
+          <div class="lk-body">
+            <div class="lk-chip"><span>Load Flight Plan</span><b>Open in Cameo</b></div>
+            <div class="lk-field"><i class="lk-zone"></i><img class="lk-drone" src="assets/sim/Drone-without-circle.svg" alt=""><span class="lk-state">Patrolling</span></div>
+            <ul class="lk-checks"><li>Ready for Mission</li><li>Going to Safe Area</li><li>Patrolling</li></ul>
+          </div>
+          <div class="lk-phone"><i></i><div class="lk-ph lk-ph-scan"><svg class="lk-qr" viewBox="-2 -2 33 33"><rect x="-2" y="-2" width="33" height="33" fill="#fff"/><path fill="#111" d="M0 0h7v1h-7zM9 0h1v1h-1zM12 0h2v1h-2zM15 0h6v1h-6zM22 0h7v1h-7zM0 1h1v1h-1zM6 1h1v1h-1zM8 1h1v1h-1zM11 1h5v1h-5zM17 1h2v1h-2zM20 1h1v1h-1zM22 1h1v1h-1zM28 1h1v1h-1zM0 2h1v1h-1zM2 2h3v1h-3zM6 2h1v1h-1zM8 2h5v1h-5zM14 2h2v1h-2zM17 2h1v1h-1zM19 2h1v1h-1zM22 2h1v1h-1zM24 2h3v1h-3zM28 2h1v1h-1zM0 3h1v1h-1zM2 3h3v1h-3zM6 3h1v1h-1zM9 3h3v1h-3zM14 3h1v1h-1zM18 3h3v1h-3zM22 3h1v1h-1zM24 3h3v1h-3zM28 3h1v1h-1zM0 4h1v1h-1zM2 4h3v1h-3zM6 4h1v1h-1zM8 4h1v1h-1zM13 4h3v1h-3zM18 4h1v1h-1zM22 4h1v1h-1zM24 4h3v1h-3zM28 4h1v1h-1zM0 5h1v1h-1zM6 5h1v1h-1zM8 5h2v1h-2zM11 5h1v1h-1zM14 5h3v1h-3zM19 5h1v1h-1zM22 5h1v1h-1zM28 5h1v1h-1zM0 6h7v1h-7zM8 6h1v1h-1zM10 6h1v1h-1zM12 6h1v1h-1zM14 6h1v1h-1zM16 6h1v1h-1zM18 6h1v1h-1zM20 6h1v1h-1zM22 6h7v1h-7zM8 7h2v1h-2zM12 7h1v1h-1zM14 7h7v1h-7zM0 8h2v1h-2zM3 8h1v1h-1zM6 8h2v1h-2zM10 8h1v1h-1zM12 8h3v1h-3zM19 8h1v1h-1zM22 8h3v1h-3zM26 8h2v1h-2zM2 9h2v1h-2zM8 9h1v1h-1zM10 9h2v1h-2zM17 9h2v1h-2zM20 9h3v1h-3zM25 9h1v1h-1zM28 9h1v1h-1zM0 10h1v1h-1zM3 10h4v1h-4zM9 10h2v1h-2zM12 10h1v1h-1zM17 10h3v1h-3zM22 10h1v1h-1zM24 10h4v1h-4zM2 11h2v1h-2zM7 11h2v1h-2zM11 11h3v1h-3zM15 11h2v1h-2zM19 11h3v1h-3zM26 11h2v1h-2zM0 12h2v1h-2zM3 12h1v1h-1zM6 12h3v1h-3zM12 12h2v1h-2zM17 12h1v1h-1zM20 12h4v1h-4zM25 12h1v1h-1zM27 12h2v1h-2zM1 13h1v1h-1zM7 13h1v1h-1zM10 13h3v1h-3zM17 13h5v1h-5zM0 14h1v1h-1zM2 14h6v1h-6zM11 14h1v1h-1zM14 14h1v1h-1zM16 14h2v1h-2zM21 14h2v1h-2zM24 14h5v1h-5zM2 15h1v1h-1zM4 15h2v1h-2zM7 15h2v1h-2zM11 15h3v1h-3zM17 15h1v1h-1zM19 15h1v1h-1zM25 15h1v1h-1zM27 15h1v1h-1zM1 16h1v1h-1zM6 16h1v1h-1zM8 16h2v1h-2zM12 16h1v1h-1zM16 16h3v1h-3zM20 16h2v1h-2zM27 16h1v1h-1zM1 17h3v1h-3zM5 17h1v1h-1zM7 17h4v1h-4zM12 17h3v1h-3zM16 17h2v1h-2zM22 17h2v1h-2zM25 17h1v1h-1zM28 17h1v1h-1zM0 18h1v1h-1zM5 18h3v1h-3zM9 18h2v1h-2zM12 18h1v1h-1zM17 18h1v1h-1zM22 18h1v1h-1zM24 18h1v1h-1zM27 18h2v1h-2zM2 19h1v1h-1zM4 19h2v1h-2zM10 19h3v1h-3zM14 19h4v1h-4zM19 19h1v1h-1zM21 19h1v1h-1zM23 19h2v1h-2zM27 19h2v1h-2zM0 20h1v1h-1zM3 20h7v1h-7zM11 20h3v1h-3zM16 20h1v1h-1zM20 20h5v1h-5zM26 20h1v1h-1zM8 21h2v1h-2zM11 21h2v1h-2zM14 21h1v1h-1zM16 21h2v1h-2zM19 21h2v1h-2zM24 21h1v1h-1zM26 21h3v1h-3zM0 22h7v1h-7zM8 22h2v1h-2zM13 22h1v1h-1zM17 22h1v1h-1zM20 22h1v1h-1zM22 22h1v1h-1zM24 22h1v1h-1zM27 22h1v1h-1zM0 23h1v1h-1zM6 23h1v1h-1zM10 23h2v1h-2zM13 23h1v1h-1zM15 23h1v1h-1zM20 23h1v1h-1zM24 23h4v1h-4zM0 24h1v1h-1zM2 24h3v1h-3zM6 24h1v1h-1zM9 24h1v1h-1zM12 24h1v1h-1zM17 24h1v1h-1zM20 24h5v1h-5zM28 24h1v1h-1zM0 25h1v1h-1zM2 25h3v1h-3zM6 25h1v1h-1zM8 25h5v1h-5zM17 25h2v1h-2zM20 25h1v1h-1zM22 25h5v1h-5zM0 26h1v1h-1zM2 26h3v1h-3zM6 26h1v1h-1zM11 26h2v1h-2zM18 26h3v1h-3zM24 26h3v1h-3zM28 26h1v1h-1zM0 27h1v1h-1zM6 27h1v1h-1zM8 27h1v1h-1zM10 27h1v1h-1zM13 27h2v1h-2zM16 27h2v1h-2zM19 27h2v1h-2zM24 27h1v1h-1zM27 27h1v1h-1zM0 28h7v1h-7zM8 28h3v1h-3zM12 28h2v1h-2zM15 28h1v1h-1zM17 28h4v1h-4zM24 28h1v1h-1zM27 28h1v1h-1z"/></svg><b class="lk-ph-line"></b><small>Scan the code</small></div><div class="lk-ph lk-ph-code"><small>Pairing code</small><span class="lk-ph-letters"><em>A</em><em>B</em><em>C</em><em>D</em><em>E</em><em>F</em></span><small class="lk-ph-ok">✓ Paired with Cameo</small></div><div class="lk-ph lk-ph-app"><b>MBSE Shepherd</b><span class="lk-ph-state">Patrolling</span><span class="lk-ph-btn">Open in Cameo</span><span class="lk-ph-btn lk-ph-btn2">▶ Run</span></div></div>
+        </div>
+        <div class="lk-wire">
+          <i class="pk a"></i><i class="pk b"></i><i class="pk c"></i>
+          <span class="lk-relay">relay<small>shepherd.chaos-art.fr</small></span>
+        </div>
+        <div class="lk-side lk-cameo">
+          <div class="lk-bar"><b>Cameo</b><span class="lk-pill"><i></i>Plugin <em>ABCDEF</em></span></div>
+          <div class="lk-body">
+            <ul class="lk-tree"><li>1 – Operational Analysis</li><li>2 – Functional Analysis</li><li class="in">Deployment</li><li class="in2 target">Load Flight Plan</li><li>3 – Logical Analysis</li></ul>
+            <div class="lk-stm"><span data-s="0">Ready</span><span data-s="1">Going</span><span data-s="2">Patrolling</span></div>
+          </div>
+        </div>
+      </div>
+      <p class="lk-cap" id="h-lk-cap" aria-live="polite"></p>
+    </div>
+  </div>
+</section>
+
+<div class="h-hop" aria-hidden="true">
+  <i class="s1"></i><i class="s2"></i><i class="s3"></i>
+  <svg viewBox="0 0 120 60"><g><rect x="10" y="4" width="9" height="56" rx="2"/><rect x="55" y="4" width="9" height="56" rx="2"/><rect x="100" y="4" width="9" height="56" rx="2"/><rect x="0" y="14" width="120" height="8" rx="2"/><rect x="0" y="36" width="120" height="8" rx="2"/></g></svg>
+</div>
+
+<section class="h-mission" id="mission">
+  <div class="h-wrap">
+    <p class="h-kicker rv">The mission</p>
+    <h2 class="rv">One flock. One drone. One bear.</h2>
+    <p class="h-sub rv">The whole lab is one system: Pasture Sentinel, the drone that shepherds in the Pyrenees call for. It is small enough to hold in your head, and it has everything real systems have.</p>
+    <div class="h-beats">
+      <article class="h-beat rv">
+        <div class="h-mini b1" aria-hidden="true"><i class="zone"></i><img class="sheep a" src="home/lamb.svg" alt=""><img class="sheep b" src="home/lamb.svg" alt=""><img class="drone" src="assets/sim/Drone-without-circle.svg" alt=""></div>
+        <h3>Reach the safe zone</h3>
+        <p>The operator loads a flight plan. The drone checks it, takes off and joins the zone.</p>
+      </article>
+      <article class="h-beat rv">
+        <div class="h-mini b2" aria-hidden="true"><i class="zone"></i><img class="sheep a" src="home/lamb.svg" alt=""><img class="sheep b" src="home/lamb.svg" alt=""><img class="drone" src="assets/sim/Drone-without-circle.svg" alt=""></div>
+        <h3>Patrol the perimeter</h3>
+        <p>Round and round until the end of the mission, keeping an eye on every sheep.</p>
+      </article>
+      <article class="h-beat rv">
+        <div class="h-mini b3" aria-hidden="true"><i class="zone"></i><img class="sheep a" src="home/lamb.svg" alt=""><img class="sheep stray" src="home/lamb.svg" alt=""><b class="ping">Shepherd notified</b><img class="drone" src="assets/sim/Drone-without-circle.svg" alt=""></div>
+        <h3>Spot the stray</h3>
+        <p>A sheep leaves the zone? The shepherd is told, and the patrol goes on.</p>
+      </article>
+      <article class="h-beat rv">
+        <div class="h-mini b4" aria-hidden="true"><i class="zone"></i><img class="sheep a" src="home/lamb.svg" alt=""><img class="bear" src="assets/sim/bear.svg" alt=""><b class="ping">?</b><img class="drone" src="assets/sim/Drone-without-circle.svg" alt=""></div>
+        <h3>Face the bear</h3>
+        <p>And when a predator shows up? That part is yours to model, and it is marked.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="h-method" id="method">
+  <div class="h-wrap">
+    <p class="h-kicker rv">The goal of the lab</p>
+    <h2 class="rv">Four questions before anyone solders anything.</h2>
+    <p class="h-sub rv">MBSE replaces the pile of documents with one model, built in layers. Each layer answers one question, and each is checked against the one before.</p>
+  </div>
+  <div class="h-scrolly h-wrap" id="h-scrolly">
+    <div class="h-stage" aria-hidden="true">
+      <div class="h-stage-tabs"><i data-c="op">Operational</i><i data-c="fn">Functional</i><i data-c="lg">Logical</i><i data-c="ph">Physical</i></div>
+      <!-- Operational: the scenario, sunny day then rainy day -->
+      <svg class="h-dia" data-layer="op" viewBox="0 0 480 340" style="--c:var(--ph-op)">
+        <g class="d-box"><rect x="24" y="16" width="120" height="38" rx="6"/><rect x="180" y="16" width="120" height="38" rx="6"/><rect x="336" y="16" width="120" height="38" rx="6"/></g>
+        <g class="d-t"><text x="84" y="40">Operator</text><text x="240" y="40">Ground Station</text><text x="396" y="40">Pasture Sentinel</text></g>
+        <g class="d-life"><path d="M84 54V330M240 54V330M396 54V330"/></g>
+        <g class="d-msg"><path d="M84 96H234"/><path d="M234 90l8 6-8 6z"/><text x="160" y="88">Flight plan</text><animate attributeName="opacity" values="0;1;1;1;1" keyTimes="0;.08;.5;.9;1" dur="9s" repeatCount="indefinite"/></g>
+        <g class="d-msg"><path d="M240 150H390"/><path d="M390 144l8 6-8 6z"/><text x="316" y="142">FlightPlan</text><animate attributeName="opacity" values="0;0;1;1;1" keyTimes="0;.18;.26;.9;1" dur="9s" repeatCount="indefinite"/></g>
+        <g class="d-msg"><path d="M396 204H246"/><path d="M246 198l-8 6 8 6z"/><text x="316" y="196">Mission ready</text><animate attributeName="opacity" values="0;0;1;1;1" keyTimes="0;.36;.44;.9;1" dur="9s" repeatCount="indefinite"/></g>
+        <g class="d-msg rain"><rect x="196" y="232" width="244" height="86" rx="6"/><text x="214" y="250" class="tag">rainy day</text><path d="M396 288H246"/><path d="M246 282l-8 6 8 6z"/><text x="316" y="280">Check Failed</text><animate attributeName="opacity" values="0;0;1;1;1" keyTimes="0;.56;.64;.9;1" dur="9s" repeatCount="indefinite"/></g>
+      </svg>
+      <!-- Functional: the state machine, a token walks through its states -->
+      <svg class="h-dia" data-layer="fn" viewBox="0 0 480 340" style="--c:var(--ph-fn)">
+        <g class="d-frame"><rect x="12" y="12" width="456" height="136" rx="10"/><rect x="12" y="172" width="456" height="156" rx="10"/><text x="30" y="36">Undeployed</text><text x="30" y="196">Deployed</text></g>
+        <g class="d-arrow"><path id="fn-path" d="M95 80H240H385V160H150V248H337"/></g>
+        <g class="d-box"><rect x="28" y="66" width="134" height="52" rx="14"/><rect x="176" y="66" width="128" height="52" rx="14"/><rect x="318" y="66" width="134" height="52" rx="14"/><rect x="60" y="234" width="170" height="52" rx="14"/><rect x="262" y="234" width="150" height="52" rx="14"/></g>
+        <g class="d-t"><text x="95" y="107">Unconfigured</text><text x="240" y="107">Configured</text><text x="385" y="107">Ready</text><text x="145" y="275">Going to Safe Area</text><text x="337" y="275">Patrolling</text></g>
+        <circle class="d-token" r="8"><animateMotion dur="7s" repeatCount="indefinite" keyPoints="0;0;.17;.17;.34;.34;.82;.82;1;1" keyTimes="0;.1;.2;.3;.4;.5;.68;.76;.88;1" calcMode="linear"><mpath href="#fn-path"/></animateMotion></circle>
+      </svg>
+      <!-- Logical: subsystems and what they exchange -->
+      <svg class="h-dia" data-layer="lg" viewBox="0 0 480 340" style="--c:var(--ph-lg)">
+        <g class="d-frame"><rect x="12" y="12" width="456" height="316" rx="10"/><text x="30" y="36">Pasture Sentinel</text></g>
+        <g class="d-arrow"><path id="lg-a" d="M240 165C170 165 150 100 130 92"/><path id="lg-b" d="M240 165C310 165 330 100 350 92"/><path id="lg-c" d="M240 165C170 165 150 250 130 262"/><path id="lg-d" d="M240 165C310 165 330 250 350 262"/></g>
+        <g class="d-box"><rect x="170" y="134" width="140" height="62" rx="8"/><rect x="34" y="62" width="130" height="56" rx="8"/><rect x="316" y="62" width="134" height="56" rx="8"/><rect x="34" y="236" width="130" height="56" rx="8"/><rect x="316" y="236" width="134" height="56" rx="8"/></g>
+        <g class="d-t"><text x="240" y="170" class="b">:Orchestrator</text><text x="99" y="95">:Mission Config</text><text x="383" y="95">:Navigation</text><text x="99" y="269">:Flock Watch</text><text x="383" y="269">:Patrol</text></g>
+        <g class="d-pulses">
+          <circle r="6"><animateMotion dur="2.4s" repeatCount="indefinite"><mpath href="#lg-a"/></animateMotion></circle>
+          <circle r="6"><animateMotion dur="2.4s" begin="-.6s" repeatCount="indefinite" keyPoints="1;0" keyTimes="0;1" calcMode="linear"><mpath href="#lg-b"/></animateMotion></circle>
+          <circle r="6"><animateMotion dur="2.4s" begin="-1.2s" repeatCount="indefinite" keyPoints="1;0" keyTimes="0;1" calcMode="linear"><mpath href="#lg-c"/></animateMotion></circle>
+          <circle r="6"><animateMotion dur="2.4s" begin="-1.8s" repeatCount="indefinite"><mpath href="#lg-d"/></animateMotion></circle>
+        </g>
+      </svg>
+      <!-- Physical: the requirements land on real parts, each one made or bought -->
+      <svg class="h-dia" data-layer="ph" viewBox="0 0 480 340" style="--c:var(--ph-ph)">
+        <g class="d-box"><rect x="20" y="130" width="136" height="84" rx="8"/><rect x="172" y="130" width="136" height="84" rx="8"/><rect x="324" y="130" width="136" height="84" rx="8"/><rect x="20" y="236" width="136" height="84" rx="8"/><rect x="172" y="236" width="136" height="84" rx="8"/><rect x="324" y="236" width="136" height="84" rx="8"/></g>
+        <g class="d-t"><text x="88" y="154">Flight Controller</text><text x="240" y="154">Mission Software</text><text x="392" y="154">GNSS Receiver</text><text x="88" y="260">Radio Link</text><text x="240" y="260">Camera</text><text x="392" y="260">Bear Detection</text></g>
+        <g class="d-tag"><text class="d-buy" x="88" y="174">BUY</text><text class="d-make" x="240" y="174">MAKE</text><text class="d-buy" x="392" y="174">BUY</text><text class="d-buy" x="88" y="280">BUY</text><text class="d-buy" x="240" y="280">BUY</text><text class="d-make" x="392" y="280">MAKE</text></g>
+        <g class="d-chip"><rect x="-64" y="-13" width="128" height="26" rx="13"/><text y="4">Plan loaded in 5 s</text><animateTransform attributeName="transform" type="translate" values="240 30;240 30;240 196;240 196" keyTimes="0;.15;.42;1" dur="7s" repeatCount="indefinite"/></g>
+        <g class="d-chip"><rect x="-52" y="-13" width="104" height="26" rx="13"/><text y="4">Link at 2 km</text><animateTransform attributeName="transform" type="translate" values="88 70;88 70;88 302;88 302" keyTimes="0;.42;.68;1" dur="7s" repeatCount="indefinite"/></g>
+        <g class="d-chip"><rect x="-66" y="-13" width="132" height="26" rx="13"/><text y="4">Bear seen at 200 m</text><animateTransform attributeName="transform" type="translate" values="392 40;392 40;240 302;240 302" keyTimes="0;.62;.9;1" dur="7s" repeatCount="indefinite"/></g>
+      </svg>
+    </div>
+    <div class="h-steps">
+      <article class="h-step" data-layer="op" style="--c:var(--ph-op)">
+        <p class="h-q">Operational</p>
+        <h3>What is expected of the system?</h3>
+        <p>Who is involved, and how does the mission unfold? You write the scenarios on a sunny day, then on a rainy day, when the flight plan is wrong.</p>
+      </article>
+      <article class="h-step" data-layer="fn" style="--c:var(--ph-fn)">
+        <p class="h-q">Functional</p>
+        <h3>How does it do it?</h3>
+        <p>Functions, states, signals. The state machine is no drawing: it runs, and it moves the drone.</p>
+      </article>
+      <article class="h-step" data-layer="lg" style="--c:var(--ph-lg)">
+        <p class="h-q">Logical</p>
+        <h3>Which subsystem carries what?</h3>
+        <p>You cut the drone into subsystems, and you say what they exchange. Three architectures, one choice, and you defend it. Still cheap to change.</p>
+      </article>
+      <article class="h-step" data-layer="ph" style="--c:var(--ph-ph)">
+        <p class="h-q">Physical</p>
+        <h3>What do we build, and what do we buy?</h3>
+        <p>Each subsystem becomes real parts: a camera, a flight computer, a piece of software. For each one, one question: make it or buy it off the shelf? The requirements decide, and each part must prove it meets them.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="h-validate" id="validate">
+  <div class="h-wrap">
+    <p class="h-kicker rv">Early validation</p>
+    <h2 class="rv">Find the mistake while it is still cheap.</h2>
+    <div class="h-curve-grid">
+      <p class="h-sub rv">A wrong assumption costs a click in a model, and a campaign once the drone is built. So the lab has you run your model at every step, long before there is anything to fly. <b>Scroll, and watch the sheep climb.</b></p>
+      <figure class="h-curve rv" id="h-curve">
+        <svg viewBox="0 0 640 300" role="img" aria-label="Illustration: the cost of fixing a mistake climbs steeply from the operational layer to the flying drone. The lab catches mistakes in the first layers.">
+          <g class="c-grid"><path d="M60 250H620"/><path d="M60 20V250"/></g>
+          <path class="c-zone" d="M60 20H300V250H60Z"/>
+          <text class="c-zone-t" x="72" y="42">You catch it here</text>
+          <path class="c-line" id="h-curve-path" d="M60 238C200 232 300 222 400 180S540 70 615 26"/>
+          <g class="c-x"><text x="96" y="272">Operational</text><text x="210" y="272">Functional</text><text x="316" y="272">Logical</text><text x="416" y="272">Physical</text><text x="540" y="272">Built, flying</text></g>
+          <text class="c-y" transform="translate(40 250) rotate(-90)">Cost of fixing a mistake</text>
+          <image id="h-curve-sheep" href="home/lamb.svg" width="48" height="41" x="-24" y="-37"/>
+        </svg>
+        <figcaption>Illustration of the idea, not measured data.</figcaption>
+      </figure>
+    </div>
+
+    <h3 class="h-try rv">Try it: you are the model.</h3>
+    <div class="h-sim rv" id="h-sim">
+      <div class="h-sim-side">
+        <p class="h-sim-now">Now <strong id="h-sim-step">Off</strong></p>
+        <ol class="h-sim-track" id="h-sim-track"></ol>
+        <p class="h-sim-label">Send the next signal</p>
+        <div class="h-sim-signals" id="h-sim-signals"></div>
+        <p class="h-sim-note" id="h-sim-note" aria-live="polite"></p>
+        <button class="h-sim-reset" id="h-sim-reset" type="button">Restart</button>
+      </div>
+      <div class="h-sim-stage" id="h-sim-stage" role="img" aria-label="The real simulation panel of the guides: the pasture, the flock and the drone. The drone follows the signals you send."></div>
+    </div>
+    <p class="h-sim-foot rv">This is the panel of the guides. In the lab, nobody clicks these signals: they come from your own model, running in Cameo.</p>
+  </div>
+</section>
+
+<section class="h-parts" id="parts">
+  <div class="h-wrap">
+    <p class="h-kicker rv">The route</p>
+    <h2 class="rv">Four parts, one flock.</h2>
+
+    <div class="h-route-list" id="h-route-list">
+      <i class="h-route-line" aria-hidden="true"></i>
+      <img class="h-route-sheep" id="h-route-sheep" src="home/lamb.svg" alt="" aria-hidden="true">
+
+      <a class="h-part rv" href="part1/" style="--c:var(--ph-op)">
+        <span class="h-way" aria-hidden="true">1</span>
+        <div class="h-part-body">
+          <p class="h-part-tag">Guided</p>
+          <h3>Discover</h3>
+          <p>Take the tool in hand on the Pasture Sentinel drone. Use case, sequence, activity, state machine, internal blocks: every gesture is shown, and at the end the drone flies your model.</p>
+          <span class="h-go">Open Part 1 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></span>
+        </div>
+        <div class="h-part-art p1" aria-hidden="true"><img class="d" src="assets/sim/Drone-without-circle.svg" alt=""><img class="s" src="home/lamb.svg" alt=""><img class="s two" src="home/lamb.svg" alt=""></div>
+      </a>
+
+      <a class="h-part rv" href="part2/" style="--c:var(--route)">
+        <span class="h-way" aria-hidden="true">2</span>
+        <div class="h-part-body">
+          <p class="h-part-tag">Marked seminar</p>
+          <h3>Protect the flock</h3>
+          <p>The Pyrenean bear arrives. Now the guide only says what is asked and where to work: the modelling is yours, and it counts.</p>
+          <span class="h-go">Open Part 2 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></span>
+        </div>
+        <div class="h-part-art p2" aria-hidden="true"><img class="b" src="assets/sim/bear.svg" alt=""><img class="s" src="home/lamb.svg" alt=""></div>
+      </a>
+
+      <a class="h-part rv" href="part3/" style="--c:var(--ph-lg)">
+        <span class="h-way" aria-hidden="true">3</span>
+        <div class="h-part-body">
+          <p class="h-part-tag">Logical architecture</p>
+          <h3>Cut it into subsystems</h3>
+          <p>Play three architectures of the same drone, choose yours, then build it one scenario event at a time, and validate each event in Cameo from the guide.</p>
+          <span class="h-go">Open Part 3 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></span>
+        </div>
+        <div class="h-part-art p3" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+      </a>
+
+      <a class="h-part rv" href="part4/" style="--c:var(--ph-fn)">
+        <span class="h-way" aria-hidden="true">4</span>
+        <div class="h-part-body">
+          <p class="h-part-tag">The swarm</p>
+          <h3>One drone is not enough</h3>
+          <p>The system becomes a whole fleet. Plug bricks like Lego, watch your drones assemble in 3D, play the missions, then unplug and try again.</p>
+          <span class="h-go">Open Part 4 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></span>
+        </div>
+        <div class="h-part-art p4" aria-hidden="true"><img src="assets/sim/Drone-without-circle.svg" alt=""><img src="assets/sim/Drone-without-circle.svg" alt=""><img src="assets/sim/Drone-without-circle.svg" alt=""></div>
+      </a>
+    </div>
+
+    <div class="h-doing rv" id="h-doing">
+      <div class="h-doing-num">
+        <strong id="h-doing-pct">73%</strong>
+        <p>of the <span id="h-doing-total">172</span> scenes have you doing something, not just reading.</p>
+      </div>
+      <figure class="h-bars">
+        <figcaption>What each scene asks of you, part by part</figcaption>
+        <div class="h-legend" id="h-legend"></div>
+        <div id="h-bars" class="h-bars-rows"></div>
+        <div class="h-tip-box" id="h-tip-box" hidden></div>
+        <table class="sr-only" id="h-bars-table"></table>
+      </figure>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="h-foot">
+  <div class="h-wrap">
+    <p class="h-foot-title">MBSE Shepherd</p>
+    <p>Domaine Systèmes Autonomes · DSAT301 Systèmes Embarqués · ISAE-SUPAERO</p>
+    <p>Quentin Cespédès · <a href="mailto:q.cespedes.pro@gmail.com">q.cespedes.pro@gmail.com</a></p>
+  </div>
+  <div class="h-foot-flock" aria-hidden="true"><img src="home/lamb.svg" alt=""><img src="home/lamb.svg" alt=""><img src="home/lamb.svg" alt=""><img src="home/lamb.svg" alt=""></div>
+</footer>
+
+<noscript><p style="padding:1rem">The animations of this page need JavaScript. The links to the parts work without it.</p></noscript>
+
 <script src="js/sim-core.js"></script>
 <script src="js/sim-motion.js"></script>
 <script src="js/sim-scene.js"></script>
-<script src="js/sim.js"></script>
-<script src="js/track.js"></script>
-<script src="js/engine.js"></script>
+<script src="home/home.js"></script>
 </body>
 </html>

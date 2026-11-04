@@ -1,0 +1,14 @@
+<!-- The little sheep of the film (LAMB in promo/promo.js). -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 120">
+<ellipse cx="72" cy="113" rx="44" ry="6" fill="rgba(0,0,0,.28)"/>
+<g fill="#2d2b33"><rect x="42" y="84" width="10" height="27" rx="5"/><rect x="58" y="88" width="10" height="24" rx="5"/><rect x="82" y="88" width="10" height="24" rx="5"/><rect x="98" y="84" width="10" height="27" rx="5"/></g>
+<g fill="#fff" stroke="#cfd8c9" stroke-width="6"><circle cx="50" cy="62" r="24"/><circle cx="72" cy="50" r="26"/><circle cx="94" cy="60" r="24"/><circle cx="72" cy="76" r="24"/><circle cx="52" cy="82" r="18"/><circle cx="92" cy="82" r="18"/><circle cx="36" cy="70" r="16"/><circle cx="106" cy="72" r="16"/></g>
+<g fill="#fff"><circle cx="50" cy="62" r="24"/><circle cx="72" cy="50" r="26"/><circle cx="94" cy="60" r="24"/><circle cx="72" cy="76" r="24"/><circle cx="52" cy="82" r="18"/><circle cx="92" cy="82" r="18"/><circle cx="36" cy="70" r="16"/><circle cx="106" cy="72" r="16"/></g>
+<ellipse cx="99" cy="47" rx="10" ry="5.5" fill="#2d2b33" transform="rotate(-28 99 47)"/>
+<ellipse cx="129" cy="46" rx="10" ry="5.5" fill="#2d2b33" transform="rotate(28 129 46)"/>
+<ellipse cx="114" cy="60" rx="18" ry="20" fill="#2d2b33"/>
+<g fill="#fff"><circle cx="107" cy="41" r="7.5"/><circle cx="115" cy="37" r="8"/><circle cx="122" cy="42" r="7"/></g>
+<circle cx="108" cy="59" r="5" fill="#fff"/><circle cx="121" cy="59" r="5" fill="#fff"/><circle cx="109" cy="60" r="2.8" fill="#111"/><circle cx="122" cy="60" r="2.8" fill="#111"/><circle cx="110" cy="58.6" r="1" fill="#fff"/><circle cx="123" cy="58.6" r="1" fill="#fff"/>
+<g fill="#ff9cc5" opacity=".85"><ellipse cx="103" cy="68" rx="4.5" ry="2.6"/><ellipse cx="126" cy="68" rx="4.5" ry="2.6"/></g>
+<path d="M111 70q2.5 3 5 0q2.5 3 5 0" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>
+</svg>
