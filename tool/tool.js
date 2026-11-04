@@ -390,7 +390,7 @@
   /* the online guide for the online relay, else the guide served next to this page, told which relay */
   function guideUrl() {
     const online = relayBase() === ONLINE_RELAY;
-    const u = online ? new URL('/', ONLINE_SITE) : new URL('../index.html', location.href);
+    const u = online ? new URL('/part1/', ONLINE_SITE) : new URL('../part1/index.html', location.href);
     u.searchParams.set('code', link.code);
     if (!online) u.searchParams.set('relay', relayBase());
     return u.href;

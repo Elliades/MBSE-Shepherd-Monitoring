@@ -1827,6 +1827,31 @@
     return () => L.end();
   };
 
+  /* ───────── plugin extraction: a small Explorer that loops (CSS only) ───────── */
+  W.pluginExtract = function (root, opts) {
+    const path = opts.path || '...' + String.fromCharCode(92) + '2026x';
+    // [name, appears %, disappears %]: one 10 s loop, each element gets its own keyframes
+    const parts = [['bar', 2, 97], ['zip', 14, 97], ['tag', 36, 56], ['d1', 62, 97], ['d2', 67, 97], ['d3', 72, 97], ['ok', 78, 97]];
+    const css = parts.map(([n, a, b]) =>
+      `@keyframes pe-${n}{0%,${a - 0.01}%{opacity:0;transform:translateY(5px)}${a + 3}%,${b}%{opacity:1;transform:none}${Math.min(b + 3, 100)}%,100%{opacity:0}}` +
+      `.pe-${n}{animation:pe-${n} 10s ease infinite}`).join('');
+    root.innerHTML = `<figure class="pe" aria-label="What you should see in the Explorer">
+      <style>${css}</style>
+      <div class="pe-win">
+        <div class="pe-top"><span class="pe-dots"><i></i><i></i><i></i></span>
+          <div class="pe-addr"><span class="pe-bar">${api_esc(path)}</span></div></div>
+        <div class="pe-body">
+          <div class="pe-row pe-zip"><span class="pe-ic zip"></span>com.elliades.isae.mbseShepherd_1.2.0.zip<em class="pe-tag">Extract here</em></div>
+          <div class="pe-row pe-d1"><span class="pe-ic dir"></span>data</div>
+          <div class="pe-row pe-d2 key"><span class="pe-ic dir"></span>plugins</div>
+          <div class="pe-row pe-d3"><span class="pe-ic dir"></span>profiles</div>
+        </div>
+      </div>
+      <figcaption class="pe-cap"><b class="pe-ok">Expected: data, plugins and profiles are in the folder.</b></figcaption>
+    </figure>`;
+  };
+  const api_esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
   /* ───────── recap ───────── */
   let celebrated = false;
   W.recap = function (root, opts, api) {

@@ -694,11 +694,13 @@ body:not(.author) .ph, body:not(.author) .author-only { display: none; }
 }
 .q-opt span::before { content: ""; width: 1.25rem; height: 1.25rem; border-radius: 50%; border: 2px solid var(--ink-3); flex: none; transition: box-shadow 0.2s, border-color 0.2s; }
 .q-opt input:checked + span { transform: scale(1.02); }
-/* one color per option: 1st option blue, 2nd option green */
+/* one color per option: 1st option blue, 2nd option green, 3rd option amber */
 .q-opt:nth-child(1) input:checked + span { border-color: var(--sky); background: var(--sky-soft); }
 .q-opt:nth-child(1) input:checked + span::before { border-color: var(--sky); box-shadow: inset 0 0 0 4px var(--sky-soft), inset 0 0 0 10px var(--sky); }
 .q-opt:nth-child(2) input:checked + span { border-color: var(--grass); background: var(--grass-soft); }
 .q-opt:nth-child(2) input:checked + span::before { border-color: var(--grass); box-shadow: inset 0 0 0 4px var(--grass-soft), inset 0 0 0 10px var(--grass); }
+.q-opt:nth-child(3) input:checked + span { border-color: var(--amber); background: var(--amber-soft); }
+.q-opt:nth-child(3) input:checked + span::before { border-color: var(--amber); box-shadow: inset 0 0 0 4px var(--amber-soft), inset 0 0 0 10px var(--amber); }
 .q-opt input:focus-visible + span { outline: 3px solid var(--sky); outline-offset: 2px; }
 .field { display: grid; gap: 0.3rem; }
 .field label { font-weight: 700; font-size: 0.92rem; }
@@ -1419,3 +1421,43 @@ body.teacher {
 .by-choice-head { display: flex; align-items: center; gap: .5rem; margin: 0 0 1rem; padding: .5rem .75rem; border-radius: var(--r-sm, 8px); background: var(--surface-2, rgba(127,127,127,.08)); font-size: .9rem; }
 .by-choice-head svg { width: 1rem; height: 1rem; flex: none; }
 .by-choice-head span { flex: 1; }
+
+/* ───────── plugin extraction widget (little Explorer, loops) ───────── */
+.pe { margin: 0.4rem 0 0.2rem; display: grid; gap: 0.5rem; max-width: 34rem; }
+.pe-win { border: 1.5px solid var(--line); border-radius: 10px; background: var(--surface); overflow: hidden; box-shadow: var(--shadow); }
+.pe-top { display: flex; align-items: center; gap: 0.6rem; padding: 0.45rem 0.6rem; background: var(--surface-2); border-bottom: 1.5px solid var(--line); }
+.pe-dots { display: flex; gap: 4px; }
+.pe-dots i { width: 8px; height: 8px; border-radius: 50%; background: var(--line); }
+.pe-addr { flex: 1; min-width: 0; padding: 0.2rem 0.5rem; border: 1.5px solid var(--line); border-radius: 6px; background: var(--surface); font: 600 0.78rem var(--font-mono); overflow: hidden; white-space: nowrap; }
+.pe-bar { display: inline-block; }
+.pe-body { padding: 0.5rem 0.6rem; display: grid; gap: 0.15rem; min-height: 7.6rem; align-content: start; }
+.pe-row { position: relative; display: flex; align-items: center; gap: 0.5rem; padding: 0.2rem 0.4rem; border-radius: 5px; font-size: 0.86rem; opacity: 0; }
+.pe-row.key { background: var(--grass-soft); color: var(--grass); font-weight: 700; }
+.pe-ic { width: 16px; height: 12px; border-radius: 2px; background: var(--amber-soft); border: 1.5px solid var(--amber); flex: none; }
+.pe-ic.zip { background: var(--sky-soft); border-color: var(--sky); }
+.pe-tag { margin-left: auto; padding: 0.1rem 0.5rem; border-radius: 999px; background: var(--route); color: var(--on-route); font-style: normal; font-size: 0.74rem; font-weight: 700; opacity: 0; }
+.pe-cap { font-size: 0.86rem; color: var(--grass); }
+.pe-cap .pe-ok { font-weight: 700; }
+.pe-bar, .pe-ok { opacity: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .pe-win *, .pe-cap, .pe-cap * { animation: none !important; opacity: 1 !important; transform: none !important; }
+  .pe-tag { display: none; }
+}
+
+/* ───────── do vs explain ─────────
+   What the student must do (steps) wears the colour of "Do in Cameo"; what only explains (animations) wears the
+   colour of "Understand". Same two colours as the kind of the scene. */
+.steps-wrap { display: grid; gap: 0.45rem; max-width: 44rem; padding-left: 0.75rem; border-left: 4px solid var(--route); }
+.steps-tag, .watch-tag {
+  display: inline-flex; align-items: center; gap: 0.4rem; justify-self: start; width: max-content; max-width: 100%;
+  font-family: var(--font-mono); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase;
+  padding: 0.18rem 0.6rem 0.18rem 0.45rem; border-radius: 999px; line-height: 1.3;
+}
+.steps-tag { background: var(--route-soft); color: var(--route); }
+.watch-tag { margin: 0 0 0.5rem; background: var(--sky-soft); color: var(--sky); }
+.steps-tag svg, .watch-tag svg { width: 1rem; height: 1rem; flex: none; }
+.steps-wrap .step-n { border-color: var(--route); color: var(--route); }
+.pair-how { list-style: decimal; padding-left: 1.4rem; }
+.pair-how li { padding-left: 0.2rem; }
+.pair-how li::before { content: none; }
+.pair-tip [data-widget="linkStatus"] { margin-top: 0.7rem; }

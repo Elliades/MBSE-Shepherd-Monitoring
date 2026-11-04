@@ -148,7 +148,7 @@
           onlineCode = f.code;
           try { localStorage.setItem(ONLINE_CODE_KEY, onlineCode); } catch (e) { /* not kept */ }
           showCode(onlineCode);
-          const guide = `${location.origin}/?code=${onlineCode}`;
+          const guide = `${location.origin}/part1/?code=${onlineCode}`;
           $('guide-link').innerHTML = `On the phone: scan the code, open <a href="${guide}" target="_blank" rel="noopener">${guide}</a>, or type the 6 letters in the guide.`;
           drawQr(guide);
           document.title = `● Bridge ${onlineCode}`;
