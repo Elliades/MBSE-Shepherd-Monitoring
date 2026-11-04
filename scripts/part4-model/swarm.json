@@ -1,0 +1,3075 @@
+{
+ "owner": {
+  "elementId": "_2026x_1_1fda04ff_1793137415433_578438_21729"
+ },
+ "name": "TP - Swarm",
+ "replace": true,
+ "reuseSignals": true,
+ "reuseScope": [
+  {
+   "elementId": "_18_5_1_150503da_1507786242011_858192_48493"
+  }
+ ],
+ "stateStereotype": "Logical Mode",
+ "functions": [
+  {
+   "name": "Define watch pathing",
+   "steps": []
+  },
+  {
+   "name": "Follow path",
+   "steps": []
+  },
+  {
+   "name": "get current position",
+   "steps": []
+  },
+  {
+   "name": "Acquire Flight Plan",
+   "steps": []
+  },
+  {
+   "name": "Check Flight Plan validity",
+   "steps": []
+  },
+  {
+   "name": "Capture surounding",
+   "steps": []
+  },
+  {
+   "name": "Detect Sheeps",
+   "steps": []
+  },
+  {
+   "name": "Count Sheep",
+   "steps": [
+    {
+     "call": "Detect Sheeps"
+    },
+    {
+     "call": "store sheeps location"
+    },
+    {
+     "call": "Send sheep location"
+    }
+   ]
+  },
+  {
+   "name": "Detect sheep exit",
+   "steps": []
+  },
+  {
+   "name": "acquire animal signature",
+   "steps": []
+  },
+  {
+   "name": "Detect Predator",
+   "steps": []
+  },
+  {
+   "name": "Compute target position",
+   "steps": []
+  },
+  {
+   "name": "store Predator location",
+   "steps": []
+  }
+ ],
+ "blocks": [
+  {
+   "name": "Zone Surveillance",
+   "stereotypes": [
+    "Logical Component"
+   ],
+   "doc": "Region Perimiter watch of the mission. Plug it in a drone: as long as the drone is on station, it patrols the perimeter of the field.",
+   "ports": [
+    {
+     "name": "p_AutoPilot",
+     "in": [
+      "On Station",
+      "Off Station",
+      "Mission Over"
+     ]
+    }
+   ],
+   "functions": [
+    {
+     "name": "Patrol perimeter",
+     "steps": [
+      {
+       "call": "Define watch pathing"
+      },
+      {
+       "call": "Follow path"
+      }
+     ],
+     "trace": "Watch Perimeter"
+    }
+   ],
+   "stm": {
+    "initial": "Zone Idle",
+    "states": [
+     {
+      "name": "Zone Idle"
+     },
+     {
+      "name": "Watching Perimeter",
+      "do": "Patrol perimeter"
+     },
+     {
+      "name": "Zone Stopped"
+     }
+    ],
+    "transitions": [
+     {
+      "from": "Zone Idle",
+      "to": "Watching Perimeter",
+      "on": "On Station"
+     },
+     {
+      "from": "Watching Perimeter",
+      "to": "Zone Idle",
+      "on": "Off Station"
+     },
+     {
+      "from": "Watching Perimeter",
+      "to": "Zone Stopped",
+      "on": "Mission Over"
+     },
+     {
+      "from": "Zone Idle",
+      "to": "Zone Stopped",
+      "on": "Mission Over"
+     }
+    ]
+   }
+  },
+  {
+   "name": "Flock Watching",
+   "stereotypes": [
+    "Logical Component"
+   ],
+   "doc": "Region Sheep Monitoring of the mission, the watching half. Plug it in a drone: as long as the drone is on station, it counts the flock. A sheep out of the zone: it warns the operator and says so to the intelligence. It never leaves: following is the job of Sheep Tracking.",
+   "ports": [
+    {
+     "name": "p_AutoPilot",
+     "in": [
+      "On Station",
+      "Off Station",
+      "Mission Over"
+     ],
+     "out": [
+      "Sheep Exit Alert"
+     ]
+    },
+    {
+     "name": "p_Camera",
+     "in": [
+      "Sheep Signature",
+      "Sheep Out Of Zone"
+     ]
+    },
+    {
+     "name": "p_Swarm",
+     "out": [
+      "Stray Sheep Spotted"
+     ]
+    }
+   ],
+   "functions": [
+    {
+     "name": "Watch the flock",
+     "steps": [
+      {
+       "call": "Capture surounding"
+      },
+      {
+       "call": "Detect Sheeps"
+      }
+     ],
+     "trace": "Sheep monitoring",
+     "reactions": [
+      {
+       "on": "Sheep Signature",
+       "steps": [
+        {
+         "call": "Count Sheep"
+        }
+       ]
+      },
+      {
+       "on": "Sheep Out Of Zone",
+       "steps": [
+        {
+         "call": "Detect sheep exit"
+        },
+        {
+         "send": "Sheep Exit Alert",
+         "port": "p_AutoPilot"
+        },
+        {
+         "send": "Stray Sheep Spotted",
+         "port": "p_Swarm"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "stm": {
+    "initial": "Flock Idle",
+    "states": [
+     {
+      "name": "Flock Idle"
+     },
+     {
+      "name": "Watching Flock",
+      "do": "Watch the flock"
+     },
+     {
+      "name": "Flock Stopped"
+     }
+    ],
+    "transitions": [
+     {
+      "from": "Flock Idle",
+      "to": "Watching Flock",
+      "on": "On Station"
+     },
+     {
+      "from": "Watching Flock",
+      "to": "Flock Idle",
+      "on": "Off Station"
+     },
+     {
+      "from": "Watching Flock",
+      "to": "Flock Stopped",
+      "on": "Mission Over"
+     },
+     {
+      "from": "Flock Idle",
+      "to": "Flock Stopped",
+      "on": "Mission Over"
+     }
+    ]
+   }
+  },
+  {
+   "name": "Sheep Tracking",
+   "stereotypes": [
+    "Logical Component"
+   ],
+   "doc": "Region Sheep Monitoring of the mission, the following half. Plug it in a drone: it waits for a job. The job opens, it asks for it; given, the drone follows the sheep until it is back in the zone; taken, another drone has it. It sees no stray by itself: someone has to watch.",
+   "ports": [
+    {
+     "name": "p_AutoPilot",
+     "in": [
+      "Mission Started",
+      "On Station",
+      "Off Station",
+      "Mission Over"
+     ],
+     "out": [
+      "Follow Sheep",
+      "Back To Station"
+     ]
+    },
+    {
+     "name": "p_Camera",
+     "in": [
+      "Sheep Back In Zone"
+     ]
+    },
+    {
+     "name": "p_Swarm",
+     "out": [
+      "Ask Sheep Job",
+      "Sheep Job Done"
+     ],
+     "in": [
+      "Sheep Job Open",
+      "Sheep Job Given",
+      "Sheep Job Taken"
+     ]
+    }
+   ],
+   "functions": [
+    {
+     "name": "Ask to follow the sheep",
+     "steps": [
+      {
+       "send": "Ask Sheep Job",
+       "port": "p_Swarm"
+      }
+     ],
+     "trace": "Track stray sheep"
+    },
+    {
+     "name": "Go after the sheep",
+     "steps": [
+      {
+       "send": "Follow Sheep",
+       "port": "p_AutoPilot"
+      }
+     ],
+     "trace": "Track stray sheep"
+    },
+    {
+     "name": "Bring the sheep back",
+     "steps": [
+      {
+       "send": "Back To Station",
+       "port": "p_AutoPilot"
+      },
+      {
+       "send": "Sheep Job Done",
+       "port": "p_Swarm"
+      }
+     ],
+     "trace": "Track stray sheep"
+    }
+   ],
+   "stm": {
+    "initial": "Tracker Idle",
+    "states": [
+     {
+      "name": "Tracker Idle"
+     },
+     {
+      "name": "Tracker On Call",
+      "initial": "Waiting For A Stray",
+      "states": [
+       {
+        "name": "Waiting For A Stray"
+       },
+       {
+        "name": "Busy Elsewhere"
+       },
+       {
+        "name": "Asking For Sheep Job",
+        "entry": "Ask to follow the sheep"
+       },
+       {
+        "name": "Following Sheep Out",
+        "entry": "Go after the sheep"
+       }
+      ],
+      "transitions": [
+       {
+        "from": "Waiting For A Stray",
+        "to": "Busy Elsewhere",
+        "on": "Off Station"
+       },
+       {
+        "from": "Busy Elsewhere",
+        "to": "Waiting For A Stray",
+        "on": "On Station"
+       },
+       {
+        "from": "Waiting For A Stray",
+        "to": "Asking For Sheep Job",
+        "on": "Sheep Job Open"
+       },
+       {
+        "from": "Asking For Sheep Job",
+        "to": "Following Sheep Out",
+        "on": "Sheep Job Given"
+       },
+       {
+        "from": "Asking For Sheep Job",
+        "to": "Waiting For A Stray",
+        "on": "Sheep Job Taken"
+       },
+       {
+        "from": "Following Sheep Out",
+        "to": "Waiting For A Stray",
+        "on": "Sheep Back In Zone",
+        "effect": "Bring the sheep back"
+       }
+      ]
+     },
+     {
+      "name": "Tracker Stopped"
+     }
+    ],
+    "transitions": [
+     {
+      "from": "Tracker Idle",
+      "to": "Tracker On Call",
+      "on": "Mission Started"
+     },
+     {
+      "from": "Tracker On Call",
+      "to": "Tracker Stopped",
+      "on": "Mission Over"
+     }
+    ]
+   }
+  },
+  {
+   "name": "Predator Management",
+   "stereotypes": [
+    "Logical Component"
+   ],
+   "doc": "Region Predator Monitoring of the mission. Plug it in a drone: thermal camera and deterrent. A bear in the tracking perimeter: it asks for the job; given, it tracks it and deters it until it has left. On a drone waiting at the base, it hears the alarm of the field.",
+   "ports": [
+    {
+     "name": "p_AutoPilot",
+     "in": [
+      "Mission Started",
+      "On Station",
+      "Off Station",
+      "Mission Over"
+     ],
+     "out": [
+      "Track Predator",
+      "Deter",
+      "Stop Deterring",
+      "Back To Station",
+      "Predator Alert",
+      "Predator Cleared"
+     ]
+    },
+    {
+     "name": "p_Camera",
+     "in": [
+      "Bear Inside Tracking Perimeter",
+      "Bear Inside Safe Perimeter",
+      "Bear Outside Perimeter"
+     ]
+    },
+    {
+     "name": "p_Swarm",
+     "out": [
+      "Ask Predator Job",
+      "Predator Job Done"
+     ],
+     "in": [
+      "Predator Job Given",
+      "Predator Job Taken"
+     ]
+    },
+    {
+     "name": "p_Light",
+     "out": [
+      "Light burst"
+     ]
+    },
+    {
+     "name": "p_Sound",
+     "out": [
+      "Sound burst"
+     ]
+    }
+   ],
+   "functions": [
+    {
+     "name": "Watch for the bear",
+     "steps": [
+      {
+       "call": "acquire animal signature"
+      },
+      {
+       "call": "Detect Predator"
+      }
+     ],
+     "trace": "Predator monitoring"
+    },
+    {
+     "name": "Ask for the bear job",
+     "steps": [
+      {
+       "call": "Compute target position"
+      },
+      {
+       "call": "store Predator location"
+      },
+      {
+       "send": "Ask Predator Job",
+       "port": "p_Swarm"
+      }
+     ],
+     "trace": "Predator monitoring"
+    },
+    {
+     "name": "Start tracking",
+     "steps": [
+      {
+       "send": "Track Predator",
+       "port": "p_AutoPilot"
+      },
+      {
+       "send": "Predator Alert",
+       "port": "p_AutoPilot"
+      }
+     ],
+     "trace": "Start Predator Tracking"
+    },
+    {
+     "name": "Burst",
+     "steps": [
+      {
+       "send": "Deter",
+       "port": "p_AutoPilot"
+      },
+      {
+       "send": "Light burst",
+       "port": "p_Light"
+      },
+      {
+       "send": "Sound burst",
+       "port": "p_Sound"
+      }
+     ],
+     "trace": "Trigger predator counter actions"
+    },
+    {
+     "name": "Stop bursts",
+     "steps": [
+      {
+       "send": "Stop Deterring",
+       "port": "p_AutoPilot"
+      }
+     ],
+     "trace": "Trigger predator counter actions"
+    },
+    {
+     "name": "Bear gone",
+     "steps": [
+      {
+       "send": "Back To Station",
+       "port": "p_AutoPilot"
+      },
+      {
+       "send": "Predator Cleared",
+       "port": "p_AutoPilot"
+      },
+      {
+       "send": "Predator Job Done",
+       "port": "p_Swarm"
+      }
+     ],
+     "trace": "Start Predator Tracking"
+    }
+   ],
+   "stm": {
+    "initial": "Predator Idle",
+    "states": [
+     {
+      "name": "Predator Idle"
+     },
+     {
+      "name": "Predator On Duty",
+      "initial": "Watching For Bear",
+      "states": [
+       {
+        "name": "Watching For Bear",
+        "do": "Watch for the bear"
+       },
+       {
+        "name": "Predator Paused"
+       },
+       {
+        "name": "Asking For Bear Job",
+        "entry": "Ask for the bear job"
+       },
+       {
+        "name": "Tracking Bear",
+        "entry": "Start tracking"
+       },
+       {
+        "name": "Deterring Bear",
+        "entry": "Burst"
+       }
+      ],
+      "transitions": [
+       {
+        "from": "Watching For Bear",
+        "to": "Predator Paused",
+        "on": "Off Station"
+       },
+       {
+        "from": "Predator Paused",
+        "to": "Watching For Bear",
+        "on": "On Station"
+       },
+       {
+        "from": "Watching For Bear",
+        "to": "Asking For Bear Job",
+        "on": "Bear Inside Tracking Perimeter"
+       },
+       {
+        "from": "Asking For Bear Job",
+        "to": "Tracking Bear",
+        "on": "Predator Job Given"
+       },
+       {
+        "from": "Asking For Bear Job",
+        "to": "Watching For Bear",
+        "on": "Predator Job Taken"
+       },
+       {
+        "from": "Tracking Bear",
+        "to": "Deterring Bear",
+        "on": "Bear Inside Safe Perimeter"
+       },
+       {
+        "from": "Deterring Bear",
+        "to": "Tracking Bear",
+        "on": "Bear Inside Tracking Perimeter",
+        "effect": "Stop bursts"
+       },
+       {
+        "from": "Tracking Bear",
+        "to": "Watching For Bear",
+        "on": "Bear Outside Perimeter",
+        "effect": "Bear gone"
+       }
+      ]
+     },
+     {
+      "name": "Predator Stopped"
+     }
+    ],
+    "transitions": [
+     {
+      "from": "Predator Idle",
+      "to": "Predator On Duty",
+      "on": "Mission Started"
+     },
+     {
+      "from": "Predator On Duty",
+      "to": "Predator Stopped",
+      "on": "Mission Over"
+     }
+    ]
+   }
+  },
+  {
+   "name": "Base Standby",
+   "stereotypes": [
+    "Logical Component"
+   ],
+   "doc": "Plug it in a drone that should wait at the base instead of flying to the field: it stays docked, and takes off when one of its components gets a job. Nothing is watched from the ground: a drone with Base Standby keeps no field.",
+   "ports": [
+    {
+     "name": "p_AutoPilot",
+     "in": [
+      "Mission Started",
+      "On Station"
+     ],
+     "out": [
+      "Stay At Base"
+     ]
+    }
+   ],
+   "functions": [
+    {
+     "name": "Hold at base",
+     "steps": [],
+     "reactions": [
+      {
+       "on": "Mission Started",
+       "steps": [
+        {
+         "send": "Stay At Base",
+         "port": "p_AutoPilot"
+        }
+       ]
+      },
+      {
+       "on": "On Station",
+       "steps": [
+        {
+         "send": "Stay At Base",
+         "port": "p_AutoPilot"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "stm": {
+    "initial": "Holding At Base",
+    "states": [
+     {
+      "name": "Holding At Base",
+      "do": "Hold at base"
+     }
+    ],
+    "transitions": []
+   }
+  },
+  {
+   "name": "Swarm Master",
+   "stereotypes": [
+    "Logical Component"
+   ],
+   "doc": "The intelligence of the swarm. Drop it once: in the Base Station, or in a drone that becomes the master. It opens the job of the stray sheep to every drone when someone spots one, gives each job (the stray sheep, the predator) to the first drone that asks and tells the others it is taken, so a drone always keeps the field.",
+   "ports": [
+    {
+     "name": "p_Drone1",
+     "in": [
+      "Stray Sheep Spotted",
+      "Ask Sheep Job",
+      "Sheep Job Done",
+      "Ask Predator Job",
+      "Predator Job Done"
+     ],
+     "out": [
+      "Sheep Job Open",
+      "Sheep Job Given",
+      "Sheep Job Taken",
+      "Predator Job Given",
+      "Predator Job Taken"
+     ]
+    },
+    {
+     "name": "p_Drone2",
+     "in": [
+      "Stray Sheep Spotted",
+      "Ask Sheep Job",
+      "Sheep Job Done",
+      "Ask Predator Job",
+      "Predator Job Done"
+     ],
+     "out": [
+      "Sheep Job Open",
+      "Sheep Job Given",
+      "Sheep Job Taken",
+      "Predator Job Given",
+      "Predator Job Taken"
+     ]
+    },
+    {
+     "name": "p_Drone3",
+     "in": [
+      "Stray Sheep Spotted",
+      "Ask Sheep Job",
+      "Sheep Job Done",
+      "Ask Predator Job",
+      "Predator Job Done"
+     ],
+     "out": [
+      "Sheep Job Open",
+      "Sheep Job Given",
+      "Sheep Job Taken",
+      "Predator Job Given",
+      "Predator Job Taken"
+     ]
+    }
+   ],
+   "functions": [
+    {
+     "name": "Open the sheep job",
+     "steps": [
+      {
+       "send": "Sheep Job Open",
+       "port": "p_Drone1"
+      },
+      {
+       "send": "Sheep Job Open",
+       "port": "p_Drone2"
+      },
+      {
+       "send": "Sheep Job Open",
+       "port": "p_Drone3"
+      }
+     ]
+    },
+    {
+     "name": "Keep the sheep job open",
+     "steps": [],
+     "reactions": [
+      {
+       "on": "Stray Sheep Spotted",
+       "steps": [
+        {
+         "send": "Sheep Job Open",
+         "port": "p_Drone1"
+        },
+        {
+         "send": "Sheep Job Open",
+         "port": "p_Drone2"
+        },
+        {
+         "send": "Sheep Job Open",
+         "port": "p_Drone3"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "Sheep job to drone 1",
+     "steps": [
+      {
+       "send": "Sheep Job Given",
+       "port": "p_Drone1"
+      },
+      {
+       "send": "Sheep Job Taken",
+       "port": "p_Drone2"
+      },
+      {
+       "send": "Sheep Job Taken",
+       "port": "p_Drone3"
+      }
+     ]
+    },
+    {
+     "name": "Sheep job held by drone 1",
+     "steps": [],
+     "reactions": [
+      {
+       "on": "Ask Sheep Job",
+       "steps": [
+        {
+         "send": "Sheep Job Taken",
+         "port": "p_Drone2"
+        },
+        {
+         "send": "Sheep Job Taken",
+         "port": "p_Drone3"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "Sheep job ended by drone 1",
+     "steps": [
+      {
+       "send": "Sheep Job Taken",
+       "port": "p_Drone2"
+      },
+      {
+       "send": "Sheep Job Taken",
+       "port": "p_Drone3"
+      }
+     ]
+    },
+    {
+     "name": "Sheep job to drone 2",
+     "steps": [
+      {
+       "send": "Sheep Job Given",
+       "port": "p_Drone2"
+      },
+      {
+       "send": "Sheep Job Taken",
+       "port": "p_Drone1"
+      },
+      {
+       "send": "Sheep Job Taken",
+       "port": "p_Drone3"
+      }
+     ]
+    },
+    {
+     "name": "Sheep job held by drone 2",
+     "steps": [],
+     "reactions": [
+      {
+       "on": "Ask Sheep Job",
+       "steps": [
+        {
+         "send": "Sheep Job Taken",
+         "port": "p_Drone1"
+        },
+        {
+         "send": "Sheep Job Taken",
+         "port": "p_Drone3"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "Sheep job ended by drone 2",
+     "steps": [
+      {
+       "send": "Sheep Job Taken",
+       "port": "p_Drone1"
+      },
+      {
+       "send": "Sheep Job Taken",
+       "port": "p_Drone3"
+      }
+     ]
+    },
+    {
+     "name": "Sheep job to drone 3",
+     "steps": [
+      {
+       "send": "Sheep Job Given",
+       "port": "p_Drone3"
+      },
+      {
+       "send": "Sheep Job Taken",
+       "port": "p_Drone1"
+      },
+      {
+       "send": "Sheep Job Taken",
+       "port": "p_Drone2"
+      }
+     ]
+    },
+    {
+     "name": "Sheep job held by drone 3",
+     "steps": [],
+     "reactions": [
+      {
+       "on": "Ask Sheep Job",
+       "steps": [
+        {
+         "send": "Sheep Job Taken",
+         "port": "p_Drone1"
+        },
+        {
+         "send": "Sheep Job Taken",
+         "port": "p_Drone2"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "Sheep job ended by drone 3",
+     "steps": [
+      {
+       "send": "Sheep Job Taken",
+       "port": "p_Drone1"
+      },
+      {
+       "send": "Sheep Job Taken",
+       "port": "p_Drone2"
+      }
+     ]
+    },
+    {
+     "name": "Predator job to drone 1",
+     "steps": [
+      {
+       "send": "Predator Job Given",
+       "port": "p_Drone1"
+      },
+      {
+       "send": "Predator Job Taken",
+       "port": "p_Drone2"
+      },
+      {
+       "send": "Predator Job Taken",
+       "port": "p_Drone3"
+      }
+     ]
+    },
+    {
+     "name": "Predator job held by drone 1",
+     "steps": [],
+     "reactions": [
+      {
+       "on": "Ask Predator Job",
+       "steps": [
+        {
+         "send": "Predator Job Taken",
+         "port": "p_Drone2"
+        },
+        {
+         "send": "Predator Job Taken",
+         "port": "p_Drone3"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "Predator job ended by drone 1",
+     "steps": [
+      {
+       "send": "Predator Job Taken",
+       "port": "p_Drone2"
+      },
+      {
+       "send": "Predator Job Taken",
+       "port": "p_Drone3"
+      }
+     ]
+    },
+    {
+     "name": "Predator job to drone 2",
+     "steps": [
+      {
+       "send": "Predator Job Given",
+       "port": "p_Drone2"
+      },
+      {
+       "send": "Predator Job Taken",
+       "port": "p_Drone1"
+      },
+      {
+       "send": "Predator Job Taken",
+       "port": "p_Drone3"
+      }
+     ]
+    },
+    {
+     "name": "Predator job held by drone 2",
+     "steps": [],
+     "reactions": [
+      {
+       "on": "Ask Predator Job",
+       "steps": [
+        {
+         "send": "Predator Job Taken",
+         "port": "p_Drone1"
+        },
+        {
+         "send": "Predator Job Taken",
+         "port": "p_Drone3"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "Predator job ended by drone 2",
+     "steps": [
+      {
+       "send": "Predator Job Taken",
+       "port": "p_Drone1"
+      },
+      {
+       "send": "Predator Job Taken",
+       "port": "p_Drone3"
+      }
+     ]
+    },
+    {
+     "name": "Predator job to drone 3",
+     "steps": [
+      {
+       "send": "Predator Job Given",
+       "port": "p_Drone3"
+      },
+      {
+       "send": "Predator Job Taken",
+       "port": "p_Drone1"
+      },
+      {
+       "send": "Predator Job Taken",
+       "port": "p_Drone2"
+      }
+     ]
+    },
+    {
+     "name": "Predator job held by drone 3",
+     "steps": [],
+     "reactions": [
+      {
+       "on": "Ask Predator Job",
+       "steps": [
+        {
+         "send": "Predator Job Taken",
+         "port": "p_Drone1"
+        },
+        {
+         "send": "Predator Job Taken",
+         "port": "p_Drone2"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "Predator job ended by drone 3",
+     "steps": [
+      {
+       "send": "Predator Job Taken",
+       "port": "p_Drone1"
+      },
+      {
+       "send": "Predator Job Taken",
+       "port": "p_Drone2"
+      }
+     ]
+    }
+   ],
+   "stm": {
+    "initial": "Master Running",
+    "states": [
+     {
+      "name": "Master Running",
+      "regions": [
+       {
+        "name": "Who follows the stray sheep",
+        "initial": "Sheep Job Free",
+        "states": [
+         {
+          "name": "Sheep Job Free"
+         },
+         {
+          "name": "Sheep Job Offered",
+          "do": "Keep the sheep job open"
+         },
+         {
+          "name": "Sheep On Drone 1",
+          "do": "Sheep job held by drone 1"
+         },
+         {
+          "name": "Sheep On Drone 2",
+          "do": "Sheep job held by drone 2"
+         },
+         {
+          "name": "Sheep On Drone 3",
+          "do": "Sheep job held by drone 3"
+         }
+        ],
+        "transitions": [
+         {
+          "from": "Sheep Job Free",
+          "to": "Sheep Job Offered",
+          "on": "Stray Sheep Spotted",
+          "effect": "Open the sheep job"
+         },
+         {
+          "from": "Sheep Job Offered",
+          "to": "Sheep On Drone 1",
+          "on": "Ask Sheep Job",
+          "effect": "Sheep job to drone 1",
+          "via": "p_Drone1"
+         },
+         {
+          "from": "Sheep On Drone 1",
+          "to": "Sheep Job Free",
+          "on": "Sheep Job Done",
+          "effect": "Sheep job ended by drone 1"
+         },
+         {
+          "from": "Sheep Job Offered",
+          "to": "Sheep On Drone 2",
+          "on": "Ask Sheep Job",
+          "effect": "Sheep job to drone 2",
+          "via": "p_Drone2"
+         },
+         {
+          "from": "Sheep On Drone 2",
+          "to": "Sheep Job Free",
+          "on": "Sheep Job Done",
+          "effect": "Sheep job ended by drone 2"
+         },
+         {
+          "from": "Sheep Job Offered",
+          "to": "Sheep On Drone 3",
+          "on": "Ask Sheep Job",
+          "effect": "Sheep job to drone 3",
+          "via": "p_Drone3"
+         },
+         {
+          "from": "Sheep On Drone 3",
+          "to": "Sheep Job Free",
+          "on": "Sheep Job Done",
+          "effect": "Sheep job ended by drone 3"
+         }
+        ]
+       },
+       {
+        "name": "Who follows the predator",
+        "initial": "Predator Job Free",
+        "states": [
+         {
+          "name": "Predator Job Free"
+         },
+         {
+          "name": "Predator On Drone 1",
+          "do": "Predator job held by drone 1"
+         },
+         {
+          "name": "Predator On Drone 2",
+          "do": "Predator job held by drone 2"
+         },
+         {
+          "name": "Predator On Drone 3",
+          "do": "Predator job held by drone 3"
+         }
+        ],
+        "transitions": [
+         {
+          "from": "Predator Job Free",
+          "to": "Predator On Drone 1",
+          "on": "Ask Predator Job",
+          "effect": "Predator job to drone 1",
+          "via": "p_Drone1"
+         },
+         {
+          "from": "Predator On Drone 1",
+          "to": "Predator Job Free",
+          "on": "Predator Job Done",
+          "effect": "Predator job ended by drone 1"
+         },
+         {
+          "from": "Predator Job Free",
+          "to": "Predator On Drone 2",
+          "on": "Ask Predator Job",
+          "effect": "Predator job to drone 2",
+          "via": "p_Drone2"
+         },
+         {
+          "from": "Predator On Drone 2",
+          "to": "Predator Job Free",
+          "on": "Predator Job Done",
+          "effect": "Predator job ended by drone 2"
+         },
+         {
+          "from": "Predator Job Free",
+          "to": "Predator On Drone 3",
+          "on": "Ask Predator Job",
+          "effect": "Predator job to drone 3",
+          "via": "p_Drone3"
+         },
+         {
+          "from": "Predator On Drone 3",
+          "to": "Predator Job Free",
+          "on": "Predator Job Done",
+          "effect": "Predator job ended by drone 3"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "name": "Master Lost"
+     }
+    ],
+    "transitions": [
+     {
+      "from": "Master Running",
+      "to": "Master Lost",
+      "on": "Master Radio Lost"
+     }
+    ]
+   }
+  },
+  {
+   "name": "Swarm Reflex",
+   "stereotypes": [
+    "Logical Component"
+   ],
+   "doc": "The other intelligence: none. Drop one in each drone. The drone says yes to itself: every drone that sees something goes, and it calls nobody else.",
+   "ports": [
+    {
+     "name": "p_Drone",
+     "in": [
+      "Stray Sheep Spotted",
+      "Ask Sheep Job",
+      "Sheep Job Done",
+      "Ask Predator Job",
+      "Predator Job Done"
+     ],
+     "out": [
+      "Sheep Job Open",
+      "Sheep Job Given",
+      "Sheep Job Taken",
+      "Predator Job Given",
+      "Predator Job Taken"
+     ]
+    }
+   ],
+   "functions": [
+    {
+     "name": "Say yes",
+     "steps": [],
+     "reactions": [
+      {
+       "on": "Stray Sheep Spotted",
+       "steps": [
+        {
+         "send": "Sheep Job Open",
+         "port": "p_Drone"
+        }
+       ]
+      },
+      {
+       "on": "Ask Sheep Job",
+       "steps": [
+        {
+         "send": "Sheep Job Given",
+         "port": "p_Drone"
+        }
+       ]
+      },
+      {
+       "on": "Ask Predator Job",
+       "steps": [
+        {
+         "send": "Predator Job Given",
+         "port": "p_Drone"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "stm": {
+    "initial": "Reflex On",
+    "states": [
+     {
+      "name": "Reflex On",
+      "do": "Say yes"
+     }
+    ],
+    "transitions": []
+   }
+  },
+  {
+   "name": "Operator Communication",
+   "stereotypes": [
+    "Logical Component"
+   ],
+   "doc": "Plug it in the Base Station. The link with the operator: it passes the commands of the operator app on to Ground Control, and tells the operator when the base is ready. Without it the base hears nothing, and nothing starts.",
+   "ports": [
+    {
+     "name": "p_App",
+     "in": [
+      "Start SOI",
+      "FlightPlan",
+      "Start Sheep Guard Mission"
+     ],
+     "out": [
+      "Ready for mission"
+     ]
+    },
+    {
+     "name": "p_Ground",
+     "out": [
+      "Base Start",
+      "Base Flight Plan",
+      "Base Launch"
+     ],
+     "in": [
+      "Base Ready Report"
+     ]
+    }
+   ],
+   "functions": [
+    {
+     "name": "Relay the operator",
+     "steps": [],
+     "reactions": [
+      {
+       "on": "Start SOI",
+       "steps": [
+        {
+         "send": "Base Start",
+         "port": "p_Ground"
+        }
+       ]
+      },
+      {
+       "on": "FlightPlan",
+       "steps": [
+        {
+         "send": "Base Flight Plan",
+         "port": "p_Ground"
+        }
+       ]
+      },
+      {
+       "on": "Start Sheep Guard Mission",
+       "steps": [
+        {
+         "send": "Base Launch",
+         "port": "p_Ground"
+        }
+       ]
+      },
+      {
+       "on": "Base Ready Report",
+       "steps": [
+        {
+         "send": "Ready for mission",
+         "port": "p_App"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "stm": {
+    "initial": "Link Up",
+    "states": [
+     {
+      "name": "Link Up",
+      "do": "Relay the operator"
+     }
+    ],
+    "transitions": []
+   }
+  },
+  {
+   "name": "Weather Monitoring",
+   "stereotypes": [
+    "Logical Component"
+   ],
+   "doc": "Plug it in the Base Station. It reads the weather station: on a storm it warns Ground Control, which calls the drones back, and tells the operator. Without it nobody watches the sky: the drones stay out in the storm.",
+   "ports": [
+    {
+     "name": "p_Weather",
+     "in": [
+      "Weather OK",
+      "Weather Alert"
+     ]
+    },
+    {
+     "name": "p_Ground",
+     "out": [
+      "Storm Warning"
+     ]
+    },
+    {
+     "name": "p_App",
+     "out": [
+      "Weather Alert"
+     ]
+    }
+   ],
+   "functions": [
+    {
+     "name": "Read the sky",
+     "steps": [],
+     "trace": "Monitor flight conditions",
+     "reactions": [
+      {
+       "on": "Weather OK",
+       "steps": []
+      },
+      {
+       "on": "Weather Alert",
+       "steps": [
+        {
+         "send": "Storm Warning",
+         "port": "p_Ground"
+        },
+        {
+         "send": "Weather Alert",
+         "port": "p_App"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "stm": {
+    "initial": "Watching Sky",
+    "states": [
+     {
+      "name": "Watching Sky",
+      "do": "Read the sky"
+     }
+    ],
+    "transitions": []
+   }
+  },
+  {
+   "name": "Mission Monitoring",
+   "stereotypes": [
+    "Logical Component"
+   ],
+   "doc": "Plug it in the Base Station. It passes the alerts of the drones (a sheep out, a bear, the bear gone) on to the operator. Without it the drones do their job, but nobody on the ground knows.",
+   "ports": [
+    {
+     "name": "p_Drones",
+     "in": [
+      "Sheep Exit Alert",
+      "Predator Alert",
+      "Predator Cleared"
+     ]
+    },
+    {
+     "name": "p_App",
+     "out": [
+      "Sheep Exit Alert",
+      "Predator Alert",
+      "Predator Cleared"
+     ]
+    }
+   ],
+   "functions": [
+    {
+     "name": "Report to the operator",
+     "steps": [],
+     "reactions": [
+      {
+       "on": "Sheep Exit Alert",
+       "steps": [
+        {
+         "send": "Sheep Exit Alert",
+         "port": "p_App"
+        }
+       ]
+      },
+      {
+       "on": "Predator Alert",
+       "steps": [
+        {
+         "send": "Predator Alert",
+         "port": "p_App"
+        }
+       ]
+      },
+      {
+       "on": "Predator Cleared",
+       "steps": [
+        {
+         "send": "Predator Cleared",
+         "port": "p_App"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "stm": {
+    "initial": "Monitoring Mission",
+    "states": [
+     {
+      "name": "Monitoring Mission",
+      "do": "Report to the operator"
+     }
+    ],
+    "transitions": []
+   }
+  },
+  {
+   "name": "Charging Dock",
+   "stereotypes": [
+    "Logical Component"
+   ],
+   "doc": "Plug it in the Base Station. Landing pads and chargers for up to three drones: a drone coming home asks to land, the dock clears it. Without it a drone coming home has nowhere to land.",
+   "ports": [
+    {
+     "name": "p_Drones",
+     "in": [
+      "Ask Landing"
+     ],
+     "out": [
+      "Landing Clear"
+     ]
+    }
+   ],
+   "functions": [
+    {
+     "name": "Clear for landing",
+     "steps": [],
+     "trace": "Return to base",
+     "reactions": [
+      {
+       "on": "Ask Landing",
+       "steps": [
+        {
+         "send": "Landing Clear",
+         "port": "p_Drones"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "stm": {
+    "initial": "Dock Open",
+    "states": [
+     {
+      "name": "Dock Open",
+      "do": "Clear for landing"
+     }
+    ],
+    "transitions": []
+   }
+  },
+  {
+   "name": "Flight Orchestrator",
+   "stereotypes": [
+    "Logical Component"
+   ],
+   "doc": "Given in every drone, not to be changed. On the order of the base station it briefs its components and takes off, unless a Base Standby keeps it docked; then it flies where its components tell it. It never asks them anything, which is why any of them can be there or not.",
+   "ports": [
+    {
+     "name": "p_Base",
+     "in": [
+      "FlightPlan",
+      "Go Patrol",
+      "Recall Drones",
+      "Landing Clear"
+     ],
+     "out": [
+      "Sheep Exit Alert",
+      "Predator Alert",
+      "Predator Cleared",
+      "Ask Landing"
+     ]
+    },
+    {
+     "name": "p_Components",
+     "out": [
+      "Mission Started",
+      "On Station",
+      "Off Station",
+      "Mission Over"
+     ],
+     "in": [
+      "Follow Sheep",
+      "Back To Station",
+      "Track Predator",
+      "Deter",
+      "Stop Deterring",
+      "Sheep Exit Alert",
+      "Predator Alert",
+      "Predator Cleared",
+      "Stay At Base"
+     ]
+    }
+   ],
+   "functions": [
+    {
+     "name": "Load flight plan",
+     "steps": [
+      {
+       "call": "Acquire Flight Plan"
+      },
+      {
+       "call": "Check Flight Plan validity"
+      }
+     ],
+     "trace": "Load Flight Plan"
+    },
+    {
+     "name": "Brief the components",
+     "steps": [
+      {
+       "send": "Mission Started",
+       "port": "p_Components"
+      }
+     ]
+    },
+    {
+     "name": "Fly to station",
+     "steps": [
+      {
+       "call": "get current position"
+      },
+      {
+       "call": "Follow path"
+      }
+     ],
+     "trace": "Going to Safe Area"
+    },
+    {
+     "name": "Arrive on station",
+     "steps": [
+      {
+       "send": "On Station",
+       "port": "p_Components"
+      }
+     ]
+    },
+    {
+     "name": "Leave station",
+     "steps": [
+      {
+       "send": "Off Station",
+       "port": "p_Components"
+      }
+     ]
+    },
+    {
+     "name": "Fly back",
+     "steps": [
+      {
+       "send": "Mission Over",
+       "port": "p_Components"
+      },
+      {
+       "call": "get current position"
+      },
+      {
+       "call": "Follow path"
+      },
+      {
+       "send": "Ask Landing",
+       "port": "p_Base"
+      }
+     ],
+     "trace": "Return to base"
+    },
+    {
+     "name": "Pass alerts on",
+     "steps": [],
+     "reactions": [
+      {
+       "on": "Sheep Exit Alert",
+       "steps": [
+        {
+         "send": "Sheep Exit Alert",
+         "port": "p_Base"
+        }
+       ]
+      },
+      {
+       "on": "Predator Alert",
+       "steps": [
+        {
+         "send": "Predator Alert",
+         "port": "p_Base"
+        }
+       ]
+      },
+      {
+       "on": "Predator Cleared",
+       "steps": [
+        {
+         "send": "Predator Cleared",
+         "port": "p_Base"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "stm": {
+    "initial": "Powered",
+    "states": [
+     {
+      "name": "Powered",
+      "regions": [
+       {
+        "name": "flight",
+        "initial": "Docked",
+        "states": [
+         {
+          "name": "Docked",
+          "initial": "Unconfigured",
+          "states": [
+           {
+            "name": "Unconfigured"
+           },
+           {
+            "name": "Ready",
+            "do": "Load flight plan"
+           },
+           {
+            "name": "Mission Briefing",
+            "entry": "Brief the components"
+           },
+           {
+            "name": "Standing By"
+           }
+          ],
+          "transitions": [
+           {
+            "from": "Unconfigured",
+            "to": "Ready",
+            "on": "FlightPlan"
+           },
+           {
+            "from": "Ready",
+            "to": "Mission Briefing",
+            "on": "Go Patrol"
+           },
+           {
+            "from": "Mission Briefing",
+            "to": "Standing By",
+            "on": "Stay At Base"
+           }
+          ]
+         },
+         {
+          "name": "Flying",
+          "initial": "Going to Station",
+          "states": [
+           {
+            "name": "Going to Station",
+            "do": "Fly to station"
+           },
+           {
+            "name": "On Station",
+            "entry": "Arrive on station"
+           },
+           {
+            "name": "Following Sheep",
+            "entry": "Leave station"
+           },
+           {
+            "name": "Tracking Predator",
+            "entry": "Leave station"
+           },
+           {
+            "name": "Deterring Predator"
+           }
+          ],
+          "transitions": [
+           {
+            "from": "Going to Station",
+            "to": "On Station"
+           },
+           {
+            "from": "On Station",
+            "to": "Following Sheep",
+            "on": "Follow Sheep"
+           },
+           {
+            "from": "Following Sheep",
+            "to": "On Station",
+            "on": "Back To Station"
+           },
+           {
+            "from": "On Station",
+            "to": "Tracking Predator",
+            "on": "Track Predator"
+           },
+           {
+            "from": "Tracking Predator",
+            "to": "Deterring Predator",
+            "on": "Deter"
+           },
+           {
+            "from": "Deterring Predator",
+            "to": "Tracking Predator",
+            "on": "Stop Deterring"
+           },
+           {
+            "from": "Tracking Predator",
+            "to": "On Station",
+            "on": "Back To Station"
+           }
+          ]
+         },
+         {
+          "name": "Returning",
+          "do": "Fly back"
+         },
+         {
+          "name": "Landed"
+         }
+        ],
+        "transitions": [
+         {
+          "from": "Standing By",
+          "to": "Following Sheep",
+          "on": "Follow Sheep"
+         },
+         {
+          "from": "Standing By",
+          "to": "Tracking Predator",
+          "on": "Track Predator"
+         },
+         {
+          "from": "Standing By",
+          "to": "Returning",
+          "on": "Recall Drones"
+         },
+         {
+          "from": "On Station",
+          "to": "Standing By",
+          "on": "Stay At Base"
+         },
+         {
+          "from": "Flying",
+          "to": "Returning",
+          "on": "Recall Drones"
+         },
+         {
+          "from": "Returning",
+          "to": "Landed",
+          "on": "Landing Clear"
+         }
+        ]
+       },
+       {
+        "name": "alerts",
+        "initial": "Passing Alerts",
+        "states": [
+         {
+          "name": "Passing Alerts",
+          "do": "Pass alerts on"
+         }
+        ],
+        "transitions": []
+       }
+      ]
+     }
+    ],
+    "transitions": []
+   }
+  },
+  {
+   "name": "Ground Control",
+   "stereotypes": [
+    "Logical Component"
+   ],
+   "doc": "Given in the base station, not to be changed. Distributes the flight plan, launches the drones and recalls them. It hears the operator and the weather only through the bricks of the base station, and decides nothing about who does what in flight.",
+   "ports": [
+    {
+     "name": "p_Ops",
+     "in": [
+      "Base Start",
+      "Base Flight Plan",
+      "Base Launch"
+     ],
+     "out": [
+      "Base Ready Report"
+     ]
+    },
+    {
+     "name": "p_Weather",
+     "in": [
+      "Storm Warning"
+     ]
+    },
+    {
+     "name": "p_Drones",
+     "out": [
+      "FlightPlan",
+      "Go Patrol",
+      "Recall Drones"
+     ]
+    }
+   ],
+   "functions": [
+    {
+     "name": "Distribute Flight Plan",
+     "steps": [
+      {
+       "call": "Acquire Flight Plan"
+      },
+      {
+       "call": "Check Flight Plan validity"
+      },
+      {
+       "send": "FlightPlan",
+       "port": "p_Drones"
+      },
+      {
+       "send": "Base Ready Report",
+       "port": "p_Ops"
+      }
+     ],
+     "trace": "Load Flight Plan"
+    },
+    {
+     "name": "Launch Drones",
+     "steps": [
+      {
+       "send": "Go Patrol",
+       "port": "p_Drones"
+      }
+     ],
+     "trace": "Going to Safe Area"
+    },
+    {
+     "name": "Recall All Drones",
+     "steps": [
+      {
+       "send": "Recall Drones",
+       "port": "p_Drones"
+      }
+     ],
+     "trace": "Return to base"
+    }
+   ],
+   "stm": {
+    "initial": "Base Off",
+    "states": [
+     {
+      "name": "Base Off"
+     },
+     {
+      "name": "Base Unconfigured"
+     },
+     {
+      "name": "Base Ready"
+     },
+     {
+      "name": "Mission Running"
+     },
+     {
+      "name": "Recalled"
+     }
+    ],
+    "transitions": [
+     {
+      "from": "Base Off",
+      "to": "Base Unconfigured",
+      "on": "Base Start"
+     },
+     {
+      "from": "Base Unconfigured",
+      "to": "Base Ready",
+      "on": "Base Flight Plan",
+      "effect": "Distribute Flight Plan"
+     },
+     {
+      "from": "Base Ready",
+      "to": "Mission Running",
+      "on": "Base Launch",
+      "effect": "Launch Drones"
+     },
+     {
+      "from": "Mission Running",
+      "to": "Recalled",
+      "on": "Storm Warning",
+      "effect": "Recall All Drones"
+     }
+    ]
+   }
+  },
+  {
+   "name": "Operator App",
+   "stereotypes": [
+    "Logical Component"
+   ],
+   "doc": "Given. Turns the actions of the operator into commands for the base station, and shows what comes back.",
+   "ports": [
+    {
+     "name": "p_Operator",
+     "in": [
+      "Start SOI",
+      "FlightPlan",
+      "Start Sheep Guard Mission"
+     ],
+     "out": [
+      "Ready for mission",
+      "Weather Alert",
+      "Sheep Exit Alert",
+      "Predator Alert",
+      "Predator Cleared"
+     ]
+    },
+    {
+     "name": "p_Base",
+     "out": [
+      "Start SOI",
+      "FlightPlan",
+      "Start Sheep Guard Mission"
+     ],
+     "in": [
+      "Ready for mission",
+      "Weather Alert",
+      "Sheep Exit Alert",
+      "Predator Alert",
+      "Predator Cleared"
+     ]
+    }
+   ],
+   "functions": [
+    {
+     "name": "Relay operator",
+     "steps": [],
+     "reactions": [
+      {
+       "on": "Start SOI",
+       "steps": [
+        {
+         "send": "Start SOI",
+         "port": "p_Base"
+        }
+       ]
+      },
+      {
+       "on": "FlightPlan",
+       "steps": [
+        {
+         "send": "FlightPlan",
+         "port": "p_Base"
+        }
+       ]
+      },
+      {
+       "on": "Start Sheep Guard Mission",
+       "steps": [
+        {
+         "send": "Start Sheep Guard Mission",
+         "port": "p_Base"
+        }
+       ]
+      },
+      {
+       "on": "Ready for mission",
+       "steps": [
+        {
+         "send": "Ready for mission",
+         "port": "p_Operator"
+        }
+       ]
+      },
+      {
+       "on": "Weather Alert",
+       "steps": [
+        {
+         "send": "Weather Alert",
+         "port": "p_Operator"
+        }
+       ]
+      },
+      {
+       "on": "Sheep Exit Alert",
+       "steps": [
+        {
+         "send": "Sheep Exit Alert",
+         "port": "p_Operator"
+        }
+       ]
+      },
+      {
+       "on": "Predator Alert",
+       "steps": [
+        {
+         "send": "Predator Alert",
+         "port": "p_Operator"
+        }
+       ]
+      },
+      {
+       "on": "Predator Cleared",
+       "steps": [
+        {
+         "send": "Predator Cleared",
+         "port": "p_Operator"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "stm": {
+    "initial": "App Running",
+    "states": [
+     {
+      "name": "App Running",
+      "do": "Relay operator"
+     }
+    ],
+    "transitions": []
+   }
+  },
+  {
+   "name": "Weather Station",
+   "stereotypes": [
+    "Logical Component"
+   ],
+   "doc": "Given. Measures the wind on the pasture and tells the base station whether drones may fly.",
+   "ports": [
+    {
+     "name": "p_Wind",
+     "in": [
+      "Wind Calm",
+      "Wind Storm"
+     ]
+    },
+    {
+     "name": "p_Base",
+     "out": [
+      "Weather OK",
+      "Weather Alert"
+     ]
+    }
+   ],
+   "functions": [
+    {
+     "name": "Measure weather",
+     "steps": [],
+     "trace": "Monitor flight conditions",
+     "reactions": [
+      {
+       "on": "Wind Calm",
+       "steps": [
+        {
+         "send": "Weather OK",
+         "port": "p_Base"
+        }
+       ]
+      },
+      {
+       "on": "Wind Storm",
+       "steps": [
+        {
+         "send": "Weather Alert",
+         "port": "p_Base"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "stm": {
+    "initial": "Measuring",
+    "states": [
+     {
+      "name": "Measuring",
+      "do": "Measure weather"
+     }
+    ],
+    "transitions": []
+   }
+  },
+  {
+   "name": "Operator",
+   "doc": "Simulation driver: the operator. The guide injects its commands here.",
+   "ports": [
+    {
+     "name": "p_App",
+     "out": [
+      "Start SOI",
+      "FlightPlan",
+      "Start Sheep Guard Mission"
+     ],
+     "in": [
+      "Ready for mission",
+      "Weather Alert",
+      "Sheep Exit Alert",
+      "Predator Alert",
+      "Predator Cleared"
+     ]
+    }
+   ],
+   "functions": [
+    {
+     "name": "Operator console",
+     "steps": [],
+     "reactions": [
+      {
+       "on": "Start SOI",
+       "steps": [
+        {
+         "send": "Start SOI",
+         "port": "p_App"
+        }
+       ]
+      },
+      {
+       "on": "FlightPlan",
+       "steps": [
+        {
+         "send": "FlightPlan",
+         "port": "p_App"
+        }
+       ]
+      },
+      {
+       "on": "Start Sheep Guard Mission",
+       "steps": [
+        {
+         "send": "Start Sheep Guard Mission",
+         "port": "p_App"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "stm": {
+    "initial": "Operating",
+    "states": [
+     {
+      "name": "Operating",
+      "regions": [
+       {
+        "name": "console",
+        "initial": "Console",
+        "states": [
+         {
+          "name": "Console",
+          "do": "Operator console"
+         }
+        ],
+        "transitions": []
+       },
+       {
+        "name": "screen",
+        "initial": "Screen Quiet",
+        "states": [
+         {
+          "name": "Screen Quiet"
+         },
+         {
+          "name": "Sheep Alert On Screen"
+         },
+         {
+          "name": "Predator Alert On Screen"
+         }
+        ],
+        "transitions": [
+         {
+          "from": "Screen Quiet",
+          "to": "Sheep Alert On Screen",
+          "on": "Sheep Exit Alert"
+         },
+         {
+          "from": "Predator Alert On Screen",
+          "to": "Sheep Alert On Screen",
+          "on": "Sheep Exit Alert"
+         },
+         {
+          "from": "Screen Quiet",
+          "to": "Predator Alert On Screen",
+          "on": "Predator Alert"
+         },
+         {
+          "from": "Sheep Alert On Screen",
+          "to": "Predator Alert On Screen",
+          "on": "Predator Alert"
+         }
+        ]
+       }
+      ]
+     }
+    ],
+    "transitions": []
+   }
+  },
+  {
+   "name": "Weather",
+   "doc": "Simulation driver: the wind.",
+   "ports": [
+    {
+     "name": "p_Wind",
+     "out": [
+      "Wind Calm",
+      "Wind Storm"
+     ]
+    }
+   ],
+   "functions": [
+    {
+     "name": "Weather world",
+     "steps": [],
+     "reactions": [
+      {
+       "on": "Wind Calm",
+       "steps": [
+        {
+         "send": "Wind Calm",
+         "port": "p_Wind"
+        }
+       ]
+      },
+      {
+       "on": "Wind Storm",
+       "steps": [
+        {
+         "send": "Wind Storm",
+         "port": "p_Wind"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "stm": {
+    "initial": "Weather World",
+    "states": [
+     {
+      "name": "Weather World",
+      "do": "Weather world"
+     }
+    ],
+    "transitions": []
+   }
+  },
+  {
+   "name": "Pasture",
+   "doc": "Simulation driver: what happens on the field. Every drone sees it; only the ones with the right component react.",
+   "ports": [
+    {
+     "name": "p_Camera",
+     "out": [
+      "Sheep Signature",
+      "Sheep Out Of Zone",
+      "Sheep Back In Zone",
+      "Bear Inside Tracking Perimeter",
+      "Bear Inside Safe Perimeter",
+      "Bear Outside Perimeter"
+     ]
+    },
+    {
+     "name": "p_Light",
+     "in": [
+      "Light burst"
+     ]
+    },
+    {
+     "name": "p_Sound",
+     "in": [
+      "Sound burst"
+     ]
+    }
+   ],
+   "functions": [
+    {
+     "name": "Pasture world",
+     "steps": [],
+     "reactions": [
+      {
+       "on": "Sheep Signature",
+       "steps": [
+        {
+         "send": "Sheep Signature",
+         "port": "p_Camera"
+        }
+       ]
+      },
+      {
+       "on": "Sheep Out Of Zone",
+       "steps": [
+        {
+         "send": "Sheep Out Of Zone",
+         "port": "p_Camera"
+        }
+       ]
+      },
+      {
+       "on": "Sheep Back In Zone",
+       "steps": [
+        {
+         "send": "Sheep Back In Zone",
+         "port": "p_Camera"
+        }
+       ]
+      },
+      {
+       "on": "Bear Inside Tracking Perimeter",
+       "steps": [
+        {
+         "send": "Bear Inside Tracking Perimeter",
+         "port": "p_Camera"
+        }
+       ]
+      },
+      {
+       "on": "Bear Inside Safe Perimeter",
+       "steps": [
+        {
+         "send": "Bear Inside Safe Perimeter",
+         "port": "p_Camera"
+        }
+       ]
+      },
+      {
+       "on": "Bear Outside Perimeter",
+       "steps": [
+        {
+         "send": "Bear Outside Perimeter",
+         "port": "p_Camera"
+        }
+       ]
+      },
+      {
+       "on": "Light burst",
+       "steps": []
+      },
+      {
+       "on": "Sound burst",
+       "steps": []
+      }
+     ]
+    }
+   ],
+   "stm": {
+    "initial": "Pasture World",
+    "states": [
+     {
+      "name": "Pasture World",
+      "do": "Pasture world"
+     }
+    ],
+    "transitions": []
+   }
+  }
+ ],
+ "contexts": [
+  {
+   "name": "Drone 1",
+   "stereotypes": [
+    "Logical Component"
+   ],
+   "doc": "A drone. Drag the components from the Library onto its diagram. Its ports are given: the drone is ready for any of them.",
+   "ports": [
+    {
+     "name": "p_Base",
+     "in": [
+      "FlightPlan",
+      "Go Patrol",
+      "Recall Drones",
+      "Landing Clear"
+     ],
+     "out": [
+      "Sheep Exit Alert",
+      "Predator Alert",
+      "Predator Cleared",
+      "Ask Landing"
+     ]
+    },
+    {
+     "name": "p_Camera",
+     "in": [
+      "Sheep Signature",
+      "Sheep Out Of Zone",
+      "Sheep Back In Zone",
+      "Bear Inside Tracking Perimeter",
+      "Bear Inside Safe Perimeter",
+      "Bear Outside Perimeter"
+     ]
+    },
+    {
+     "name": "p_Swarm",
+     "out": [
+      "Stray Sheep Spotted",
+      "Ask Sheep Job",
+      "Sheep Job Done",
+      "Ask Predator Job",
+      "Predator Job Done"
+     ],
+     "in": [
+      "Sheep Job Open",
+      "Sheep Job Given",
+      "Sheep Job Taken",
+      "Predator Job Given",
+      "Predator Job Taken"
+     ]
+    },
+    {
+     "name": "p_Light",
+     "out": [
+      "Light burst"
+     ]
+    },
+    {
+     "name": "p_Sound",
+     "out": [
+      "Sound burst"
+     ]
+    },
+    {
+     "name": "p_Wing2",
+     "in": [
+      "Stray Sheep Spotted",
+      "Ask Sheep Job",
+      "Sheep Job Done",
+      "Ask Predator Job",
+      "Predator Job Done"
+     ],
+     "out": [
+      "Sheep Job Open",
+      "Sheep Job Given",
+      "Sheep Job Taken",
+      "Predator Job Given",
+      "Predator Job Taken"
+     ]
+    },
+    {
+     "name": "p_Wing3",
+     "in": [
+      "Stray Sheep Spotted",
+      "Ask Sheep Job",
+      "Sheep Job Done",
+      "Ask Predator Job",
+      "Predator Job Done"
+     ],
+     "out": [
+      "Sheep Job Open",
+      "Sheep Job Given",
+      "Sheep Job Taken",
+      "Predator Job Given",
+      "Predator Job Taken"
+     ]
+    }
+   ],
+   "parts": [
+    {
+     "name": "fo",
+     "type": "Flight Orchestrator"
+    }
+   ],
+   "connectors": [
+    [
+     "p_Base",
+     "fo.p_Base"
+    ]
+   ]
+  },
+  {
+   "name": "Drone 2",
+   "stereotypes": [
+    "Logical Component"
+   ],
+   "doc": "A drone. Drag the components from the Library onto its diagram. Its ports are given: the drone is ready for any of them.",
+   "ports": [
+    {
+     "name": "p_Base",
+     "in": [
+      "FlightPlan",
+      "Go Patrol",
+      "Recall Drones",
+      "Landing Clear"
+     ],
+     "out": [
+      "Sheep Exit Alert",
+      "Predator Alert",
+      "Predator Cleared",
+      "Ask Landing"
+     ]
+    },
+    {
+     "name": "p_Camera",
+     "in": [
+      "Sheep Signature",
+      "Sheep Out Of Zone",
+      "Sheep Back In Zone",
+      "Bear Inside Tracking Perimeter",
+      "Bear Inside Safe Perimeter",
+      "Bear Outside Perimeter"
+     ]
+    },
+    {
+     "name": "p_Swarm",
+     "out": [
+      "Stray Sheep Spotted",
+      "Ask Sheep Job",
+      "Sheep Job Done",
+      "Ask Predator Job",
+      "Predator Job Done"
+     ],
+     "in": [
+      "Sheep Job Open",
+      "Sheep Job Given",
+      "Sheep Job Taken",
+      "Predator Job Given",
+      "Predator Job Taken"
+     ]
+    },
+    {
+     "name": "p_Light",
+     "out": [
+      "Light burst"
+     ]
+    },
+    {
+     "name": "p_Sound",
+     "out": [
+      "Sound burst"
+     ]
+    },
+    {
+     "name": "p_Wing1",
+     "in": [
+      "Stray Sheep Spotted",
+      "Ask Sheep Job",
+      "Sheep Job Done",
+      "Ask Predator Job",
+      "Predator Job Done"
+     ],
+     "out": [
+      "Sheep Job Open",
+      "Sheep Job Given",
+      "Sheep Job Taken",
+      "Predator Job Given",
+      "Predator Job Taken"
+     ]
+    },
+    {
+     "name": "p_Wing3",
+     "in": [
+      "Stray Sheep Spotted",
+      "Ask Sheep Job",
+      "Sheep Job Done",
+      "Ask Predator Job",
+      "Predator Job Done"
+     ],
+     "out": [
+      "Sheep Job Open",
+      "Sheep Job Given",
+      "Sheep Job Taken",
+      "Predator Job Given",
+      "Predator Job Taken"
+     ]
+    }
+   ],
+   "parts": [
+    {
+     "name": "fo",
+     "type": "Flight Orchestrator"
+    }
+   ],
+   "connectors": [
+    [
+     "p_Base",
+     "fo.p_Base"
+    ]
+   ]
+  },
+  {
+   "name": "Drone 3",
+   "stereotypes": [
+    "Logical Component"
+   ],
+   "doc": "A drone. Drag the components from the Library onto its diagram. Its ports are given: the drone is ready for any of them.",
+   "ports": [
+    {
+     "name": "p_Base",
+     "in": [
+      "FlightPlan",
+      "Go Patrol",
+      "Recall Drones",
+      "Landing Clear"
+     ],
+     "out": [
+      "Sheep Exit Alert",
+      "Predator Alert",
+      "Predator Cleared",
+      "Ask Landing"
+     ]
+    },
+    {
+     "name": "p_Camera",
+     "in": [
+      "Sheep Signature",
+      "Sheep Out Of Zone",
+      "Sheep Back In Zone",
+      "Bear Inside Tracking Perimeter",
+      "Bear Inside Safe Perimeter",
+      "Bear Outside Perimeter"
+     ]
+    },
+    {
+     "name": "p_Swarm",
+     "out": [
+      "Stray Sheep Spotted",
+      "Ask Sheep Job",
+      "Sheep Job Done",
+      "Ask Predator Job",
+      "Predator Job Done"
+     ],
+     "in": [
+      "Sheep Job Open",
+      "Sheep Job Given",
+      "Sheep Job Taken",
+      "Predator Job Given",
+      "Predator Job Taken"
+     ]
+    },
+    {
+     "name": "p_Light",
+     "out": [
+      "Light burst"
+     ]
+    },
+    {
+     "name": "p_Sound",
+     "out": [
+      "Sound burst"
+     ]
+    },
+    {
+     "name": "p_Wing1",
+     "in": [
+      "Stray Sheep Spotted",
+      "Ask Sheep Job",
+      "Sheep Job Done",
+      "Ask Predator Job",
+      "Predator Job Done"
+     ],
+     "out": [
+      "Sheep Job Open",
+      "Sheep Job Given",
+      "Sheep Job Taken",
+      "Predator Job Given",
+      "Predator Job Taken"
+     ]
+    },
+    {
+     "name": "p_Wing2",
+     "in": [
+      "Stray Sheep Spotted",
+      "Ask Sheep Job",
+      "Sheep Job Done",
+      "Ask Predator Job",
+      "Predator Job Done"
+     ],
+     "out": [
+      "Sheep Job Open",
+      "Sheep Job Given",
+      "Sheep Job Taken",
+      "Predator Job Given",
+      "Predator Job Taken"
+     ]
+    }
+   ],
+   "parts": [
+    {
+     "name": "fo",
+     "type": "Flight Orchestrator"
+    }
+   ],
+   "connectors": [
+    [
+     "p_Base",
+     "fo.p_Base"
+    ]
+   ]
+  },
+  {
+   "name": "Base Station",
+   "stereotypes": [
+    "Logical Component"
+   ],
+   "doc": "The base station. Ground Control is given. Drag here what links it to the operator, the weather and the drones coming home (Operator Communication, Weather Monitoring, Mission Monitoring, Charging Dock); the Swarm Master can be dropped here too.",
+   "ports": [
+    {
+     "name": "p_App",
+     "in": [
+      "Start SOI",
+      "FlightPlan",
+      "Start Sheep Guard Mission"
+     ],
+     "out": [
+      "Ready for mission",
+      "Weather Alert",
+      "Sheep Exit Alert",
+      "Predator Alert",
+      "Predator Cleared"
+     ]
+    },
+    {
+     "name": "p_Weather",
+     "in": [
+      "Weather OK",
+      "Weather Alert"
+     ]
+    },
+    {
+     "name": "p_Drones",
+     "out": [
+      "FlightPlan",
+      "Go Patrol",
+      "Recall Drones",
+      "Landing Clear"
+     ],
+     "in": [
+      "Sheep Exit Alert",
+      "Predator Alert",
+      "Predator Cleared",
+      "Ask Landing"
+     ]
+    },
+    {
+     "name": "p_Swarm1",
+     "in": [
+      "Stray Sheep Spotted",
+      "Ask Sheep Job",
+      "Sheep Job Done",
+      "Ask Predator Job",
+      "Predator Job Done"
+     ],
+     "out": [
+      "Sheep Job Open",
+      "Sheep Job Given",
+      "Sheep Job Taken",
+      "Predator Job Given",
+      "Predator Job Taken"
+     ]
+    },
+    {
+     "name": "p_Swarm2",
+     "in": [
+      "Stray Sheep Spotted",
+      "Ask Sheep Job",
+      "Sheep Job Done",
+      "Ask Predator Job",
+      "Predator Job Done"
+     ],
+     "out": [
+      "Sheep Job Open",
+      "Sheep Job Given",
+      "Sheep Job Taken",
+      "Predator Job Given",
+      "Predator Job Taken"
+     ]
+    },
+    {
+     "name": "p_Swarm3",
+     "in": [
+      "Stray Sheep Spotted",
+      "Ask Sheep Job",
+      "Sheep Job Done",
+      "Ask Predator Job",
+      "Predator Job Done"
+     ],
+     "out": [
+      "Sheep Job Open",
+      "Sheep Job Given",
+      "Sheep Job Taken",
+      "Predator Job Given",
+      "Predator Job Taken"
+     ]
+    }
+   ],
+   "parts": [
+    {
+     "name": "gc",
+     "type": "Ground Control"
+    }
+   ],
+   "connectors": [
+    [
+     "p_Drones",
+     "gc.p_Drones"
+    ]
+   ]
+  },
+  {
+   "name": "Pasture Sentinel System",
+   "stereotypes": [
+    "Logical Component"
+   ],
+   "doc": "The system of interest of Part 4: the whole solution. The drones, the base station, the weather station and the operator app are connected; what links a drone to the intelligence depends on where you put it.",
+   "ports": [
+    {
+     "name": "p_Operator",
+     "in": [
+      "Start SOI",
+      "FlightPlan",
+      "Start Sheep Guard Mission"
+     ],
+     "out": [
+      "Ready for mission",
+      "Weather Alert",
+      "Sheep Exit Alert",
+      "Predator Alert",
+      "Predator Cleared"
+     ]
+    },
+    {
+     "name": "p_Wind",
+     "in": [
+      "Wind Calm",
+      "Wind Storm"
+     ]
+    },
+    {
+     "name": "p_Camera",
+     "in": [
+      "Sheep Signature",
+      "Sheep Out Of Zone",
+      "Sheep Back In Zone",
+      "Bear Inside Tracking Perimeter",
+      "Bear Inside Safe Perimeter",
+      "Bear Outside Perimeter"
+     ]
+    },
+    {
+     "name": "p_Light",
+     "out": [
+      "Light burst"
+     ]
+    },
+    {
+     "name": "p_Sound",
+     "out": [
+      "Sound burst"
+     ]
+    }
+   ],
+   "parts": [
+    {
+     "name": "app",
+     "type": "Operator App"
+    },
+    {
+     "name": "base",
+     "type": "Base Station"
+    },
+    {
+     "name": "ws",
+     "type": "Weather Station"
+    },
+    {
+     "name": "drone1",
+     "type": "Drone 1"
+    },
+    {
+     "name": "drone2",
+     "type": "Drone 2"
+    },
+    {
+     "name": "drone3",
+     "type": "Drone 3"
+    }
+   ],
+   "connectors": [
+    [
+     "p_Operator",
+     "app.p_Operator"
+    ],
+    [
+     "p_Wind",
+     "ws.p_Wind"
+    ],
+    [
+     "base.p_Drones",
+     "drone1.p_Base"
+    ],
+    [
+     "base.p_Drones",
+     "drone2.p_Base"
+    ],
+    [
+     "base.p_Drones",
+     "drone3.p_Base"
+    ]
+   ]
+  },
+  {
+   "name": "Swarm Simulation",
+   "doc": "The system between the operator, the weather and the pasture. The guide plays the missions here.",
+   "parts": [
+    {
+     "name": "soi",
+     "type": "Pasture Sentinel System"
+    },
+    {
+     "name": "operator",
+     "type": "Operator"
+    },
+    {
+     "name": "weather",
+     "type": "Weather"
+    },
+    {
+     "name": "pasture",
+     "type": "Pasture"
+    }
+   ],
+   "connectors": [
+    [
+     "operator.p_App",
+     "soi.p_Operator"
+    ],
+    [
+     "weather.p_Wind",
+     "soi.p_Wind"
+    ],
+    [
+     "pasture.p_Camera",
+     "soi.p_Camera"
+    ],
+    [
+     "soi.p_Light",
+     "pasture.p_Light"
+    ],
+    [
+     "soi.p_Sound",
+     "pasture.p_Sound"
+    ]
+   ]
+  }
+ ]
+}

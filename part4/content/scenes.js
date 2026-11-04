@@ -1,8 +1,9 @@
 /* Part 4, the swarm: chapters, then scenes in reading order. One scene = one idea.
    Same engine, marks and blocks as Part 1 (see content/scenes.js at the root for the list).
    A { recall } block may take base: "../part3/index.html" to point to the scenes of Part 3 instead of Part 1.
-   Widgets of this part: js/widgets-logical.js (swarmScope, strayDilemma, parallelRegions, swarmOptions);
-   the options of the swarm and the fleet of the simulation panel are in part4/content/config.js. */
+   Widgets of this part: js/widgets-logical.js (swarmScope, strayDilemma, parallelRegions, swarmOptions) and js/widgets-lego.js
+   (legoBay, missionBoard, missionCheck). The bricks and the missions are in part4/content/lego.js; the options of the swarm and
+   the fleet of the simulation panel in part4/content/config.js. */
 window.COURSE = {
   phases: [
     { id: "op", title: "Operational analysis", short: "Operational", q: "What is expected of the system?" },
@@ -15,8 +16,8 @@ window.COURSE = {
     { id: "setup", code: "1", title: "Set up Cameo", blurb: "The model of Part 4." },
     { id: "problem", code: "2", title: "The problem", blurb: "Follow one, keep the others.", phase: "op" },
     { id: "mission", code: "3", title: "A concurrent mission", blurb: "Parallel regions, no drone in sight.", phase: "fn" },
-    { id: "choice", code: "4", title: "Choose a swarm", blurb: "Who leads, which drones.", phase: "lg" },
-    { id: "sim", code: "5", title: "Simulation", blurb: "The swarm flies the mission.", phase: "lg" },
+    { id: "build", code: "4", title: "Build your swarm", blurb: "A box of Lego.", phase: "lg" },
+    { id: "fly", code: "5", title: "Fly the missions", blurb: "Play, unplug, try again.", phase: "lg" },
     { id: "end", code: "✓", title: "Debrief", blurb: "Your choice, defended." }
   ],
 
@@ -43,7 +44,7 @@ window.COURSE = {
         {
           callout: {
             tone: "note", title: "What you keep from Part 3",
-            text: "The logical architecture of one drone is not lost: it becomes **one part** of the new system of interest. The same tools, transition, ports, propagate, work at this new level."
+            text: "The logical architecture of one drone is not lost: the subsystems you built one by one come back as **ready-made bricks**. This time you assemble them."
           }
         }
       ]
@@ -55,13 +56,17 @@ window.COURSE = {
       title: "Open the model of Part 4",
       lead: "A new model: the system of interest is the solution, not the drone.",
       blocks: [
+        { download: { label: "Starting model", file: "UAV_Part4_Swarm.mdzip", src: "assets/models/UAV_Part4_Swarm.mdzip", size: "1.6 MB" } },
+        { download: { label: "Its profile", file: "ISAE-Profile.mdzip", src: "assets/models/ISAE-Profile.mdzip", size: "160 KB" } },
         {
           steps: [
             "Start Cameo with the floating license, as in Part 3.",
-            "Open the model of Part 4. Keep the profile file next to it; do not unzip the .mdzip.",
-            "Link this guide to Cameo with the **Cameo** button at the top: the simulation of chapter 5 follows the drones of your model."
+            "Download both files **into the same folder**, then open the model ({{File > Open Project}}). Do not unzip the .mdzip.",
+            "Open [[tp-swarm]]. The drones, the base station and the links between them are there; the [[tp-library]] holds the bricks you will play with.",
+            "Link this guide to Cameo with the **Cameo** button at the top: it will follow what you assemble, and play the missions."
           ]
         },
+        { pair: true },
         {
           recall: {
             label: "Forgot how? See it again",
@@ -69,12 +74,6 @@ window.COURSE = {
               { id: "start-tool", title: "Start the tool (Part 1)" },
               { id: "install-plugin", title: "Install the plugin (Part 1)" }
             ]
-          }
-        },
-        {
-          placeholder: {
-            kind: "link", title: "The model of Part 4",
-            todo: ["Put the .mdzip in part4/assets/models/ (or on the LMS) and add a download block", "Name of the SoI block (UAV + Base Station + Weather Station)"]
           }
         }
       ]
@@ -88,17 +87,11 @@ window.COURSE = {
       blocks: [
         {
           cards: [
-            { n: "1", icon: "binoculars", tone: "tip", title: "A sheep leaves the zone", text: "We want to **follow it for X metres** out of the zone, to know where it goes, **without leaving the rest of the flock** unguarded." },
-            { n: "2", icon: "bell", tone: "warn", title: "A predator comes", text: "Same thing: deal with the predator, follow it if it runs, and **keep the other sheep guarded** all along." }
+            { n: "1", icon: "binoculars", tone: "tip", title: "A sheep leaves the zone", text: "We want to **follow it** out of the zone, to know where it goes, **without leaving the rest of the flock** unguarded." },
+            { n: "2", icon: "bell", tone: "warn", title: "A predator comes", text: "Same thing: deal with the predator and **keep the other sheep guarded** all along." }
           ]
         },
-        { p: "One drone cannot be in two places. The solution must **evolve into a swarm**: several drones that share the work." },
-        {
-          placeholder: {
-            kind: "text", title: "The distance X",
-            todo: ["Value of X (metres) that the requirement gives, and whether it is a requirement of the model"]
-          }
-        }
+        { p: "One drone cannot be in two places. The solution must **evolve into a swarm**: several drones that share the work." }
       ]
     },
     {
@@ -140,12 +133,16 @@ window.COURSE = {
       title: "Change the mission without drawing the drones",
       lead: "The mission state machine must say that the flock is guarded, a stray sheep tracked and a predator managed, all at the same time, before we know how many drones do it.",
       blocks: [
-        { widget: "parallelRegions" },
+        { widget: "parallelRegions", opts: { regions: [
+          { name: "Perimeter", states: ["Perimiter watch"], ev: {} },
+          { name: "Sheep", states: ["Sheep Monitoring", "Stray sheep tracking"], ev: { "Sheep leaves the zone": 1, "Sheep back": 0 } },
+          { name: "Predator", states: ["Predator Monitoring", "Predator tracking", "Predator counteraction"], ev: { "Predator detected": 1, "Predator in safe zone": 2, "Predator gone": 0 } }
+        ] } },
         { p: "In **one region**, the mission holds one state at a time: following a sheep and watching a bear exclude each other. With **parallel regions**, each concern has its own active state, and they move independently." },
         {
           callout: {
             tone: "goal", title: "The drones do not appear",
-            text: "The regions describe **what** must happen at the same time. Which drone does it is decided later, at the logical level, when the regions are allocated."
+            text: "The regions describe **what** must happen at the same time. Which drone does it comes next: each region will be carried by a component, and you will see at once whether one is left without."
           }
         }
       ]
@@ -153,28 +150,25 @@ window.COURSE = {
     {
       id: "regions-do", ch: "mission", kind: "do",
       title: "Put the concurrent parts in parallel",
-      lead: "Turn the mission state into a state with several regions.",
+      lead: "This is your mission of the first parts, with what this part needs. And now one thing does not hold.",
       blocks: [
         {
+          callout: {
+            tone: "note", title: "What we added to the mission",
+            text: "The **weather**: nothing is ready without good flight conditions, and a storm brings the system home (`Awaiting Flight Conditions`, `Returning`). The **stray sheep**: `Stray sheep tracking`, entered when a sheep leaves the zone. The mission now plays in the [[op-context]], where the bear has a behaviour and a flock has joined it: what happens on the pasture comes from them. The bear says where it is by a signal, `Bear Position` and its specializations, as `FlightPlan` does in Load Flight Plan: the simulation asks you nothing."
+          }
+        },
+        {
           steps: [
-            "Open the mission state machine of the system of interest.",
-            "Identify the parts that must run at the same time: guarding the flock, tracking a stray sheep, managing the predator.",
-            "On the mission state, add a region per concern (right-click the state, {{Add Region}}). A dashed line separates them.",
-            "Move the states of each concern into its region, with an initial state each.",
-            "Check: no transition crosses from one region to another."
+            "Open [[mission-stm]]. From `Patrolling`, two ways out: `Predator Detected` and `Stray sheep tracking`. Each one stops the patrol, and they exclude each other.",
+            "Press the button below: a bear, then a sheep. It does not hold.",
+            "No region to add: `Patrolling` already has three. Give it more room, then drag `Stray sheep tracking` into the region of `Sheep Monitoring`, and `Predator Detected` into the region of `Predator Monitoring`.",
+            "Reconnect the four transitions: they no longer leave from `Patrolling`, but from `Sheep Monitoring` and `Predator Monitoring`, and they come back to them.",
+            "Check: no transition crosses from one region to another, and nothing makes the system leave `Patrolling` but the storm."
           ]
         },
-        {
-          recall: {
-            items: [{ id: "c-state", title: "Create a state" }, { id: "c-transition", title: "Draw a transition" }]
-          }
-        },
-        {
-          placeholder: {
-            kind: "screenshot", title: "The mission state machine with its regions",
-            todo: ["Exact menu label to add a region in Cameo", "Screenshot of the expected state machine (names of the regions and states)"]
-          }
-        }
+        { widget: "missionCheck" },
+        { figure: { src: "assets/img/mission-regions.png", w: 1177, h: 1088, alt: "State machine of the mission. Deployed has Going to Safe Area, Patrolling and a region with Mission Monitoring. Patrolling has three parallel regions: Perimiter watch; Sheep Monitoring and Stray sheep tracking; Predator Monitoring and Predator Detected, which holds Predator tracking and Predator counteraction.", caption: "What you should get. Each region of Patrolling is one concern of the shepherds." } }
       ]
     },
     {
@@ -192,154 +186,169 @@ window.COURSE = {
         {
           reveal: {
             label: "Compare",
-            text: "This guide uses three: **Flock** (patrol, guard close), **Stray sheep** (none, tracking), **Predator** (none, tracking, counteraction). Weather or energy could be a fourth."
+            text: "The model has three in `Patrolling`: **Perimiter watch**, **Sheep Monitoring** (and following a stray one), **Predator Monitoring** (and `Predator Detected`). Keep them in mind: you are about to meet them again as three bricks."
           }
         }
       ]
     },
 
-    /* ───────────────────────── 4 · Choose a swarm ───────────────────────── */
+    /* ───────────────────────── 4 · Build your swarm ───────────────────────── */
     {
-      id: "options", ch: "choice", kind: "try", mark: "intro",
+      id: "options", ch: "build", kind: "try", mark: "intro",
       title: "Three ways to organise the swarm",
-      lead: "Same mission, three architectures. Load each one in the simulation and play its scenario.",
+      lead: "Same mission, three families of solutions. Look at each one: in a moment you will build them yourself, in minutes.",
       blocks: [
         { widget: "swarmOptions" },
         { widget: "simHint" }
       ]
     },
     {
-      id: "allocate", ch: "choice", kind: "do",
-      title: "Allocate the regions",
-      lead: "Each region of the mission goes to a part of the solution. Where it goes depends on the option.",
+      id: "box", ch: "build", kind: "read",
+      title: "One region, one brick",
+      lead: "In Part 3 you built each subsystem. Here they are ready: nothing technical to change, you only choose what goes where. Click a component to see what it does.",
       blocks: [
+        { widget: "brickPanel" },
+        { p: "A component never leaves on its own: it asks. **Who answers is the intelligence**, and it is a brick too: **Swarm Master** (once, in the base station or in a drone) or **Swarm Reflex** (one per drone, nobody coordinates)." },
         {
-          tabs: [
-            {
-              label: "Option A", sub: "base station · complete drones",
-              blocks: [
-                {
-                  list: [
-                    "The base station takes the **mission**: it watches all the regions and assigns a drone to each event.",
-                    "Each complete drone takes **every behaviour**: patrol, guard, track a sheep, repel the predator. Which one runs is ordered by the base.",
-                    "Ask yourself: what does a drone send back so that the base can choose?"
-                  ]
-                }
-              ]
-            },
-            {
-              label: "Option B", sub: "base station · specialised drones",
-              blocks: [
-                {
-                  list: [
-                    "The base station takes the **mission** and dispatches.",
-                    "Each region goes to the drone whose role fits: Flock → shepherd, Stray sheep → guard, Predator → anti-predator.",
-                    "Ask yourself: who keeps the field when the guard follows a sheep?"
-                  ]
-                }
-              ]
-            },
-            {
-              label: "Option C", sub: "a master drone",
-              blocks: [
-                {
-                  list: [
-                    "The master drone takes the **mission** on top of its own role.",
-                    "The other regions go to the specialised drones, as in option B.",
-                    "The base station only receives reports. Ask yourself: what happens when the master drone is lost?"
-                  ]
-                }
-              ]
-            }
-          ]
-        },
-        {
-          steps: [
-            "Pick the option you defend.",
-            "Use {{MBSE Shepherd > Transition to Logical}} to give each region to its part, as in Part 3.",
-            "Fix the behaviour: the part that leads sends orders, the others answer."
-          ]
-        },
-        {
-          recall: {
-            label: "The gestures of Part 3", base: "../part3/index.html",
-            items: [{ id: "trans-do", title: "Transition the behaviour to the subsystems" }]
+          callout: {
+            tone: "note", title: "What is already there",
+            text: "Each drone holds a **Flight Orchestrator**: it flies where its components tell it, and never asks them anything, which is why any of them can be there or not. The base station holds **Ground Control**: flight plan, launch, recall. You do not touch them. Ground Control hears the operator and the weather only through the bricks of the base station: **Operator Communication**, **Weather Monitoring**, **Mission Monitoring** and the **Charging Dock**."
           }
         }
       ]
     },
     {
-      id: "architecture", ch: "choice", kind: "do",
-      title: "Connect the swarm",
-      lead: "The system of interest gets its parts: the drones, the base station, the weather station. Then ports and connectors, as in Part 3.",
+      id: "plug-drone", ch: "build", kind: "do",
+      title: "Plug the components in the drones",
+      lead: "Drag, drop, connect. Watch the drone build itself here while you do it in Cameo.",
       blocks: [
+        { tip: { label: "The components, one click each", blocks: [{ widget: "brickPanel", opts: { given: false } }] } },
         {
           steps: [
-            "In the internal block diagram of the system of interest, add the parts of your option: the drones (one part per role, or one part with a multiplicity of 3), the base station, the weather station.",
-            "{{MBSE Shepherd > Create All Missing Ports}} from the behaviour you allocated.",
-            "Connect the ports: the orders from the master, the reports back, the weather to whoever decides.",
-            "{{MBSE Shepherd > Propagate}}, then {{MBSE Shepherd > Organize}}."
+            "Open the diagram of [[drone1-ibd]]: a Flight Orchestrator alone. Do the same with [[drone2-ibd]] and [[drone3-ibd]] when you get there.",
+            "From the [[tp-library]], drag a brick and drop it on the diagram. Do not create a part by hand: the drop makes it.",
+            "Choose what each drone carries: all three identical, or a job each: one that watches, one that follows, one for the bear.",
+            "Right-click the diagram → {{MBSE Shepherd > Auto Connect}}. The links appear: check that they make sense."
           ]
         },
+        { widget: "legoBay" },
         {
-          placeholder: {
-            kind: "screenshot", title: "The IBD of the swarm, per option",
-            todo: ["Expected IBD for A, B and C from the solution model", "Whether the drones are separate parts or one part [3]"]
+          reveal: {
+            label: "Prefer to connect by hand?",
+            text: "Auto Connect does nothing magic: each port says what it sends and receives, and connects to the one that takes the opposite. `p_AutoPilot` of a component goes to `p_Components` of the Flight Orchestrator. `p_Camera`, `p_Light` and `p_Sound` go out to the ports of the same name on the frame of the drone. `p_Swarm` goes to whoever answers: next to it if the intelligence is in this drone, otherwise out to `p_Swarm` on the frame."
           }
         }
       ]
     },
     {
-      id: "choose", ch: "choice", kind: "answer", mark: "outro",
+      id: "plug-base", ch: "build", kind: "do",
+      title: "Equip the base station",
+      lead: "Ground Control is alone in the base: it hears nobody, and no drone can land. Four bricks, one each.",
+      blocks: [
+        { tip: { label: "The components, one click each", blocks: [{ widget: "brickPanel", opts: { given: false } }] } },
+        {
+          steps: [
+            "Open [[base-ibd]]: Ground Control alone.",
+            "From the [[tp-library]], drop **Operator Communication**, **Weather Monitoring**, **Mission Monitoring** and **Charging Dock** on the diagram.",
+            "Right-click the diagram → {{MBSE Shepherd > Auto Connect}}. Each brick links Ground Control to a port of the frame: the operator app, the weather station, the drones."
+          ]
+        },
+        { widget: "legoBay" },
+        {
+          callout: {
+            tone: "note", title: "Each one has a job",
+            text: "Leave one out and a mission shows it: without **Operator Communication** nothing starts, without **Weather Monitoring** the drones stay out in the storm, without **Mission Monitoring** the operator is never told, without the **Charging Dock** a drone coming home has nowhere to land."
+          }
+        }
+      ]
+    },
+    {
+      id: "plug-brain", ch: "build", kind: "do", mark: "outro",
+      title: "Decide who decides",
+      lead: "The same brick, two possible homes. Where you drop it changes what links the drones together.",
+      blocks: [
+        { tip: { label: "The components, one click each", blocks: [{ widget: "brickPanel", opts: { given: false } }] } },
+        {
+          steps: [
+            "Drop **Swarm Master** on [[base-ibd]], or on the diagram of one drone. Or one **Swarm Reflex** in each drone.",
+            "Right-click → {{MBSE Shepherd > Auto Connect}}.",
+            "Open [[soi-ibd]]: look at the links between the drones. Move the master, connect again, and look at them again: they follow."
+          ]
+        },
+        { figure: { src: "assets/img/drone1-assembled.png", w: 1918, h: 500, alt: "Internal block diagram of Drone 1 with Flight Orchestrator, Zone Surveillance, Flock Watching, Sheep Tracking, Predator Management and Swarm Master, all connected. Swarm Master answers the components next to it, and goes out through p_Wing2 and p_Wing3 to the other drones.", caption: "Drone 1 as the master, once connected: it answers its own components, and reaches the two others through its frame." } },
+        { figure: { src: "assets/img/soi-assembled.png", w: 2200, h: 680, alt: "Internal block diagram of the system: the base station, the weather station, the operator app and three drones. Drone 1 is linked to Drone 2 and Drone 3 through p_Wing2 and p_Wing3 to their p_Swarm.", caption: "The same solution, seen from the system: the links between the drones start from the one that decides." } },
+        { widget: "legoBay" }
+      ]
+    },
+
+    /* ───────────────────────── 5 · Fly the missions ───────────────────────── */
+    {
+      id: "fly", ch: "fly", kind: "do", mark: "intro",
+      title: "Play the missions",
+      lead: "Each mission runs in Cameo, on what you assembled, from a fresh start. Open the Simulation panel to watch the swarm.",
+      blocks: [
+        { widget: "missionBoard" },
+        {
+          callout: {
+            tone: "note", title: "The rule behind the checks",
+            text: "While a drone follows a stray sheep or deals with the bear, another drone must keep the field."
+          }
+        }
+      ]
+    },
+    {
+      id: "rewire", ch: "fly", kind: "do",
+      title: "Unplug, replug, beat your score",
+      lead: "A red cross is not a mistake: it is what this solution costs. Take it apart, and try another.",
+      blocks: [
+        {
+          list: [
+            "To take a brick out: select it on the diagram and press **Ctrl+D**: the Delete key only removes the symbol. Its links go with it.",
+            "To cut a single link: delete the connector, play a mission, and see who no longer answers.",
+            "**Reflex everywhere:** three complete drones, one reflex each. Play the stray sheep. What happens to the flock?",
+            "**Base radio down:** which solutions still hold? What does a master in a drone cost in exchange?",
+            "**The cheapest fleet** that holds every mission: how few bricks does it take?",
+            "**Save on the base:** take one brick out of the Base Station and play the missions. Which one fails, and why?",
+            "**Keep some at home:** put **Base Standby** on the drone that follows and on the one that handles the bear. Do the missions still hold? Watch them take off from the base."
+          ]
+        },
+        { widget: "legoBay" },
+        { widget: "missionBoard" },
+        { notes: { id: "lego-learnt", label: "What surprised you", hint: "One line per solution." } }
+      ]
+    },
+    {
+      id: "endurance", ch: "fly", kind: "try",
+      title: "Bonus: four hours on the pasture",
+      lead: "Cameo tells you who does what. It says nothing about batteries. Here the same rules run for four hours, computed in this page, with invented figures: compare the solutions, do not trust the numbers.",
+      blocks: [
+        { widget: "enduranceLab" },
+        {
+          list: [
+            "**Three heavy drones or one light one?** More on the field means fewer holes, a higher bill, and a more stressed flock.",
+            "**Move the base 3.6 km away.** At 12 m/s, a drone waiting at the base takes 5 minutes to arrive, and the bear needs 4. Then fly at 20 m/s: it arrives in time, and what does that do to the battery? You may have to fly home sooner.",
+            "**A bigger battery?** More flight time, but it weighs, so everything costs more to lift, and it takes longer to charge. Compare Large and High density.",
+            "**Fly home at 5%.** How far can you push the battery before you lose a drone on the way back?",
+            "**One charging place, or three?** Find the moment the drones queue at the base.",
+            "**Take off together, or in turn?** Look at the holes in the blue."
+          ]
+        },
+        { notes: { id: "endurance-learnt", label: "Your trade-off", hint: "What did you give up, and for what?" } }
+      ]
+    },
+    {
+      id: "choose", ch: "fly", kind: "answer", mark: "outro",
       title: "Your choice",
-      lead: "Which option do you defend, and on which criteria?",
+      lead: "Which solution do you defend, and on which criteria? Look at the two questions you answered in chapter 2: has your answer changed?",
       blocks: [
         {
           question: {
             id: "q-option", type: "choice",
             prompt: "Which organisation of the swarm do you choose?",
-            options: ["A · Base station leads 3 complete drones", "B · Base station leads 3 specialised drones", "C · A drone leads specialised drones"],
+            options: ["A · Base station leads 3 complete drones", "B · Base station leads 3 specialised drones", "C · A drone leads the others", "D · Reflexes, no leader"],
             justify: true
           }
         }
-      ]
-    },
-
-    /* ───────────────────────── 5 · Simulation ───────────────────────── */
-    {
-      id: "sim-run", ch: "sim", kind: "do", mark: "intro",
-      title: "Run the swarm",
-      lead: "Run the simulation of the system of interest in Cameo. The panel shows each drone, its step, and who leads.",
-      blocks: [
-        {
-          steps: [
-            "In Cameo, start the simulation of the system of interest ((simulate)), then ((run)).",
-            "Open the **Simulation** panel at the top: one drone per drone instance of your model.",
-            "Make a sheep stray, then bring a predator: check that a drone always **keeps the field**. The panel turns red when the flock is left alone."
-          ]
-        },
-        { widget: "simHint" },
-        {
-          callout: {
-            tone: "note", title: "The rule the panel checks",
-            text: "A drone may follow a stray sheep or the predator out of the field only while another drone stays on the field."
-          }
-        }
-      ]
-    },
-    {
-      id: "sim-iterate", ch: "sim", kind: "do", mark: "outro",
-      title: "Iterate",
-      lead: "Each red field is a hole in the behaviour of the leader. Correct it, run again.",
-      blocks: [
-        {
-          list: [
-            "Two drones leave at once: the leader must reserve one drone for the field before sending another.",
-            "Nobody leaves: the order reaches no drone; check the ports and the connectors from the leader.",
-            "Option C, the master is down: who takes over?"
-          ]
-        },
-        { notes: { id: "sim-fixes", label: "What you had to correct", hint: "One line per correction." } }
       ]
     },
 
@@ -356,9 +365,10 @@ window.COURSE = {
   ],
 
   authorNotes: [
-    { scene: "options", text: "The three options, their for/against and the fleets they load are in part4/content/config.js (swarm.options). The handout lists them as: base station master + 3 complete drones; base station master + 3 different drones; different drones with a drone master." },
-    { scene: "sim-run", text: "The Cameo plugin publishes one step for the whole simulation. For Part 4 it must add a drones list (id, step, role, name) and the master to its state frame: see \"Fleet simulation\" in README.md. The steps of each role (fleet.roles.*.steps) are placeholders until the model's state names are known; \"Tracking stray sheep\" is shown as the new behaviour escort." },
-    { scene: "allocate", text: "The drone assembly lab (part4/lab/, not deployed) could serve here to build the drone variants of options B and C. Link it once it is published." },
-    { scene: "regions-do", text: "{{Add Region}} is a guess at the Cameo label; check it." }
+    { scene: "options", text: "The three options, their for/against and the fleets they load are in part4/content/config.js (swarm.options)." },
+    { scene: "box", text: "The model and the missions come from scripts/make-part4-model.py and part4/content/lego.js. The mission and the operational context are kept by hand in the two base models (instructor-only/UAV_Part4_Base*.mdzip); TP - Swarm comes from the generator (scripts/build-part4-model.mjs), never by hand." },
+    { scene: "plug-drone", text: "Auto Connect and the live bay need a plugin with the assembly feature (MBSE Shepherd > Auto Connect, relay calls assembly/read and assembly/autoConnect)." },
+    { scene: "endurance", text: "Not in the model on purpose: js/lego-endurance.js computes it from the bricks, with the masses and powers of the 3D catalog; the events and the settings are in part4/content/lego.js (day)." },
+    { scene: "fly", text: "A mission takes about a minute in Cameo: each event crosses several state machines with the animation on. scripts/check-part4-solutions.mjs plays them on a set of assemblies, with the same code as this board (js/lego-run.js)." }
   ]
 };

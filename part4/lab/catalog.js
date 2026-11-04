@@ -81,6 +81,8 @@
       what: 'Plans the patrol of the zone and reports what moves in it.' },
     { id: 'sw-flock', name: 'Flock Tracker', short: 'Flock tracker', kind: 'sw', group: 'Software', mass: 0, power: 1,
       what: 'Counts the sheep on the video and follows the flock.' },
+    { id: 'sw-track', name: 'Stray Tracker', short: 'Stray tracker', kind: 'sw', group: 'Software', mass: 0, power: 1,
+      what: 'Keeps a stray sheep in the image and flies after it.' },
     { id: 'sw-pred', name: 'Predator Recognition', short: 'Predator rec.', kind: 'sw', group: 'Software', mass: 0, power: 2,
       what: 'Recognises a predator in the thermal image and tracks it.' },
     { id: 'sw-engage', name: 'Engage Manager', short: 'Engage mgr', kind: 'sw', group: 'Software', mass: 0, power: 1,
@@ -162,7 +164,7 @@
     ir:     { shape: 'camera', x: -22, y: -58, z: -32, w: 24, d: 22, h: 20, tone: 'heat' },
     det:    { shape: 'deterrent', x: 0, y: 62, z: -32, w: 46, d: 26, h: 22 }
   };
-  const SW_SLOTS = ['sw-zone', 'sw-flock', 'sw-pred', 'sw-engage', 'sw-swarm'];
+  const SW_SLOTS = ['sw-zone', 'sw-flock', 'sw-track', 'sw-pred', 'sw-engage', 'sw-swarm'];
 
   window.LAB = window.LAB || {};
   Object.assign(window.LAB, { IF, FAM, BLOCKS, BY, CAPS, CAP, VARIANTS, VAR, recipe, variantCaps, variantName, MOUNTS, SW_SLOTS });

@@ -169,12 +169,15 @@
       } else {
         target = BEAR.out;
       }
+      const was = bear.x;
       step(bear, target, BEAR_SPEED[mode], dt);
+      /* the bear picture faces right: turn it when it walks left */
+      if (Math.abs(bear.x - was) > 0.005) bear.left = bear.x < was;
       if (mode === 'pursue' && bear.x > 104) { bear.gone = true; bear.shown = false; }
     }
-    /* The stray sheep walks out while a drone escorts it, and back to the flock after. */
+    /* The stray sheep walks out when the mission says so, with or without a drone after it, and back to the flock after. */
     function moveStray(by, dt) {
-      step(stray, by.escort ? STRAY.out : SHEEP[STRAY.sheep], STRAY.speed, dt);
+      step(stray, by.escort || fleet.sheepOut ? STRAY.out : SHEEP[STRAY.sheep], STRAY.speed, dt);
     }
     function step(p, target, speed, dt) {
       const dx = target.x - p.x;
@@ -225,7 +228,7 @@
       setClass(straySheep, `flt-sheep${stressed ? ' flt-sheep--nervous' : ''}${insideFence(stray) ? '' : ' flt-sheep--out'}`);
 
       setHidden(el.bear, !bear.shown);
-      setClass(el.bear, `flt-bear${by.counter ? ' flt-bear--danger' : ''}`);
+      setClass(el.bear, `flt-bear${by.counter ? ' flt-bear--danger' : ''}${bear.left ? ' flt-bear--left' : ''}`);
       setStyle(el.bear, 'left', `${bear.x.toFixed(2)}%`);
       setStyle(el.bear, 'top', `${bear.y.toFixed(2)}%`);
 
@@ -293,7 +296,8 @@
     function tick(now) {
       frame = 0;
       if (!visible) return;
-      const dt = Math.min(40, now - last);
+      /* The time of a first frame may be earlier than the performance.now() of wake(). */
+      const dt = Math.max(0, Math.min(40, now - last));
       last = now;
       const by = groups();
       moveBear(bearMode(by), dt, now);

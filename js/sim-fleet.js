@@ -101,7 +101,7 @@
     const focused = drawer.contains(document.activeElement) ? document.activeElement.dataset.drone : undefined;
     $('#flt-list').innerHTML = snap.drones.map((d) => {
       const lead = snap.master === d.id;
-      const where = F.AWAY.includes(d.behaviour) ? 'out of the field' : F.ON_FIELD.includes(d.behaviour) ? 'on the field' : '';
+      const where = F.AWAY.includes(d.behaviour) ? 'out of the field' : F.ON_FIELD.includes(d.behaviour) ? 'keeps the field' : '';
       const step = PREVIEW
         ? `<select data-drone="${esc(d.id)}" aria-label="Step of ${esc(d.name)}">${stepsOf(d).map((s) => `<option${s === d.step ? ' selected' : ''}>${esc(s)}</option>`).join('')}</select>`
         : `<strong>${esc(d.step)}</strong>`;

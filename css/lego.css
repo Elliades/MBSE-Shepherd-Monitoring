@@ -1,0 +1,147 @@
+/* ───────── the box of Lego (Part 4) ─────────
+   The assembly bay and the mission board of js/widgets-lego.js. The drone itself is part4/lab/drone3d.css. */
+.lego { display: grid; gap: 0.9rem; }
+.lego-status { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; }
+.lego-pill { padding: 0.35rem 0.7rem; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); font-size: 0.9rem; }
+.lego-pill.is-ok { border-color: var(--grass); color: var(--grass); background: var(--grass-soft); }
+.lego-pill.is-warn { border-color: var(--amber); color: var(--amber); background: var(--amber-soft); }
+.lego-pill.is-bad { border-color: var(--danger); color: var(--danger); background: var(--danger-soft); }
+.lego-auto-out { font-size: 0.85rem; color: var(--ink-2); }
+.lego-missing { flex-basis: 100%; font-size: 0.82rem; color: var(--ink-2); }
+.lego-missing ul { margin: 0.3rem 0 0; padding-left: 1.1rem; font-family: var(--font-mono); font-size: 0.74rem; list-style: none; }
+
+.lego-box { display: flex; flex-wrap: wrap; align-items: center; gap: 0.45rem; }
+.lego-brick { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.25rem 0.6rem 0.25rem 0.3rem; border-radius: var(--r-sm); border: 1px solid var(--line); background: var(--surface); font-size: 0.85rem; font-weight: 600; }
+.lego-brick i { width: 1.05rem; height: 1.05rem; border-radius: 4px; background: var(--tone); box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.18); }
+.lego-hint { font-size: 0.8rem; color: var(--ink-2); }
+
+.lego-hangar { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 0.7rem; }
+.lego-card { display: flex; flex-direction: column; gap: 0.35rem; padding: 0.6rem; border-radius: var(--r); border: 1px solid var(--line); background: var(--surface); min-width: 0; }
+.lego-card header { display: flex; flex-direction: column; }
+.lego-card header b { font-family: var(--font-display); font-size: 1rem; }
+.lego-card header small { color: var(--ink-2); font-size: 0.76rem; }
+.lego-card.has-brain { border-color: var(--route); box-shadow: 0 0 0 1px var(--route); }
+.lego-3d { position: relative; height: 190px; overflow: hidden; border-radius: var(--r-sm); background: var(--bg); }
+.lego-mast { height: 190px; display: grid; place-items: center; border-radius: var(--r-sm); background: var(--bg); color: var(--ink-2); }
+.lego-mast svg { width: 70%; fill: none; stroke: currentColor; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.lego-mast circle { fill: currentColor; }
+.lego-mast .wave { opacity: 0.25; }
+.lego-card.has-brain .lego-mast { color: var(--route); }
+.lego-card.has-brain .lego-mast .wave { opacity: 1; animation: lego-wave 1.6s ease-in-out infinite; }
+@keyframes lego-wave { 50% { opacity: 0.25; } }
+.lego-chips { display: flex; flex-wrap: wrap; gap: 0.3rem; min-height: 1.7rem; }
+.lego-chip { padding: 0.12rem 0.5rem; border-radius: 6px; border: 1px solid color-mix(in srgb, var(--tone) 60%, var(--line)); background: transparent; color: var(--ink); font: inherit; font-size: 0.78rem; font-weight: 600; }
+button.lego-chip { cursor: pointer; }
+.lego-chip.is-in { background: var(--tone); border-color: var(--tone); color: #fff; }
+.lego-chip.is-open { background: transparent; color: var(--ink); border-style: dashed; }
+.lego-empty { font-size: 0.78rem; color: var(--ink-3); }
+.lego-budget { margin: 0; font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink-2); }
+
+.lego-regions, .lego-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+.lego-regions caption, .lego-table caption { text-align: left; font-weight: 700; padding-bottom: 0.3rem; }
+.lego-regions td, .lego-table td, .lego-table th { padding: 0.32rem 0.5rem; border-top: 1px solid var(--line); text-align: left; }
+.lego-regions tr.ok td:last-child { color: var(--grass); }
+.lego-regions tr.no td:last-child { color: var(--danger); }
+
+.lego-board { display: grid; gap: 0.9rem; }
+.lego-missions { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.7rem; }
+.lego-mission { display: flex; flex-direction: column; align-items: flex-start; gap: 0.4rem; padding: 0.7rem; border-radius: var(--r); border: 1px solid var(--line); background: var(--surface); }
+.lego-mission p { margin: 0; font-size: 0.86rem; color: var(--ink-2); flex: 1; }
+.lego-mission-head { display: flex; justify-content: space-between; align-items: baseline; gap: 0.5rem; width: 100%; }
+.lego-mission-head b { font-family: var(--font-display); }
+.lego-ok { color: var(--grass); font-weight: 700; font-size: 0.82rem; }
+.lego-no { color: var(--danger); font-weight: 700; font-size: 0.82rem; }
+.lego-checks { margin: 0; padding: 0; list-style: none; font-size: 0.82rem; }
+.lego-checks li.ok { color: var(--grass); }
+.lego-checks li.no { color: var(--danger); }
+.lego-caption { margin: 0; min-height: 1.6em; font-family: var(--font-display); font-size: 1.15rem; }
+.lego-compare { overflow-x: auto; }
+.lego-table td.ok { color: var(--grass); font-weight: 700; }
+.lego-table td.no { color: var(--danger); font-weight: 700; }
+.lego-table tr.is-now td:first-child { font-weight: 700; }
+.lego-table td:first-child { font-family: var(--font-mono); font-size: 0.72rem; }
+.lego-say { position: absolute; left: 50%; top: 8%; z-index: 5; transform: translateX(-50%); width: max-content; max-width: 80%; margin: 0; padding: 0.4rem 0.9rem; border-radius: var(--r-sm); background: var(--scrim); color: #fff; font-family: var(--font-display); font-size: 1.15rem; text-align: center; pointer-events: none; }
+#sim-stage { position: relative; }
+
+/* The bonus, endurance. Colours of the states: categorical order checked with the data-viz validator on --surface, both themes. */
+.lg-end {
+  --st-field: #2a78d6; --st-job: #eb6834; --st-transit: #1baf7a; --st-charging: #eda100; --st-queue: #e87ba4; --st-lost: #c9302c;
+  display: grid; gap: 0.8rem; position: relative;
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) .lg-end { --st-field: #3987e5; --st-job: #d95926; --st-transit: #199e70; --st-charging: #c98500; --st-queue: #d55181; --st-lost: #e66767; }
+}
+:root[data-theme="dark"] .lg-end { --st-field: #3987e5; --st-job: #d95926; --st-transit: #199e70; --st-charging: #c98500; --st-queue: #d55181; --st-lost: #e66767; }
+.lg-end-fleets { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.lg-end-controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 0.6rem 1rem; font-size: 0.84rem; }
+.lg-end-controls label { display: grid; gap: 0.15rem; color: var(--ink-2); }
+.lg-end-controls b { color: var(--ink); }
+.lg-end-controls input[type="range"] { width: 100%; accent-color: var(--route); }
+.lg-end-controls select { width: 100%; min-height: 2rem; font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-sm); }
+.lg-end-controls .lg-end-check { display: flex; align-items: center; gap: 0.4rem; color: var(--ink); }
+.lg-end-verdict { margin: 0; font-family: var(--font-display); font-size: 1.05rem; color: var(--ink); }
+.lg-end-verdict.is-bad { color: var(--danger); }
+.lg-end-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(135px, 1fr)); gap: 0.5rem; }
+.lg-end-tile { display: grid; gap: 0.05rem; padding: 0.5rem 0.65rem; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--surface); }
+.lg-end-tile small { color: var(--ink-2); font-size: 0.74rem; }
+.lg-end-tile b { font-family: var(--font-display); font-size: 1.15rem; color: var(--ink); }
+.lg-end-chart { position: relative; display: grid; gap: 0.35rem; }
+.lg-end-legend { display: flex; flex-wrap: wrap; gap: 0.25rem 0.8rem; font-size: 0.76rem; color: var(--ink-2); margin-bottom: 0.2rem; }
+.lg-end-legend span { display: inline-flex; align-items: center; gap: 0.3rem; }
+.lg-end-legend .lg-st { position: static; display: inline-block; width: 12px; height: 12px; }
+.lg-end-key { display: inline-block; width: 16px; border-top: 2px solid var(--ink-2); }
+.lg-end-row { display: grid; grid-template-columns: 8.5rem minmax(0, 1fr); gap: 0.5rem; align-items: stretch; }
+.lg-end-name { display: grid; align-content: center; font-size: 0.82rem; min-width: 0; }
+.lg-end-name small { color: var(--ink-2); font-size: 0.7rem; overflow-wrap: anywhere; }
+.lg-end-name .lg-no { color: var(--danger); font-weight: 700; }
+.lg-end-plot { position: relative; height: 62px; touch-action: pan-y; }
+.lg-end-line { position: absolute; inset: 0 0 20px 0; width: 100%; height: 42px; overflow: visible; }
+.lg-end-line polyline { fill: none; stroke: var(--ink-2); stroke-width: 2; stroke-linejoin: round; }
+.lg-end-line line { stroke: var(--line); stroke-width: 1; stroke-dasharray: 4 3; }
+.lg-end-strip { position: absolute; left: 0; right: 0; bottom: 0; height: 16px; }
+.lg-st { position: absolute; top: 0; bottom: 0; min-width: 1px; border-radius: 2px; }
+.lg-st--field { background: var(--st-field); }
+.lg-st--job { background: var(--st-job); }
+.lg-st--transit { background: var(--st-transit); }
+.lg-st--charging { background: var(--st-charging); }
+.lg-st--queue { background: var(--st-queue); }
+.lg-st--ready { background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--line); }
+.lg-st--lost { background: repeating-linear-gradient(135deg, var(--st-lost) 0 3px, transparent 3px 7px); box-shadow: inset 0 0 0 1px var(--st-lost); }
+.lg-end-mark { position: absolute; top: 0; bottom: 0; width: 0; border-left: 1px solid var(--ink-3); opacity: 0.55; pointer-events: none; }
+.lg-end-cross { position: absolute; top: 0; bottom: 0; width: 0; border-left: 1px solid var(--ink); pointer-events: none; }
+.lg-end-events, .lg-end-axis { position: relative; height: 1.1rem; font-size: 0.7rem; color: var(--ink-2); }
+.lg-end-events { height: 2rem; }
+.lg-end-event { position: absolute; transform: translateX(-50%); font-weight: 700; color: var(--ink); white-space: nowrap; }
+.lg-end-event--sheep { top: 1rem; }
+.lg-end-axis span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
+.lg-end .lego-table td:first-child { min-width: 11rem; }
+.lg-end-axis span:first-child { transform: none; }
+.lg-end-axis span:last-child { transform: translateX(-100%); }
+.lg-end-tip { position: absolute; z-index: 4; width: 180px; padding: 0.35rem 0.5rem; font-size: 0.76rem; line-height: 1.35; background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: var(--r-sm); box-shadow: 0 2px 10px rgb(0 0 0 / 0.18); pointer-events: none; transform: translateY(-100%); }
+.lg-end-table summary { cursor: pointer; font-size: 0.86rem; color: var(--ink-2); }
+.lg-end-table [data-tables] { display: grid; gap: 0.8rem; margin-top: 0.5rem; overflow-x: auto; }
+@media (max-width: 560px) {
+  .lg-end-row { grid-template-columns: 5.2rem minmax(0, 1fr); }
+  .lg-end-name small { font-size: 0.64rem; }
+}
+
+/* the components, one click each (brickPanel); the icon of a brick is also in .lego-brick i */
+.lego-brick i { display: grid; place-items: center; width: 1.35rem; height: 1.35rem; color: #fff; }
+.lego-brick i svg { width: 0.95rem; height: 0.95rem; }
+.lego-panel { display: grid; gap: 0.55rem; }
+.lego-panel-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 10.5rem), 1fr)); gap: 0.5rem; }
+.lego-panel-btn {
+  display: flex; align-items: center; gap: 0.55rem; padding: 0.45rem 0.6rem 0.45rem 0.45rem; border-radius: var(--r-sm);
+  border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; font-size: 0.9rem; font-weight: 600;
+  text-align: left; cursor: pointer;
+}
+.lego-panel-btn:hover { border-color: var(--tone); }
+.lego-panel-btn[aria-pressed="true"] { border-color: var(--tone); background: color-mix(in srgb, var(--tone) 10%, var(--surface)); }
+.lego-panel-btn.is-given { border-style: dashed; }
+.lego-panel-ico { flex: none; display: grid; place-items: center; width: 2rem; height: 2rem; border-radius: 7px; background: var(--tone); color: #fff; box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.18); }
+.lego-panel-ico svg { width: 1.25rem; height: 1.25rem; }
+.lego-panel-ico.big { width: 3rem; height: 3rem; border-radius: 10px; }
+.lego-panel-ico.big svg { width: 1.8rem; height: 1.8rem; }
+.lego-panel-out { display: flex; gap: 0.8rem; align-items: flex-start; padding: 0.75rem 0.85rem; border-radius: var(--r-sm); background: var(--surface-2); border-left: 4px solid var(--tone); }
+.lego-panel-out p { margin: 0.2rem 0 0.35rem; }
+.lego-panel-out ul { margin: 0; padding-left: 1.1rem; font-size: 0.88rem; color: var(--ink-2); }

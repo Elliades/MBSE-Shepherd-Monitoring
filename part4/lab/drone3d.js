@@ -133,7 +133,7 @@
     energy: [0, 0, -70], prop: [0, 0, 26], fc: [0, 36, 48], nav: [0, 40, 90], wifi: [0, 30, 60], mc: [0, -24, 70],
     fleet: [-40, 24, 64], relay: [44, 20, 60], eo: [20, -60, -60], ir: [-36, -56, -54], det: [0, 64, -66]
   };
-  const SW_COL = { 'sw-zone': 'zone', 'sw-flock': 'sheep', 'sw-pred': 'predator', 'sw-engage': 'engage', 'sw-swarm': 'master' };
+  const SW_COL = { 'sw-zone': 'zone', 'sw-flock': 'sheep', 'sw-track': 'sheep', 'sw-pred': 'predator', 'sw-engage': 'engage', 'sw-swarm': 'master' };
 
   function create(host) {
     const stage = div('d3', host);
