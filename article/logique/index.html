@@ -1,0 +1,263 @@
+<!doctype html>
+<!-- Article 2 of the series: the logical layer (docs/articles/02-note-article-2-couche-logique.md). Page of the site,
+     styled by ../article.css, ../tp/tp.css (the phone, the gallery, the series) and logique.css. Its figures are the
+     site's own pieces: the guide of Part 3 in a phone, the specs of the three correction architectures
+     (part3/content/archs.js) and the simulator js/logical-engine.js. The bill and the method are in logique.js; the
+     incremental replay, the table of contents and the theme are those of ../article.js. -->
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dompter la couche logique · MBSE Shepherd</title>
+<meta name="description" content="La couche logique d’un modèle SysML est trop longue à câbler à la main, et il en faut plusieurs pour choisir. Une démarche, trois clics droits dans Cameo, et les scénarios de la mission rejoués à coût zéro.">
+<meta property="og:title" content="Dompter la couche logique en MBSE : démarche, automatisation, simulation">
+<meta property="og:description" content="MBSE Shepherd (2/3) : construire et comparer des architectures logiques simulables sans se noyer dans la plomberie SysML.">
+<meta property="og:image" content="../../assets/img/promo-parts34-poster.jpg">
+<meta name="theme-color" content="#e8eee1" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0e1814" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2315221a'/%3E%3Crect x='11' y='11' width='10' height='10' rx='2' fill='%23fbfdf8'/%3E%3Cg fill='none' stroke='%23fbfdf8' stroke-width='2.4'%3E%3Ccircle cx='9' cy='9' r='4'/%3E%3Ccircle cx='23' cy='9' r='4'/%3E%3Ccircle cx='9' cy='23' r='4'/%3E%3Ccircle cx='23' cy='23' r='4'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:ital,wght@0,400;0,600;0,700;1,400&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:wght@400;700&display=swap">
+<link rel="stylesheet" href="../article.css">
+<link rel="stylesheet" href="../tp/tp.css">
+<link rel="stylesheet" href="logique.css">
+</head>
+<body>
+
+<header class="masthead">
+  <a class="brand" href="../../">MBSE Shepherd</a>
+  <button class="theme" id="theme-btn" type="button" aria-label="Changer de thème">◐</button>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="Sommaire">
+  <p class="toc-title">Sommaire</p>
+  <ol>
+    <li><a href="#plomberie">La plomberie</a></li>
+    <li><a href="#triptyque">Le mot d’ordre</a></li>
+    <li><a href="#demarche">La démarche</a></li>
+    <li><a href="#automatisation">Trois clics droits</a></li>
+    <li><a href="#simulation">Rejouer la mission</a></li>
+    <li><a href="#tradeoffs">Les trade-offs</a></li>
+    <li><a href="#bilan">Bilan et suite</a></li>
+    <li><a href="#capot">Sous le capot</a></li>
+  </ol>
+</nav>
+
+<article class="post">
+  <header class="post-head">
+    <p class="kicker">MBSE Shepherd · 2/3 · architecture</p>
+    <h1>Dompter la couche logique : démarche, automatisation, simulation</h1>
+    <p class="lede">Une architecture logique simulable, c’est des centaines d’éléments SysML à câbler à la main, et il en faut plusieurs pour choisir. Une démarche, trois clics droits dans Cameo, et les scénarios de la mission rejoués à coût zéro.</p>
+    <p class="byline">Quentin Cespédès · novembre 2026</p>
+  </header>
+
+  <!-- ───────── accroche ───────── -->
+  <section id="plomberie">
+    <p>Dans le <a href="../tp/">premier article</a>, les étudiants modélisaient la mission du drone berger : une machine d’états qui s’exécute, et un drone qui vole dans le pâturage, ou qui reste au sol. Vient alors la vraie question de l’ingénieur système : <b>quels sous-systèmes font tout ça, et qu’est-ce qu’ils s’échangent ?</b> C’est la couche logique.</p>
+    <p>Le concept tient en une phrase. La réalisation, beaucoup moins. Pour qu’une architecture logique se simule dans Cameo, chaque composant doit avoir sa machine d’états et ses fonctions ; chaque signal doit partir d’un port relié au bon destinataire ; chaque port doit être typé par une interface dont les propriétés de flux portent les bons signaux, dans le bon sens ; et chaque fonction copiée doit garder sa traçabilité vers la mission. Faites le compte, sur le drone du TP :</p>
+
+    <figure class="fig wide" data-fig="bill"></figure>
+    <p class="fig-cap">Figure 1. Ce que contiennent les trois architectures logiques de correction du TP, comptées sur leurs spécifications. Les messages sont comptés en rejouant le scénario complet avec le simulateur du site.</p>
+
+    <p>Et ce n’est qu’<b>une</b> architecture. En couche logique, le métier n’est pas de câbler une boîte : c’est de proposer plusieurs architectures candidates, puis de trancher par un <i>trade-off</i>. Quand câbler une seule candidate prend déjà des heures, personne n’en fait trois.</p>
+    <p>Que je forme des étudiants ou des ingénieurs, j’observais la même chose : tout le temps passait dans la plomberie, et il ne restait plus d’énergie pour concevoir. Le constat est simple : <b>la couche logique est trop longue à faire faire dans l’outil.</b> Cet article raconte comment on l’a outillée.</p>
+
+    <div class="series">
+      <b>Une série en trois actes</b>
+      <ol>
+        <li><a href="../tp/"><span>L’humain apprend</span></a> un TP vivant, connecté à l’outil</li>
+        <li class="now"><span>L’humain conçoit sans souffrir</span> la couche logique : démarche, automatisation, simulation (cet article)</li>
+        <li><span>L’IA prend le relais du labeur</span> la même méthode, les mêmes outils, le même juge</li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ───────── 1 ───────── -->
+  <section id="triptyque">
+    <h2><span class="n">1</span> Le mot d’ordre : démarche, automatisation, simulation</h2>
+    <p>Connaître la syntaxe fUML et la plomberie SysML ne fait pas partie de la mission d’un ingénieur système. Sa mission, c’est de décider <b>qui fait quoi, qui prévient qui, et si l’ensemble tient la mission</b>. Tout le reste devrait coûter le moins possible.</p>
+    <p>Toute la couche logique du TP tient donc en trois mots, qui sont aussi le plan de cet article :</p>
+    <div class="cards">
+      <div class="card"><b>Démarche</b><span>Partir de la machine d’états de la mission, un sous-système à la fois : l’interne d’abord, l’externe ensuite, puis fonctionnalité par fonctionnalité.</span></div>
+      <div class="card"><b>Automatisation</b><span>Trois clics droits dans Cameo qui absorbent la plomberie SysML et fUML. La décision d’architecture reste visible.</span></div>
+      <div class="card"><b>Simulation</b><span>À chaque fonctionnalité, rejouer les scénarios déjà écrits pour la mission : la validation ne coûte rien de plus.</span></div>
+    </div>
+  </section>
+
+  <!-- ───────── 2 ───────── -->
+  <section id="demarche">
+    <h2><span class="n">2</span> La démarche : de la mission aux sous-systèmes</h2>
+    <p>On ne part pas d’une feuille blanche. On part de ce qui vole déjà : la machine d’états de la mission, validée en couche fonctionnelle. Dans cette mission, le drone <b>se parle à lui-même</b> : chaque décision est un signal qu’une fonction s’envoie, et qui fait avancer la mission. Passer au logique, c’est <b>répartir ses états et ses fonctions entre des sous-systèmes</b>. À l’intérieur d’un sous-système, se parler à soi-même reste permis. Dès qu’un autre doit savoir, ça passe par un port.</p>
+    <p>La séquence de travail tient en quatre étapes :</p>
+    <ol>
+      <li><b>Identifier les sous-systèmes et leurs états.</b> On cherche des motifs dans la mission. Une région parallèle est souvent un sous-système : les trois régions de <i>Patrolling</i> donnent la patrouille, les moutons, le prédateur. Ça marche dans les deux sens : on crée un composant et on lui alloue des états, ou un groupe d’états cohérents fait émerger le composant. Toute la préparation, <i>Undeployed</i>, devient ainsi <i>Mission Configuration</i>.</li>
+      <li><b>Faire tourner l’interne d’abord.</b> Une fois les états alloués et leurs fonctions dupliquées, on travaille la machine d’états du sous-système, ou celle de l’orchestrateur, et ses fonctions, jusqu’à ce qu’elle avance proprement.</li>
+      <li><b>Régler ensuite l’externe.</b> L’intérieur tourne ; on se pose alors la question du dehors : <i>qu’est-ce que je dois recevoir, qu’est-ce que je dois envoyer, et à qui ?</i></li>
+      <li><b>Itérer.</b> Deuxième sous-système, troisième. Puis, sur cette base, les fonctionnalités principales une par une ; à chaque fonctionnalité testable, on connecte et on valide.</li>
+    </ol>
+
+    <figure class="fig wide dm" data-fig="method"></figure>
+    <p class="fig-cap">Figure 2. Les quatre étapes, sur la mission du TP et l’architecture à orchestrateur central (simplifiées). Choisissez une étape, ou laissez défiler.</p>
+
+    <h3>Deux questions par signal</h3>
+    <p>L’étape externe se réduit à deux questions, posées pour chaque signal du sous-système : <b>qui déclenche la transition, et qui d’autre doit savoir ?</b> Sur <i>Mission Configuration</i> :</p>
+    <table>
+      <thead><tr><th>Signal</th><th>Qui déclenche la transition ?</th><th>Qui d’autre doit savoir ?</th><th>Ce que ça donne</th></tr></thead>
+      <tbody>
+        <tr><td><code>Start SOI</code></td><td>L’extérieur : la mise sous tension</td><td>Personne</td><td>Un port entrant</td></tr>
+        <tr><td><code>FlightPlan Correct</code>, <code>FlightPlan Incorrect</code></td><td>L’extérieur : l’opérateur, via la base sol</td><td>Personne</td><td>Un port entrant</td></tr>
+        <tr><td><code>Ready for mission</code>, <code>FlightPlan Check Failed</code></td><td>Lui-même : <i>Load Flight Plan</i></td><td>L’opérateur</td><td>Un envoi à soi-même, plus un signal sortant <code>_ext</code></td></tr>
+        <tr><td><code>Start Sheep Guard Mission</code></td><td>L’extérieur : l’opérateur</td><td>Le décideur, qui lance la mission</td><td>Un port entrant, plus un signal sortant <code>_ext</code></td></tr>
+      </tbody>
+    </table>
+    <p>Déclenché par lui-même et personne d’autre concerné : un envoi à soi-même, rien à faire. Déclenché du dehors : un port entrant. Quelqu’un d’autre doit savoir : un port sortant, avec un signal à lui. Ces deux questions ne s’automatisent pas ; c’est exactement là que l’ingénieur système travaille. Tout ce qui vient après, en revanche, s’automatise très bien.</p>
+  </section>
+
+  <!-- ───────── 3 ───────── -->
+  <section id="automatisation">
+    <h2><span class="n">3</span> L’automatisation : trois clics droits</h2>
+    <p>Prenons le seul <i>Mission Configuration</i>, le plus petit des sous-systèmes. À la main, il faut redessiner ses cinq états et leurs transitions, copier chaque fonction qu’ils appellent, lier chaque copie à son original par <code>«refine»</code>, allouer les originaux au bloc. Puis, pour chaque signal qui arrive du dehors, créer un port, une interface, une propriété de flux typée par le signal, dans le bon sens. Puis, pour chaque signal qui sort, un signal dédié, son envoi dans l’effet de la transition, avec le bon port renseigné. Rien de tout ça n’est difficile. Tout ça est long, et une seule faute de frappe casse la simulation.</p>
+    <p>Le plugin MBSE Shepherd de Cameo en fait trois clics droits :</p>
+    <ul>
+      <li><b>Logical Transition.</b> On sélectionne des états de la mission, on choisit le composant : les états sont copiés dans sa machine d’états, avec leurs sous-états, leurs transitions et toutes les fonctions qu’ils appellent. Chaque copie reçoit un <code>«refine»</code> vers son original, l’original est alloué au bloc, et la mission n’est jamais modifiée. Une transition qui sortait de la sélection pointe vers un état <code>off-TO RENAME</code>, à renommer : c’est la frontière du sous-système, rendue visible.</li>
+      <li><b>Create All Missing Signal Ports.</b> Un clic droit sur la part analyse son comportement et crée tous les ports manquants : un port <b>entrant</b> pour chaque signal qui fait avancer sa machine d’états et vient du dehors, un port <b>sortant</b> pour chaque signal envoyé par ses fonctions et que sa machine d’états ne consomme pas. Chaque port vient typé par son interface, avec sa propriété de flux orientée. Sur <i>Mission Configuration</i> : cinq ports d’un coup.</li>
+      <li><b>Delegate to external systems.</b> Un clic droit sur une transition dont le signal est interne, mais que quelqu’un dehors doit connaître : la commande crée son jumeau pour l’extérieur, <code>Ready for mission_ext</code>, l’envoi dans l’effet de la transition, et le port qui va avec.</li>
+    </ul>
+
+    <figure class="fig wide gallery" data-fig="gallery">
+      <div class="gal">
+        <div class="phone-slot" data-phone="mc-tool"></div>
+        <ol class="gal-list">
+          <li><button type="button" data-scene="mc-tool" data-widget="mcTransition" aria-pressed="true"><b>Logical Transition</b><span>Undeployed copié dans Mission Configuration : états, transitions, fonctions, «refine». La mission ne bouge pas.</span></button></li>
+          <li><button type="button" data-scene="mc-magic" data-widget="mcPortsMagic" aria-pressed="false"><b>Create All Missing Signal Ports</b><span>Le bouton magique : un port par signal attendu, typé, relié à la transition qui l’attend.</span></button></li>
+          <li><button type="button" data-scene="mc-delegate" data-widget="mcDelegate" aria-pressed="false"><b>Delegate to external systems</b><span>Le verdict n’a pas de port : il est interne. Un clic droit lui donne un jumeau pour l’opérateur.</span></button></li>
+          <li><button type="button" data-scene="mc-ports" data-widget="mcPorts" aria-pressed="false"><b>Puis, regrouper</b><span>Un port par signal, c’est trop. On fusionne ce qui forme un échange : <i>p_BaseStation</i>, <i>p_Verdict</i>. Ça, c’est une décision.</span></button></li>
+        </ol>
+      </div>
+      <figcaption>Figure 3. Les trois clics droits, tels que le guide de la partie 3 les montre aux étudiants (en anglais, comme le TP). Choisissez une commande, puis faites défiler ses étapes dans le téléphone.</figcaption>
+    </figure>
+
+    <p>Le partage des rôles est net : <b>la syntaxe est cachée, la décision reste visible.</b> Choisir les états d’un sous-système, décider qui doit savoir quoi, regrouper des signaux en un échange : c’est l’ingénieur. Recopier, typer, orienter, renseigner : c’est le plugin.</p>
+    <p class="aside">Une méthode simplifiée, avec des outils maison : ces commandes ont été écrites pour ce cours. Chacune ne crée que des éléments SysML standard, ceux qu’on ferait à la main : blocs, états, activités, ports, interfaces, connecteurs, <code>«refine»</code>, <code>«allocate»</code>. Le modèle reste lisible, et modifiable, sans le plugin.</p>
+  </section>
+
+  <!-- ───────── 4 ───────── -->
+  <section id="simulation">
+    <h2><span class="n">4</span> La simulation : rejouer la mission, à coût zéro</h2>
+    <p>Une fois l’interne et l’externe d’une fonctionnalité branchés, comment savoir qu’on est bon ? On ne relit pas des diagrammes : <b>on rejoue les scénarios de la mission.</b> Ils existent déjà, écrits et validés en couche fonctionnelle. Si le scénario passe sur l’architecture, et fait avancer la mission au même endroit qu’avant, la fonctionnalité est validée.</p>
+    <p>D’où une construction par incréments. On pose d’abord <b>un socle</b>, les composants techniques sans enjeu d’architecture : mise sous tension, configuration, liaison sol, autopilote. Puis on ajoute <b>les fonctionnalités</b> une à une : le départ, la patrouille, les moutons, l’ours, la dissuasion. À chaque incrément, on rejoue la phase du scénario qui le concerne ; les incréments précédents sont rejoués en précondition. Essayez :</p>
+
+    <figure class="fig wide" data-fig="build"></figure>
+    <p class="fig-cap">Figure 4. La construction de l’architecture logique, incrément par incrément, rejouée avec le simulateur du site sur les spécifications des modèles de correction.</p>
+
+    <p><b>Le rejeu attrape de vraies erreurs.</b> Passez sur l’architecture sans chef et rejouez « Ours, sans patch » : la gestion du prédateur est branchée, mais personne ne suspend la surveillance des moutons ni ne rend l’autopilote à la patrouille. Deux étapes passent au rouge. On ajoute le patch, on rejoue « Ours » : c’est vert. L’erreur n’est pas dans un diagramme mal dessiné ; elle est dans l’architecture, et c’est la mission qui la trouve.</p>
+
+    <h3>Pourquoi « coût zéro »</h3>
+    <p>Parce que rien n’est à écrire. Les scénarios nominaux, alternatifs et dysfonctionnels ont été décrits une fois, sur la mission : un ours passe, un ours approche puis recule, un mouton s’échappe. La couche logique les rejoue tels quels ; seuls les états attendus changent de propriétaire. Il ne reste à écrire que d’éventuels scénarios purement logiques, quand on veut spécifier les tests unitaires d’un sous-système.</p>
+
+    <h3>Et dans Cameo</h3>
+    <p>Le simulateur du guide est un banc d’essai rapide. Le juge, c’est le modèle de l’étudiant : sous chaque scénario, <b>Validate in Cameo</b> démarre la simulation dans son modèle, envoie les mêmes signaux, relit l’état de chaque part, et affiche en rouge ce qui diffère de l’attendu.</p>
+    <figure class="fig wide gallery" data-fig="gallery">
+      <div class="gal">
+        <div class="phone-slot" data-phone="mc-check"></div>
+        <ol class="gal-list">
+          <li><button type="button" data-scene="mc-check" data-widget="archSim" aria-pressed="true"><b>Un mauvais plan, un bon plan</b><span>Le premier incrément : un plan de vol refusé renvoie à <i>Unconfigured</i>, un bon plan mène à <i>Ready for Mission</i>. Jouez-le, puis <i>Validate in Cameo</i>.</span></button></li>
+          <li><button type="button" data-scene="bear-check" data-widget="archSim" aria-pressed="false"><b>Un ours : valider</b><span>L’incrément du prédateur, sur l’architecture choisie : suivre l’ours, puis reprendre la patrouille.</span></button></li>
+          <li><button type="button" data-scene="scenario" data-widget="archSim" aria-pressed="false"><b>Le scénario complet</b><span>Préparation, patrouille, moutons, ours, retour à la patrouille : tout rejouer à la fin.</span></button></li>
+        </ol>
+      </div>
+      <figcaption>Figure 5. La validation, dans le guide de la partie 3. Ici, aucun Cameo n’est relié : <i>Validate in Cameo</i> invite à relier le guide et propose de télécharger le scénario. La simulation dans la page, elle, tourne.</figcaption>
+    </figure>
+  </section>
+
+  <!-- ───────── 5 ───────── -->
+  <section id="tradeoffs">
+    <h2><span class="n">5</span> Enfin : plusieurs candidates, et un vrai trade-off</h2>
+    <p>Avec la démarche et les outils, une candidate de plus ne coûte plus des heures. On repart de la même mission, on regroupe ou on scinde des composants, on reconnecte, on rejoue. Le TP en met trois en concurrence, qui répondent différemment à la même question : <b>où est la logique ?</b></p>
+    <table>
+      <thead><tr><th>Architecture</th><th>Qui décide</th><th>Composants</th><th>Ports</th><th>Messages sur le scénario</th></tr></thead>
+      <tbody>
+        <tr><td><b>1 · Orchestrateur et fonctionnalités autonomes</b></td><td>L’orchestrateur choisit la fonctionnalité active ; elle décide le reste. Sur un ours, la défense prédateur demande la main.</td><td>8</td><td>31</td><td>46</td></tr>
+        <tr><td><b>2 · Patch décentralisé</b></td><td>Personne au centre : on ajoute le prédateur à un drone qui patrouille déjà. Le « patch » coupe la surveillance des moutons.</td><td>7</td><td>27</td><td>42</td></tr>
+        <tr><td><b>3 · Orchestrateur central</b></td><td>L’orchestrateur décide tout, par priorité : l’ours d’abord, puis les moutons et la patrouille. Les autres signalent et demandent.</td><td>9</td><td>25</td><td>66</td></tr>
+      </tbody>
+    </table>
+    <p>Aucune ne gagne sur tous les axes. L’orchestrateur central rassemble toutes les règles en un seul endroit, mais fait transiter le plus de messages et devient un point de défaillance unique. Le patch est le moins cher à modifier et le plus économe en messages, mais ses règles sont dispersées, et chaque nouveau conflit appellera un nouveau patch. L’orchestrateur à fonctionnalités autonomes laisse le plus de place aux fonctionnalités futures, au prix de composants plus chargés.</p>
+
+    <figure class="fig wide gallery" data-fig="gallery">
+      <div class="gal">
+        <div class="phone-slot" data-phone="trade-off"></div>
+        <ol class="gal-list">
+          <li><button type="button" data-scene="trade-off" data-widget="tradeOff" aria-pressed="true"><b>Le trade-off</b><span>Six critères en étoile, le diagramme de blocs interne de chaque candidate, ses pour et ses contre. Plus c’est loin du centre, mieux c’est.</span></button></li>
+          <li><button type="button" data-scene="three-archs" data-widget="archSim" aria-pressed="false"><b>Trois façons de découper le drone</b><span>La même mission jouée sur les trois architectures. Regardez qui réagit à chaque événement, et le message rouge épais : c’est le patch.</span></button></li>
+          <li><button type="button" data-scene="differences" data-widget="logicSpot" aria-pressed="false"><b>Où est la logique</b><span>Chaque architecture met les décisions ailleurs, et ça change les interfaces.</span></button></li>
+        </ol>
+      </div>
+      <figcaption>Figure 6. La comparaison des trois candidates, dans le guide de la partie 3.</figcaption>
+    </figure>
+    <p>Le point qui compte : ces critères ne sont pas notés sur des boîtes dessinées au tableau. Le nombre de messages sort du rejeu ; les états atteints, ou pas, aussi. <b>On compare des architectures qui tournent.</b></p>
+  </section>
+
+  <!-- ───────── 6 ───────── -->
+  <section id="bilan">
+    <h2><span class="n">6</span> Bilan, et la suite</h2>
+    <p>Avec <i>démarche, automatisation, simulation</i>, la couche logique devient rapide, incrémentale et vérifiable, pour un étudiant comme pour un ingénieur en formation. Dans le TP, chaque étudiant construit une architecture complète, la valide incrément par incrément dans Cameo, et passe le temps gagné là où il compte : choisir une architecture, et savoir dire pourquoi.</p>
+    <div class="cards">
+      <div class="card"><b>Une démarche</b><span>de la mission aux sous-systèmes : l’interne, puis l’externe, puis une fonctionnalité à la fois.</span></div>
+      <div class="card"><b>Trois clics droits</b><span><i>Logical Transition</i>, <i>Create All Missing Signal Ports</i>, <i>Delegate</i> : la plomberie disparaît.</span></div>
+      <div class="card"><b>Un juge gratuit</b><span>les scénarios de la mission, rejoués à chaque incrément, puis sur chaque candidate.</span></div>
+    </div>
+    <figure class="fig">
+      <video controls preload="none" playsinline poster="../../assets/img/promo-parts34-poster.jpg" src="../../assets/video/promo-parts34-en.mp4"></video>
+      <figcaption>Figure 7. Les parties 3 et 4 du TP en film (en anglais) : la scène 3D du pâturage pilotée par la simulation de Cameo.</figcaption>
+    </figure>
+    <blockquote class="tease">
+      <p>Maintenant, on a une démarche définie pas à pas, des outils d’automatisation, et des scénarios de simulation pour tout tester. Il reste pourtant beaucoup de travail mécanique : appliquer la démarche, enchaîner les clics droits, rejouer, corriger, recommencer. Et si on confiait ce labeur à une IA ?</p>
+    </blockquote>
+    <p>Ce sera l’objet du troisième article : donner à un LLM <b>le cours et les outils</b>. Les mêmes règles de méthode, les mêmes automatisations appelées depuis un script Kotlin plutôt que par des centaines de clics, et le même juge impartial : les scénarios de la mission. Jusqu’à lui faire générer et comparer des architectures d’essaim. Le TP complet, ses modèles et la simulation sont en ligne : <a href="../../">shepherd.chaos-art.fr</a>.</p>
+  </section>
+
+  <section id="refs">
+    <h2>Références</h2>
+    <ul class="refs">
+      <li>SEBoK, <a href="https://sebokwiki.org/wiki/Logical_Architecture"><i>Logical Architecture</i></a> (un ensemble de concepts et de principes techniques, sans choix d’implémentation ; plusieurs candidates comparées, une retenue).</li>
+      <li>J.-L. Voirin, <i>Model-based System and Architecture Engineering with the Arcadia Method</i>, ISTE Press, 2017 (l’architecture logique et la comparaison d’architectures candidates).</li>
+      <li>OMG, <i>Semantics of a Foundational Subset for Executable UML Models</i> (fUML) et <i>Precise Semantics of UML State Machines</i> (PSSM), les sémantiques exécutées par le simulateur de Cameo.</li>
+      <li>C. Peltz, <a href="https://doi.org/10.1109/MC.2003.1236471"><i>Web Services Orchestration and Choreography</i></a>, IEEE Computer, vol. 36, n° 10, 2003 (orchestrateur central contre composants qui se coordonnent seuls).</li>
+      <li>ISO/IEC/IEEE 15288:2023, <i>Systems and software engineering — System life cycle processes</i> (définition de l’architecture, et validation sur modèles).</li>
+      <li>J. M. Stecklein et al., <a href="https://ntrs.nasa.gov/citations/20100036670"><i>Error Cost Escalation Through the Project Life Cycle</i></a>, NASA JSC, 2004 (pourquoi trouver une erreur d’architecture sur modèle, avant le physique).</li>
+    </ul>
+    <p>Pour une version plus formelle de la validation par scénarios, de la mission jusqu’au logique : <a href="../">Rejouer la mission pour valider l’architecture logique</a>.</p>
+  </section>
+
+  <!-- ───────── sous le capot ───────── -->
+  <section id="capot">
+    <h2>Sous le capot</h2>
+    <p class="aside"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align: -2px; margin-right: 6px; display: inline-block;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>Pour les curieux</p>
+    <details open><summary>Ce que fait exactement Logical Transition</summary>
+      <p>La commande part des états sélectionnés dans la machine d’états de la mission. Elle les clone dans la machine d’états du composant choisi, avec leurs sous-états et les transitions internes à la sélection. Chaque fonction appelée (<i>do activity</i>, effet) est dupliquée dans le paquetage du composant, et la copie reçoit un <code>«refine»</code> vers la fonction de la mission ; la fonction d’origine est allouée (<code>«allocate»</code>) au composant. Les signaux sont réutilisés, pas copiés. Toute transition qui quittait la sélection aboutit à un état créé pour l’occasion, <code>off-TO RENAME</code> : c’est là que l’ingénieur décide ce qui se passe hors du sous-système.</p>
+    </details>
+    <details><summary>La règle de Create All Missing Signal Ports</summary>
+      <p>Pour une part, la commande lit la machine d’états de son bloc et les envois de signaux de ses fonctions. Un signal qui déclenche une transition et qu’aucune de ses fonctions n’envoie vient du dehors : il lui faut un port entrant. Un signal envoyé par une fonction et qu’aucune transition du bloc n’attend part au dehors : il lui faut un port sortant, et l’envoi reçoit ce port (<i>On Port</i>). Chaque port est typé par une interface dont la propriété de flux porte le signal, dans le sens vu du bloc. Les ports existants ne sont pas recréés. <i>Merge Ports</i> regroupe ensuite plusieurs ports en un échange, et <i>Auto Connect</i> relie les ports dont les interfaces sont compatibles.</p>
+    </details>
+    <details><summary>Un simulateur dans la page, les mêmes spécifications que Cameo</summary>
+      <p>Les trois architectures du TP sont décrites par des spécifications : blocs, ports, machines d’états, fonctions, connecteurs, scénario. Les modèles de correction de Cameo sont construits à partir de ces spécifications, et le site en garde une copie, que les figures de cet article, comme le guide, rejouent avec un petit simulateur JavaScript à événements (<code>js/logical-engine.js</code>) : un signal injecté traverse les connecteurs, déclenche des transitions, lance des fonctions qui envoient d’autres signaux. Les chiffres de la figure 1 et du tableau des candidates sont comptés sur ces spécifications et ce rejeu.</p>
+    </details>
+    <details><summary>Validate in Cameo</summary>
+      <p>Le guide parle au plugin par la même liaison que dans le premier article (un serveur WebSocket embarqué, et un code d’appairage). <i>Validate in Cameo</i> cherche dans le modèle de l’étudiant le bloc de contexte de simulation, démarre la simulation, rejoue d’abord les incréments précédents en précondition, puis envoie chaque signal du scénario au bon pilote (l’opérateur ou le pâturage). Après chaque signal, il relit l’état actif de chaque part et le compare à l’attendu ; un écart s’affiche en rouge sous l’étape.</p>
+    </details>
+  </section>
+</article>
+</div>
+
+<script src="../../part3/content/config.js"></script>
+<script src="../../part3/content/archs.js"></script>
+<script src="../../js/logical-engine.js"></script>
+<script src="../article.js"></script>
+<script src="logique.js"></script>
+</body>
+</html>
