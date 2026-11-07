@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <script>/* The Part 1 guide used to live here: its old links (?code=ABCDEF of a QR code, ?teacher=, #c-state) go on to it. */
 (function () {
-  var home = /^#?(top|film|link|mission|method|validate|parts)?$/;
+  var home = /^#?(top|film|link|mission|method|validate|parts|articles)?$/;
   if (location.search || !home.test(location.hash)) location.replace('part1/' + location.search + location.hash);
   try { var t = localStorage.getItem('mbse-shepherd:home-theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) { /* not kept */ }
   document.documentElement.classList.add('js');
@@ -42,6 +42,7 @@
     <a href="part2/" style="--c:var(--route)"><b>2</b> Marked</a>
     <a href="part3/" style="--c:var(--ph-lg)"><b>3</b> Logical</a>
     <a href="part4/" style="--c:var(--ph-fn)"><b>4</b> Swarm</a>
+    <a href="article/" class="h-nav-articles">Articles</a>
   </div>
   <button class="h-theme h-sound" id="h-sound" type="button" aria-pressed="true" aria-label="Mute the sheep">
     <svg class="i-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>
@@ -245,7 +246,7 @@
       <article class="h-step" data-layer="lg" style="--c:var(--ph-lg)">
         <p class="h-q">Logical</p>
         <h3>Which subsystem carries what?</h3>
-        <p>You cut the drone into subsystems, and you say what they exchange. Three architectures, one choice, and you defend it. Still cheap to change.</p>
+        <p>You cut the drone into subsystems, and you say what they exchange. Three architectures, one choice, and you defend it. Still cheap to change. <a class="h-step-more" href="article/logique/">Read the article <span aria-hidden="true">&rarr;</span></a></p>
       </article>
       <article class="h-step" data-layer="ph" style="--c:var(--ph-ph)">
         <p class="h-q">Physical</p>
@@ -362,10 +363,62 @@
   </div>
 </section>
 
+<section class="h-articles" id="articles">
+  <div class="h-wrap">
+    <p class="h-kicker rv">Under the hood</p>
+    <h2 class="rv">Behind the scenes.</h2>
+    <p class="h-sub rv">A trilogy of deep-dive articles exploring why we built MBSE Shepherd, how we automated the logical layer, and how an AI assistant follows the same engineering method.</p>
+
+    <div class="h-article-cards">
+      <a class="h-article-card rv" href="article/tp/">
+        <div class="h-article-meta">
+          <span class="h-article-num">1 / 3</span>
+          <span class="h-article-tag">Pedagogy</span>
+        </div>
+        <h3>Goodbye Word… Finally, Interactive Hands-on MBSE!</h3>
+        <p>A web guide on the student’s phone, connected live to Cameo, and a real-time simulation where you watch your drone fly… or stay grounded.</p>
+        <span class="h-article-go">Read article <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></span>
+      </a>
+
+      <a class="h-article-card rv" href="article/logique/">
+        <div class="h-article-meta">
+          <span class="h-article-num">2 / 3</span>
+          <span class="h-article-tag" style="--c:var(--ph-lg)">Architecture</span>
+        </div>
+        <h3>Taming the Logical Layer</h3>
+        <p>Method, automation, and simulation: turning hours of tedious plumbing into three architectural right-clicks, and replaying mission scenarios at zero cost.</p>
+        <span class="h-article-go">Read article <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></span>
+      </a>
+
+      <div class="h-article-card wip rv">
+        <div class="h-article-meta">
+          <span class="h-article-num">3 / 3</span>
+          <span class="h-article-tag" style="--c:var(--amber)">AI &amp; MBSE</span>
+          <span class="h-article-badge">WIP</span>
+        </div>
+        <h3>AI Follows the MBSE Approach</h3>
+        <p>Equipping an LLM with courseware, tool automations, and student scenarios, all the way to designing and validating a drone swarm.</p>
+        <span class="h-article-go disabled">Coming soon</span>
+      </div>
+    </div>
+
+    <div class="h-articles-foot rv">
+      <a class="h-btn" href="article/">Browse all articles <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></a>
+    </div>
+  </div>
+</section>
+
 </main>
 
 <footer class="h-foot">
   <div class="h-wrap">
+    <div class="h-foot-nav">
+      <a href="part1/">Part 1</a>
+      <a href="part2/">Part 2</a>
+      <a href="part3/">Part 3</a>
+      <a href="part4/">Part 4</a>
+      <a href="article/">Articles</a>
+    </div>
     <p class="h-foot-title">MBSE Shepherd</p>
     <p>Domaine Systèmes Autonomes · DSAT301 Systèmes Embarqués · ISAE-SUPAERO</p>
     <p>Quentin Cespédès · <a href="mailto:q.cespedes.pro@gmail.com">q.cespedes.pro@gmail.com</a></p>
