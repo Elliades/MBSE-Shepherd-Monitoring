@@ -44,75 +44,47 @@
     } catch (e) { /* nothing to put back */ }
   });
 
-  /* ───────── the guide of Part 3 in a phone ───────── */
+  /* ───────── the guide of Part 3, one widget at a time ───────── */
   const docOf = (f) => { try { const d = f.contentDocument; return d && d.documentElement ? d : null; } catch (e) { return null; } };
-  async function waitFor(f, sel, ms) {
-    const end = Date.now() + (ms || 4000);
-    while (Date.now() < end) {
-      const d = docOf(f);
-      const n = d && $$(sel, d).filter((x) => x.getBoundingClientRect().width > 0).pop();
-      if (n) return n;
-      await sleep(120);
-    }
-    return null;
-  }
-  const guideUrl = (scene) => `${BASE}part3/index.html?author=0#${scene}`;
-  const PHONE = { iw: 390, ih: 800 };
-  function phone(host) {
-    host.innerHTML = '<div class="phone"><span class="notch"></span><div class="phone-screen"></div></div>';
-    const box = $('.phone-screen', host);
-    const f = document.createElement('iframe');
-    f.title = 'Le guide de la partie 3, sur un téléphone';
-    box.appendChild(f);
-    const fit = () => {
-      const w = box.clientWidth;
-      if (!w) return;
-      const k = w / PHONE.iw;
-      Object.assign(f.style, { width: PHONE.iw + 'px', height: PHONE.ih + 'px', transform: `scale(${k})` });
-      box.style.height = Math.round(PHONE.ih * k) + 'px';
-    };
-    fit();
-    if ('ResizeObserver' in window) new ResizeObserver(fit).observe(box);
-    else addEventListener('resize', fit);
-    return f;
-  }
+  /* embed=widget: the guide shows the interactive piece of the scene alone, without Next, top bar or title (js/engine.js) */
+  const guideUrl = (scene, widget) => `${BASE}part3/index.html?author=0&embed=widget&w=${widget}#${scene}`;
   function whenNear(node, fn) {
     if (!('IntersectionObserver' in window)) { fn(); return; }
     const io = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) { io.disconnect(); fn(); } }, { rootMargin: '400px 0px' });
     io.observe(node);
   }
 
+  /* a frame as wide as the page, as tall as the widget it holds */
   function galleryFigure(root) {
-    const slot = $('[data-phone]', root);
-    const f = phone(slot);
+    const slot = $('[data-focus]', root);
+    slot.innerHTML = '<div class="focus-box"><iframe scrolling="no" title="Le guide de la partie 3"></iframe></div>';
+    const f = $('iframe', slot);
+    f.style.height = '420px';
+    f.addEventListener('load', () => {
+      const d = docOf(f);
+      const stage = d && d.getElementById('stage');
+      if (!stage) return;
+      const fit = () => { f.style.height = Math.max(240, Math.ceil(stage.getBoundingClientRect().height)) + 'px'; };
+      if ('ResizeObserver' in f.contentWindow) new f.contentWindow.ResizeObserver(fit).observe(stage);
+      fit();
+    });
     const btns = $$('[data-scene]', root);
     const current = () => btns.find((b) => b.getAttribute('aria-pressed') === 'true') || btns[0];
-    /* the widget of the scene, under its title: what the button promises is on screen */
-    async function align(b) {
-      if (!b || !b.dataset.widget) return;
-      await sleep(150);
-      const node = await waitFor(f, `[data-widget="${b.dataset.widget}"]`, 3000);
-      if (!node || !f.contentWindow) return;
-      const top = docOf(f) && $('.top', docOf(f));
-      const y = node.getBoundingClientRect().top + f.contentWindow.scrollY - ((top ? top.offsetHeight : 50) + 12);
-      f.contentWindow.scrollTo({ top: Math.max(0, y), behavior: reduced() ? 'auto' : 'smooth' });
-    }
+    const url = (b) => guideUrl(b.dataset.scene, b.dataset.widget);
     whenNear(slot, () => {
       try { localStorage.removeItem('mbse-shepherd:bridge-code'); } catch (e) { /* no storage */ }
-      if (!f.src) f.src = guideUrl(current().dataset.scene);
+      if (!f.src) f.src = url(current());
     });
-    f.addEventListener('load', () => align(current()));
     btns.forEach((b) => b.addEventListener('click', () => {
       btns.forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
-      if (!f.src) { f.src = guideUrl(b.dataset.scene); return; }
-      try { if (f.contentWindow.location.hash !== '#' + b.dataset.scene) f.contentWindow.location.hash = b.dataset.scene; } catch (e) { /* not reachable */ }
-      align(b);
+      f.src = url(b);
     }));
   }
 
   /* ───────── figure 1: the bill ───────── */
   const ARCH_FR = { 1: 'Orchestrateur et fonctionnalités autonomes', 2: 'Patch décentralisé', 3: 'Orchestrateur central' };
-  const TILES = [
+  const ARCH_EN = { 1: 'Orchestrator & autonomous features', 2: 'Decentralized patch', 3: 'Central orchestrator' };
+  const TILES_FR = [
     ['parts', 'composants'],
     ['ports', 'ports, et autant d’interfaces'],
     ['flows', 'propriétés de flux, une par signal et par sens'],
@@ -121,6 +93,16 @@
     ['conns', 'connecteurs'],
     ['msgs', 'messages échangés pour jouer le scénario complet']
   ];
+  const TILES_EN = [
+    ['parts', 'components'],
+    ['ports', 'ports, and as many interfaces'],
+    ['flows', 'flow properties, one per signal and direction'],
+    ['states', 'states'],
+    ['fns', 'functions'],
+    ['conns', 'connectors'],
+    ['msgs', 'messages exchanged to play the full scenario']
+  ];
+  const getTiles = () => (document.documentElement.lang === 'fr' ? TILES_FR : TILES_EN);
   function countArch(arch) {
     const types = arch.soi.parts.map((p) => p.type);
     const blocks = arch.blocks.filter((b) => types.indexOf(b.name) >= 0);
@@ -146,23 +128,36 @@
     const keys = ['1', '2', '3'].filter((k) => A[k]);
     const per = {};
     keys.forEach((k) => { per[k] = countArch(A[k]); });
-    per.all = TILES.reduce((o, [id]) => { o[id] = keys.reduce((n, k) => n + per[k][id], 0); return o; }, {});
-    root.innerHTML = `
-      <div class="fig-bar"><div class="seg" role="group" aria-label="Architecture">
-        ${keys.map((k, i) => `<button type="button" data-k="${k}" aria-pressed="${i === 2}"><small>Architecture ${k}</small>${ARCH_FR[k]}</button>`).join('')}
-        <button type="button" data-k="all" aria-pressed="false"><small>Le TP</small>Les trois candidates</button>
-      </div></div>
-      <div class="kinds bill">${TILES.map(([id, label]) => `<div class="bill-${id}"><b data-n="${id}">0</b><span>${label}</span></div>`).join('')}</div>
-      <p class="fig-note bill-note" aria-live="polite"></p>`;
-    const note = $('.bill-note', root);
+    per.all = TILES_FR.reduce((o, [id]) => { o[id] = keys.reduce((n, k) => n + per[k][id], 0); return o; }, {});
+
+    let activeK = '3';
     const shown = {};
+
+    function renderUI() {
+      const isFr = document.documentElement.lang === 'fr';
+      const ARCH = isFr ? ARCH_FR : ARCH_EN;
+      const TILES = getTiles();
+      root.innerHTML = `
+        <div class="fig-bar"><div class="seg" role="group" aria-label="Architecture">
+          ${keys.map((k) => `<button type="button" data-k="${k}" aria-pressed="${k === activeK}"><small>${isFr ? 'Architecture ' + k : 'Architecture ' + k}</small>${ARCH[k]}</button>`).join('')}
+          <button type="button" data-k="all" aria-pressed="${activeK === 'all'}"><small>${isFr ? 'Le TP' : 'The lab'}</small>${isFr ? 'Les trois candidates' : 'All three candidates'}</button>
+        </div></div>
+        <div class="kinds bill">${TILES.map(([id, label]) => `<div class="bill-${id}"><b data-n="${id}">0</b><span>${label}</span></div>`).join('')}</div>
+        <p class="fig-note bill-note" aria-live="polite"></p>`;
+      $$('[data-k]', root).forEach((b) => b.addEventListener('click', () => show(b.dataset.k)));
+      show(activeK, true);
+    }
+
     let tween = 0;
-    function show(k) {
+    function show(k, instant) {
+      activeK = k;
+      const isFr = document.documentElement.lang === 'fr';
+      const TILES = getTiles();
       const o = per[k];
       const my = ++tween;
       const from = Object.assign({}, shown);
       const t0 = performance.now();
-      const dur = reduced() ? 0 : 650;
+      const dur = instant || reduced() ? 0 : 650;
       const step = (now) => {
         if (my !== tween) return;
         const t = dur ? Math.min(1, (now - t0) / dur) : 1;
@@ -170,19 +165,31 @@
         TILES.forEach(([id]) => {
           const v = Math.round((from[id] || 0) + (o[id] - (from[id] || 0)) * e);
           shown[id] = v;
-          $(`[data-n="${id}"]`, root).textContent = v.toLocaleString('fr-FR');
+          const elNode = $(`[data-n="${id}"]`, root);
+          if (elNode) elNode.textContent = v.toLocaleString(isFr ? 'fr-FR' : 'en-US');
         });
         if (t < 1) requestAnimationFrame(step);
       };
-      requestAnimationFrame(step);
-      const n = elements(o).toLocaleString('fr-FR');
-      note.innerHTML = k === 'all'
-        ? `<b>Les trois candidates du TP : ${n} éléments</b> à créer, typer et relier dans Cameo, avant la première simulation.`
-        : `<b>Une seule candidate : ${n} éléments</b> à créer, typer et relier dans Cameo (composants, ports, interfaces, propriétés de flux, états, fonctions, connecteurs), avant la première simulation. Et aucun ne doit manquer.`;
+      if (dur === 0) step(t0);
+      else requestAnimationFrame(step);
+      const n = elements(o).toLocaleString(isFr ? 'fr-FR' : 'en-US');
+      const note = $('.bill-note', root);
+      if (note) {
+        note.innerHTML = k === 'all'
+          ? (isFr
+              ? `<b>Les trois candidates du TP : ${n} éléments</b> à créer, typer et relier dans Cameo, avant la première simulation.`
+              : `<b>The lab’s three candidates: ${n} elements</b> to create, type, and connect in Cameo before the first simulation.`)
+          : (isFr
+              ? `<b>Une seule candidate : ${n} éléments</b> à créer, typer et relier dans Cameo (composants, ports, interfaces, propriétés de flux, états, fonctions, connecteurs), avant la première simulation. Et aucun ne doit manquer.`
+              : `<b>A single candidate: ${n} elements</b> to create, type, and connect in Cameo (components, ports, interfaces, flow properties, states, functions, connectors) before the first simulation. And not one can be missing.`);
+      }
       $$('[data-k]', root).forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.k === k)));
     }
-    $$('[data-k]', root).forEach((b) => b.addEventListener('click', () => show(b.dataset.k)));
-    TILES.forEach(([id]) => { shown[id] = 0; });
+
+    TILES_FR.forEach(([id]) => { shown[id] = 0; });
+    renderUI();
+    window.addEventListener('article-lang', renderUI);
+
     if (!reduced() && 'IntersectionObserver' in window) {
       const io = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) { io.disconnect(); show('3'); } }, { threshold: 0.4 });
       io.observe(root);
@@ -190,25 +197,44 @@
   }
 
   /* ───────── figure 2: the method, in four steps ───────── */
-  const METHOD = [
+  const METHOD_FR = [
     { tab: 'Identifier', say: 'On part de la machine d’états de la mission. Les trois régions parallèles de <i>Patrolling</i> donnent trois sous-systèmes. Toute la préparation, <i>Undeployed</i>, fait émerger <i>Mission Configuration</i>. Les modes de la mission vont à un orchestrateur, et le suivi de l’ours à <i>Tracking</i>.' },
     { tab: 'L’interne', say: '<i>Logical Transition</i> copie <i>Undeployed</i> dans <i>Mission Configuration</i>, avec ses fonctions, chaque copie liée à l’original par «refine». On fait d’abord tourner l’intérieur : <i>Load Flight Plan</i> s’envoie <i>Ready for mission</i> à elle-même, et c’est très bien ainsi.' },
     { tab: 'L’externe', say: 'Puis le dehors : qu’est-ce que je reçois, qu’est-ce que j’envoie, et à qui ? Le plan de vol arrive de l’opérateur. Le verdict repart vers lui. L’ordre de départ est passé à l’orchestrateur.' },
     { tab: 'Itérer', say: 'Sous-système suivant, puis fonctionnalité par fonctionnalité : départ, patrouille, moutons, ours, dissuasion. À chaque fonctionnalité testable, on connecte et on rejoue le scénario.' }
   ];
-  const NOTE = {
+  const METHOD_EN = [
+    { tab: 'Identify', say: 'We start from the mission state machine. The three parallel orthogonal regions of <i>Patrolling</i> yield three subsystems. All preparation, <i>Undeployed</i>, gives rise to <i>Mission Configuration</i>. Mission modes go to an orchestrator, and bear tracking to <i>Tracking</i>.' },
+    { tab: 'Internal', say: '<i>Logical Transition</i> clones <i>Undeployed</i> into <i>Mission Configuration</i> along with its functions, each copy linked to its original via «refine». We make the inside run first: <i>Load Flight Plan</i> sends <i>Ready for mission</i> to itself, and that is perfectly sound.' },
+    { tab: 'External', say: 'Then the outside: what do I receive, what do I send, and to whom? The flight plan arrives from the operator. The verdict goes back to them. The mission start order is passed to the orchestrator.' },
+    { tab: 'Iterate', say: 'Next subsystem, then feature by feature: launch, patrol, flock, bear, deterrence. At each testable feature, connect interfaces and replay the scenario.' }
+  ];
+  const getMethod = () => (document.documentElement.lang === 'fr' ? METHOD_FR : METHOD_EN);
+
+  const NOTE_FR = {
     2: 'L’intérieur tourne. Un signal qui part et arrive dans le même composant n’a besoin d’aucun port.',
     3: 'Trois échanges, trois ports. Ce qui ne sort pas reste dedans.',
     4: 'Une architecture complète, construite par petites marches, chacune vérifiée par la mission.'
   };
+  const NOTE_EN = {
+    2: 'The inside runs. A signal originating and consumed within the same component needs no port.',
+    3: 'Three exchanges, three ports. What does not leave stays inside.',
+    4: 'A complete architecture, built in small steps, each verified against the mission.'
+  };
+  const getNote = () => (document.documentElement.lang === 'fr' ? NOTE_FR : NOTE_EN);
+
   /* which states of the mission go to which subsystem, in the order step 1 shows them */
   const ALLOC = [[['und'], 'mc'], [['gsa', 'pat', 'pd'], 'orch'], [['pw'], 'zp'], [['smon'], 'sm'], [['pmon'], 'pm'], [['pd'], 'trk']];
-  const FEATURES = ['Départ', 'Patrouille', 'Moutons', 'Ours', 'Dissuasion'];
+  const FEATURES_FR = ['Départ', 'Patrouille', 'Moutons', 'Ours', 'Dissuasion'];
+  const FEATURES_EN = ['Launch', 'Patrol', 'Flock', 'Bear', 'Deterrence'];
+  const getFeatures = () => (document.documentElement.lang === 'fr' ? FEATURES_FR : FEATURES_EN);
 
   function drawMethod(s) {
+    const isFr = document.documentElement.lang === 'fr';
+    const FEATURES = getFeatures();
     const R = { left: {}, comp: {}, geo: {} };
-    el('text', { x: 8, y: 16, class: 'dm-tag' }, s, 'FONCTIONNEL · LA MISSION');
-    el('text', { x: 372, y: 16, class: 'dm-tag' }, s, 'LOGIQUE · LES SOUS-SYSTÈMES');
+    el('text', { x: 8, y: 16, class: 'dm-tag' }, s, isFr ? 'FONCTIONNEL · LA MISSION' : 'FUNCTIONAL · MISSION');
+    el('text', { x: 372, y: 16, class: 'dm-tag' }, s, isFr ? 'LOGIQUE · LES SOUS-SYSTÈMES' : 'LOGICAL · SUBSYSTEMS');
     el('rect', { x: 8, y: 26, width: 338, height: 406, rx: 12, class: 'dm-frame' }, s);
 
     const left = (key, x, y, w, h, name, sub, target, opts) => {
@@ -224,15 +250,15 @@
       return g;
     };
     left('und', 22, 38, 310, 66, 'Undeployed', 'Off → Unconfigured → Configured → Ready for Mission', 'mc', { sub2: 'do / Load Flight Plan' });
-    el('text', { x: 322, y: 57, class: 'dm-badge', 'text-anchor': 'end', 'data-from': 2 }, s, 'copié · «refine»');
+    el('text', { x: 322, y: 57, class: 'dm-badge', 'text-anchor': 'end', 'data-from': 2 }, s, isFr ? 'copié · «refine»' : 'cloned · «refine»');
     el('rect', { x: 22, y: 116, width: 310, height: 306, rx: 10, class: 'dm-frame2' }, s);
     el('text', { x: 34, y: 134, class: 'dm-name' }, s, 'Deployed');
-    left('gsa', 34, 144, 138, 42, 'Going to Safe Area', 'un mode', 'orch');
+    left('gsa', 34, 144, 138, 42, 'Going to Safe Area', isFr ? 'un mode' : 'a mode', 'orch');
     left('pd', 184, 144, 136, 42, 'Predator Detected', 'tracking ⇄ counteraction', 'orch');
     left('pat', 34, 198, 286, 212, 'Patrolling', null, 'orch', { frame: true });
-    left('pw', 46, 226, 262, 50, 'Perimeter watch', 'région 1 · la patrouille', 'zp');
-    left('smon', 46, 288, 262, 50, 'Sheep Monitoring', 'région 2 · les moutons', 'sm');
-    left('pmon', 46, 350, 262, 50, 'Predator Monitoring', 'région 3 · le prédateur', 'pm');
+    left('pw', 46, 226, 262, 50, 'Perimeter watch', isFr ? 'région 1 · la patrouille' : 'region 1 · patrol', 'zp');
+    left('smon', 46, 288, 262, 50, 'Sheep Monitoring', isFr ? 'région 2 · les moutons' : 'region 2 · sheep', 'sm');
+    left('pmon', 46, 350, 262, 50, 'Predator Monitoring', isFr ? 'région 3 · le prédateur' : 'region 3 · predator', 'pm');
     el('line', { x1: 46, x2: 308, y1: 282, y2: 282, class: 'dm-dash' }, s);
     el('line', { x1: 46, x2: 308, y1: 344, y2: 344, class: 'dm-dash' }, s);
 
@@ -262,11 +288,11 @@
     ms(646, 96, 'Ready for Mission');
     [[434, 446], [538, 550], [634, 646]].forEach(([a, b]) => el('path', { d: `M${a} 105 H${b - 2}`, class: 'dm-arrow', 'marker-end': 'url(#dm-head)' }, mini));
     R.self = el('path', { d: 'M592 116 C 600 140, 684 140, 694 118', class: 'dm-loop', 'marker-end': 'url(#dm-head)' }, mini);
-    el('text', { x: 643, y: 146, class: 'dm-sig', 'text-anchor': 'middle' }, mini, 'Ready for mission, à soi-même');
+    el('text', { x: 643, y: 146, class: 'dm-sig', 'text-anchor': 'middle' }, mini, isFr ? 'Ready for mission, à soi-même' : 'Ready for mission, to itself');
 
     const out = el('g', { 'data-from': 3 }, s);
     el('rect', { x: 372, y: 24, width: 158, height: 24, rx: 12, class: 'dm-pill' }, out);
-    el('text', { x: 451, y: 40, class: 'dm-mini-t', 'text-anchor': 'middle' }, out, 'Opérateur · base sol');
+    el('text', { x: 451, y: 40, class: 'dm-mini-t', 'text-anchor': 'middle' }, out, isFr ? 'Opérateur · base sol' : 'Operator · ground station');
     el('line', { x1: 452, x2: 452, y1: 48, y2: 57, class: 'dm-con' }, out);
     el('rect', { x: 447, y: 57, width: 10, height: 10, class: 'dm-port' }, out);
     el('text', { x: 540, y: 34, class: 'dm-sig' }, out, '▾ FlightPlan Correct');
@@ -284,7 +310,7 @@
     [['M464 226 V240', 700], ['M658 226 V240', 1300], ['M561 226 V330 H556', 1900], ['M561 330 H566', 2500]].forEach(([d, delay]) =>
       el('path', { d, class: 'dm-con', 'data-from': 4, 'data-delay': delay }, s));
 
-    el('text', { x: 372, y: 382, class: 'dm-tag', 'data-from': 4, 'data-delay': 3000 }, s, 'PUIS, UNE FONCTIONNALITÉ À LA FOIS');
+    el('text', { x: 372, y: 382, class: 'dm-tag', 'data-from': 4, 'data-delay': 3000 }, s, isFr ? 'PUIS, UNE FONCTIONNALITÉ À LA FOIS' : 'THEN, ONE FEATURE AT A TIME');
     FEATURES.forEach((f, i) => {
       const g = el('g', { class: 'dm-chip', 'data-from': 4, 'data-delay': 3300 + i * 450 }, s);
       const x = 372 + i * 76;
@@ -295,28 +321,47 @@
   }
 
   function methodFigure(root) {
-    root.innerHTML = `
-      <div class="fig-bar"><div class="seg" role="group" aria-label="Étape">
-        ${METHOD.map((m, i) => `<button type="button" data-step="${i + 1}" aria-pressed="false"><small>Étape ${i + 1}</small>${m.tab}</button>`).join('')}
-      </div></div>
-      <p class="m-story dm-say" aria-live="polite"></p>
-      <svg class="dm-art" viewBox="0 0 760 440" role="img" aria-label="À gauche, la machine d’états de la mission : Undeployed, puis Deployed avec Going to Safe Area, Predator Detected et Patrolling à trois régions, Perimeter watch, Sheep Monitoring et Predator Monitoring. À droite, les sous-systèmes de l’architecture à orchestrateur central : Mission Configuration, Mission Orchestrator, Zone Patrolling, SheepMonitoring, Predator Management et Tracking."></svg>
-      <div class="btn-row"><button type="button" class="btn" data-replay>↻ Rejouer l’étape</button><button type="button" class="btn ghost" data-all>▶ Tout depuis le début</button></div>
-      <p class="bd-note dm-note" aria-live="polite"></p>`;
-    const s = $('.dm-art', root);
-    const mk = el('marker', { id: 'dm-head', viewBox: '0 0 10 10', refX: 9, refY: 5, markerWidth: 6, markerHeight: 6, orient: 'auto-start-reverse' }, el('defs', {}, s));
-    el('path', { d: 'M0 0L10 5L0 10z', class: 'a-head' }, mk);
-    const R = drawMethod(s);
-    const tabs = $$('[data-step]', root);
-    const say = $('.dm-say', root);
-    const note = $('.dm-note', root);
+    let s, R, tabs, nextBtn, allBtn, say, note;
     const STOP = {};
     let step = 1;
     let gen = 0;
 
+    function renderUI() {
+      const isFr = document.documentElement.lang === 'fr';
+      const METHOD = getMethod();
+      root.innerHTML = `
+        <div class="fig-bar"><div class="seg" role="group" aria-label="${isFr ? 'Étape' : 'Step'}">
+          ${METHOD.map((m, i) => `<button type="button" data-step="${i + 1}" aria-pressed="${step === i + 1}"><small>${isFr ? 'Étape' : 'Step'} ${i + 1}</small>${m.tab}</button>`).join('')}
+        </div></div>
+        <p class="m-story dm-say" aria-live="polite"></p>
+        <svg class="dm-art" viewBox="0 0 760 440" role="img" aria-label="${isFr ? 'À gauche, la machine d’états de la mission. À droite, les sous-systèmes de l’architecture.' : 'On left, mission state machine. On right, logical subsystems.'}"></svg>
+        <div class="btn-row"><button type="button" class="btn" data-next></button><button type="button" class="btn ghost" data-replay>${isFr ? '↻ Rejouer cette étape' : '↻ Replay this step'}</button><button type="button" class="btn ghost" data-all>${isFr ? '▶ Tout depuis le début' : '▶ From the beginning'}</button></div>
+        <p class="bd-note dm-note" aria-live="polite"></p>`;
+      s = $('.dm-art', root);
+      const mk = el('marker', { id: 'dm-head', viewBox: '0 0 10 10', refX: 9, refY: 5, markerWidth: 6, markerHeight: 6, orient: 'auto-start-reverse' }, el('defs', {}, s));
+      el('path', { d: 'M0 0L10 5L0 10z', class: 'a-head' }, mk);
+      R = drawMethod(s);
+      tabs = $$('[data-step]', root);
+      nextBtn = $('[data-next]', root);
+      allBtn = $('[data-all]', root);
+      say = $('.dm-say', root);
+      note = $('.dm-note', root);
+
+      tabs.forEach((b) => b.addEventListener('click', () => go(+b.dataset.step, +b.dataset.step)));
+      nextBtn.addEventListener('click', () => (step < METHOD.length ? go(step + 1, step + 1) : go(1, METHOD.length)));
+      $('[data-replay]', root).addEventListener('click', () => go(step, step));
+      allBtn.addEventListener('click', () => go(1, METHOD.length));
+      setStep(step);
+    }
+
     function setStep(n) {
       step = n;
-      tabs.forEach((b) => b.setAttribute('aria-pressed', String(+b.dataset.step === n)));
+      const isFr = document.documentElement.lang === 'fr';
+      const METHOD = getMethod();
+      tabs.forEach((b) => { b.setAttribute('aria-pressed', String(+b.dataset.step === n)); b.classList.toggle('is-next', +b.dataset.step === n + 1); });
+      /* the main button always leads to what comes next; replaying the step is secondary */
+      nextBtn.textContent = n < METHOD.length ? (isFr ? `Étape ${n + 1} : ${METHOD[n].tab} →` : `Step ${n + 1}: ${METHOD[n].tab} →`) : (isFr ? '↻ Revoir tout depuis le début' : '↻ Review from the beginning');
+      allBtn.hidden = n === METHOD.length;
       say.innerHTML = METHOD[n - 1].say;
       note.innerHTML = '';
       $$('.hl', s).forEach((g) => g.classList.remove('hl'));
@@ -366,6 +411,8 @@
 
     async function play(n, my) {
       await wait(my, setStep(n));
+      const isFr = document.documentElement.lang === 'fr';
+      const NOTE = getNote();
       if (n === 1) {
         for (const [from, to] of ALLOC) {
           from.forEach((k) => { R.left[k].classList.add('hl'); link(k, to, to); });
@@ -375,7 +422,7 @@
           R.comp[to].classList.remove('hl');
           $$('.dm-link', s).forEach((x) => x.remove());
         }
-        note.innerHTML = 'Six sous-systèmes, et chaque état de la mission sait où il va.';
+        note.innerHTML = isFr ? 'Six sous-systèmes, et chaque état de la mission sait où il va.' : 'Six subsystems, and each mission state knows where it belongs.';
       }
       if (n === 2) {
         R.left.und.classList.add('hl');
@@ -405,10 +452,9 @@
       } catch (e) { if (e !== STOP) throw e; }
     }
 
-    tabs.forEach((b) => b.addEventListener('click', () => go(+b.dataset.step, +b.dataset.step)));
-    $('[data-replay]', root).addEventListener('click', () => go(step, step));
-    $('[data-all]', root).addEventListener('click', () => go(1, 4));
-    setStep(1);
+    renderUI();
+    window.addEventListener('article-lang', renderUI);
+
     if (!reduced() && 'IntersectionObserver' in window) {
       const io = new IntersectionObserver((es) => {
         if (!es.some((e) => e.isIntersecting)) return;
