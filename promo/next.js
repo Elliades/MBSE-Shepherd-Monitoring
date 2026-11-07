@@ -87,25 +87,15 @@
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
   /* ═════════════════════════ the clock (seconds) ═════════════════════════ */
-  const T = {
-    title: [0, 5.6],
-    approach: [5.6, 15.6],
-    goal: [15.6, 24.6],
-    auto: [24.6, 40.2],        // three commands, 5.2 s each
-    build: [40.2, 66.2],       // five events, 5.2 s each
-    whole: [66.2, 72.6],
-    band4: [72.6, 78.0],
-    scope: [78.0, 85.0],
-    dilemma: [85.0, 91.0],
-    options: [91.0, 97.4],
-    lego: [97.4, 109.4],
-    fly: [109.4, 118.0],
-    side: [118.0, 130.5],
-    outro: [130.5, 139.5]
-  };
-  const END = T.outro[1];
-  const AUTO = 5.2;
+  const GOAL = 5.2;            // each architecture plays a sheep that strays
+  const AUTO = 8.2;            // each command plays its gesture, stage by stage
   const BUILD = 5.2;
+  /* each part follows the one before: [name, length in seconds] */
+  const T = {};
+  [['title', 5.6], ['approach', 10], ['goal', 3 * GOAL + 0.3], ['auto', 3 * AUTO], ['build', 5 * BUILD], ['whole', 6.4],
+    ['band4', 5.4], ['scope', 7], ['dilemma', 6], ['options', 6.4], ['lego', 14], ['fly', 8.6], ['side', 12.5], ['outro', 9]]
+    .reduce((a, [k, d]) => { T[k] = [a, +(a + d).toFixed(2)]; return T[k][1]; }, 0);
+  const END = T.outro[1];
 
   /* ═════════════════════════ layout ═════════════════════════ */
   const CAP = { x: 96, y: 210, w: 640 };
@@ -170,19 +160,43 @@
     html[data-film] .sim-drawer, html[data-film] .toast { display: none !important; }`;
   const IW = 900;
   const wins = [];
+  /* where the pointer goes: { t, at(t) → [x, y] on the stage or null, fb: where to aim until it is found } */
+  const STOPS = [];
+  /* The window comes in from the right and leaves to the left, as the next one pushes it. `still`: the same view
+     goes on, it only fades. `shrink`: it folds into its centre on the way out. */
   function guide(a, b, o) {
-    const w = { a, b, o, live: null, n: null };
+    const w = { a, b, o, live: null, n: null, dx: 0 };
     const n = el('div', 'nx-win', `<div class="nx-bar"><i></i><i></i><i></i><span>${esc(o.label)}</span></div><div class="nx-clip"></div>`, screen);
     const box = o.box || WIN;
     place(n, box.x, box.y, box.w, box.h);
     w.n = n;
+    w.box = box;
     w.clip = $('.nx-clip', n);
     w.scale = box.w / IW;
     wins.push(w);
+    if (o.cursor !== false) {
+      (o.cues || []).forEach(([ct, fn]) => {
+        if (fn.find) STOPS.push({ t: a + ct, at: (t) => inWin(w, fn.find, t), fb: [box.x + box.w / 2, box.y + box.h / 2] });
+      });
+    }
+    const fo = o.exit === 'shrink' ? 0.8 : 0.4;
     at((t) => {
-      const o2 = env(t, a, b, 0.35, 0.35);
+      const o2 = env(t, a, b, 0.4, fo);
       show(n, o2);
-      if (o2) set(n, 'transform', `translateY(${((1 - eout(prog(t, a, a + 0.5))) * 40).toFixed(1)}px)`);
+      if (o2) {
+        const pin = 1 - eout(prog(t, a, a + 0.6));
+        const pout = eio(prog(t, b - fo, b));
+        if (o.exit === 'shrink' && pout > 0) {
+          w.dx = 0;
+          set(n, 'transform', `scale(${(1 - 0.86 * pout).toFixed(4)})`);
+        } else if (o.still) {
+          w.dx = 0;
+          set(n, 'transform', 'none');
+        } else {
+          w.dx = pin * 110 - pout * 110;
+          set(n, 'transform', `translateX(${w.dx.toFixed(1)}px) scale(${(1 - 0.04 * (pin + pout)).toFixed(4)})`);
+        }
+      }
       const lv = w.live;
       if (lv && lv.ready) {
         const y = panAt(o.pan || [[0, 0]], t - a) + lv.base;
@@ -190,6 +204,17 @@
       }
     });
     return w;
+  }
+  /* an element of the guide in a window, on the stage (null while it is not there) */
+  function inWin(w, find, t) {
+    const lv = w.live;
+    if (!lv || !lv.ready) return null;
+    const e = find(lv.root);
+    if (!e) return null;
+    const r = e.getBoundingClientRect();
+    if (!r.width || !r.height) return null;
+    const y0 = panAt(w.o.pan || [[0, 0]], t - w.a) + lv.base;
+    return [w.box.x + w.dx + w.scale * (r.left + r.width / 2), w.box.y + BAR + w.scale * (r.top + r.height / 2 - y0)];
   }
   function panAt(keys, lt) {
     let y = keys[0][1];
@@ -201,6 +226,16 @@
     return y;
   }
   const PRE = 4.5;
+  /* the guide's CSS stills its animations when the system asks for reduced motion; a film has to move */
+  function calm(d) {
+    [...d.styleSheets].forEach((sh) => {
+      let rules;
+      try { rules = sh.cssRules; } catch (e) { return; }
+      for (let i = rules.length - 1; i >= 0; i--) {
+        if (rules[i].media && /prefers-reduced-motion/.test(rules[i].media.mediaText)) sh.deleteRule(i);
+      }
+    });
+  }
   function open(w) {
     const f = document.createElement('iframe');
     f.className = 'nx-frame';
@@ -208,7 +243,7 @@
     f.setAttribute('aria-hidden', 'true');
     f.style.width = IW + 'px';
     f.style.height = (w.o.ih || 1700) + 'px';
-    f.src = w.o.src;
+    f.src = w.o.src.replace(/(#|$)/, '?motion=1$1');
     w.clip.appendChild(f);
     const lv = { f, ready: false, fired: 0, base: 0, doc: null, root: null };
     w.live = lv;
@@ -221,6 +256,7 @@
         const root = hosts[w.o.nth || 0];
         if (!root || !root.firstElementChild) { if (++tries < 80) setTimeout(look, 100); return; }
         isolate(d, root, w.o.css || '');
+        calm(d);
         lv.doc = d;
         lv.root = root;
         f.contentWindow.addEventListener('keydown', onKey, true);
@@ -273,14 +309,17 @@
     });
   }
 
-  /* what the film clicks in a widget */
-  const btn = (re) => (root) => {
-    const b = [...root.querySelectorAll('button')].find((x) => re.test(x.textContent.trim()));
-    if (b) b.click();
+  /* what the film clicks in a widget; `find` lets the pointer go there first */
+  const clicker = (find) => {
+    const f = (root) => { const b = find(root); if (b) b.click(); };
+    f.find = find;
+    return f;
   };
-  const sel = (s) => (root) => { const b = root.querySelector(s); if (b) b.click(); };
-  /* "▶ Next step" of archSim, every `gap` seconds from `from`: the signals travel, the states tick */
-  const NEXT = btn(/^▶ Next step/);
+  const btn = (re) => clicker((root) => [...root.querySelectorAll('button')].find((x) => re.test(x.textContent.trim())));
+  const sel = (s) => clicker((root) => root.querySelector(s));
+  /* "▶ Next step" of archSim, every `gap` seconds from `from`: the signals travel, the states tick. Its button is
+     hidden in the film, so the pointer does not go to it. */
+  const NEXT = (root) => { const b = [...root.querySelectorAll('button')].find((x) => /^▶ Next step/.test(x.textContent.trim())); if (b) b.click(); };
   const stepper = (from, n, gap) => Array.from({ length: n }, (_, i) => [from + i * gap, NEXT]);
 
   /* ═════════════════════════ 0 · title: Part 3 ═════════════════════════ */
@@ -320,11 +359,14 @@
     k: 'The goal', title: 'Several versions, one choice',
     text: 'Three ways to cut the same drone. Each one plays the mission: where the logic sits, how many interfaces, what a change costs. Compare, choose, defend it.',
     list: [['Mission orchestrator', 'autonomous features'], ['Decentralised patch'], ['Centralised orchestrator']],
-    at: [0.2, 3.2, 6.2].map((x) => T.goal[0] + x)
+    at: [0, 1, 2].map((i) => T.goal[0] + 0.15 + i * GOAL)
   });
+  /* The stage "a sheep strays" of the build: picking an architecture plays the preparation silently, so each one
+     starts on the field and its parts answer the sheep at once. Its two steps play at their own pace: a "Next step"
+     while the first one still plays is ignored, the next free one starts the second. */
   guide(T.goal[0], T.goal[1], {
-    label: 'Part 3 · Three ways to cut the drone', src: '../part3/#three-archs', widget: 'archSim', css: ARCH_CSS,
-    cues: [1, 2, 3].flatMap((k, i) => [[0.15 + i * 3, sel(`[data-k="${k}"]`)]].concat(stepper(0.45 + i * 3, 3, 0.85)))
+    label: 'Part 3 · Three ways to cut the drone: a sheep strays', src: '../part3/#sheep-check', widget: 'archSim', css: ARCH_CSS,
+    cues: [1, 2, 3].flatMap((k, i) => [[0.15 + i * GOAL, sel(`[data-k="${k}"]`)]].concat([0.5, 2.3, 2.8, 3.3].map((x) => [x + i * GOAL, NEXT])))
   });
 
   /* ═════════════════════════ 3 · the method, automated ═════════════════════════ */
@@ -335,17 +377,20 @@
     list: [['Logical Transition', 'copies the states of the mission into the subsystem'], ['Create All Missing Signal Ports', 'reads what the states wait for and send'], ['Delegate to external systems', 'what leaves the subsystem goes out of it']],
     at: [A3(0), A3(1), A3(2)]
   });
+  /* Each guided example plays its stages in order, at the pace of its gestures (the widget draws its own pointer
+     for the clicks). The first stage is picked before the window shows, so it starts from the beginning. */
+  const stagesAt = (list) => list.map(([at, k]) => [at, sel(`[data-st="${k}"]`)]);
   guide(A3(0), A3(1) + 0.3, {
-    label: 'Part 3 · Logical Transition', src: '../part3/#mc-tool', widget: 'mcTransition',
-    cues: [[0.1, btn(/^3/)], [2.4, btn(/^4/)]]
+    label: 'Part 3 · Logical Transition', src: '../part3/#mc-tool', widget: 'mcTransition', cursor: false,
+    cues: stagesAt([[-0.4, 1], [1.6, 2], [2.9, 3], [4.7, 4]])
   });
   guide(A3(1), A3(2) + 0.3, {
-    label: 'Part 3 · Create All Missing Signal Ports', src: '../part3/#mc-magic', widget: 'mcPortsMagic',
-    cues: [[0.1, btn(/^3/)], [1.8, btn(/^4/)], [3.5, btn(/^5/)]]
+    label: 'Part 3 · Create All Missing Signal Ports', src: '../part3/#mc-magic', widget: 'mcPortsMagic', cursor: false,
+    cues: stagesAt([[-0.4, 1], [2.7, 2], [3.8, 3], [5.6, 4]])
   });
   guide(A3(2), T.auto[1], {
-    label: 'Part 3 · Delegate to external systems', src: '../part3/#mc-delegate', widget: 'mcDelegate',
-    cues: [[0.1, btn(/^2/)], [2.0, btn(/^3/)], [3.8, btn(/^4/)]]
+    label: 'Part 3 · Delegate to external systems', src: '../part3/#mc-delegate', widget: 'mcDelegate', cursor: false,
+    cues: stagesAt([[-0.4, 2], [2.0, 3], [4.4, 4], [6.2, 5]])
   });
 
   /* ═════════════════════════ 4 · build it, one event at a time, validated each time ═════════════════════════ */
@@ -370,7 +415,7 @@
     const b = i === STAGES.length - 1 ? T.build[1] : B4(i + 1) + 0.3;
     guide(a, b, {
       label: `Part 3 · ${i + 1} · ${name}: validate`, src: `../part3/#${id}-check`, widget: 'archSim',
-      css: CHECK_CSS + (id === 'bear' || id === 'deter' ? QUIET : ''),
+      css: CHECK_CSS + (id === 'bear' || id === 'deter' ? QUIET : ''), still: i > 0, cursor: false,
       cues: [[0.05, sel('[data-k="3"]')]].concat(stepper(0.35, 5, 0.8))
     });
     stamp(a + 3.9, b - 0.2, 'Validated', WIN.x + WIN.w - 190, WIN.y + 150);
@@ -383,9 +428,32 @@
   });
   guide(T.whole[0], T.whole[1], {
     label: 'Part 3 · The whole scenario', src: '../part3/#scenario', widget: 'archSim', css: CHECK_CSS + QUIET,
+    still: true, cursor: false, exit: 'shrink',
     cues: [[0.05, sel('[data-k="3"]')]].concat(stepper(0.3, 13, 0.42))
   });
-  stamp(T.whole[0] + 5.6, T.whole[1] - 0.1, 'Mission validated', WIN.x + WIN.w - 250, WIN.y + 150);
+  stamp(T.whole[0] + 5.0, T.whole[1] - 0.75, 'Mission validated', WIN.x + WIN.w - 250, WIN.y + 150);
+
+  /* The drone of Part 3 is folded into one drone, waits through the band, then lands in the swarm of Part 4. */
+  const QUAD = '<svg viewBox="0 0 64 64" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="5"><circle cx="15" cy="15" r="10"/><circle cx="49" cy="15" r="10"/><circle cx="15" cy="49" r="10"/><circle cx="49" cy="49" r="10"/><path d="M22 22l20 20M42 22L22 42"/></g><rect x="23" y="23" width="18" height="18" rx="4" fill="currentColor"/></svg>';
+  const part3 = el('div', 'nx-drone', `${QUAD}<span>The drone of Part 3</span>`, screen);
+  const P3 = { home: [WIN.x + WIN.w / 2, WIN.y + WIN.h / 2], wait: [1560, 280], land: [1181, 478] };
+  at((t) => {
+    const a = T.whole[1] - 0.55;
+    const land = T.scope[0] + 0.5;
+    const o = Math.min(env(t, a, land + 1.1, 0.35, 0.45), 1);
+    show(part3, o);
+    if (!o) return;
+    const up = eio(prog(t, T.whole[1] + 0.1, T.whole[1] + 1.0));
+    const down = eio(prog(t, land - 0.6, land + 0.3));
+    let x = lerp(P3.home[0], P3.wait[0], up);
+    let y = lerp(P3.home[1], P3.wait[1], up) - 120 * 4 * up * (1 - up);
+    x = lerp(x, P3.land[0], down);
+    y = lerp(y, P3.land[1], down) - 90 * 4 * down * (1 - down);
+    const bob = Math.sin(t * 3.1) * 8 * (1 - down);
+    const s = (0.4 + 0.6 * eback(prog(t, a, a + 0.5))) * (1 - 0.62 * down);
+    set(part3, 'transform', `translate(${x.toFixed(1)}px, ${(y + bob).toFixed(1)}px) translate(-50%, -50%) scale(${s.toFixed(3)}) rotate(${(Math.sin(t * 2.3) * 4 * (1 - down)).toFixed(2)}deg)`);
+    tog(part3, 'landed', t > land + 0.25);
+  });
 
   /* ═════════════════════════ 6 · Part 4: one level up ═════════════════════════ */
   band(T.band4[0] + 0.3, T.band4[1], '04', 'Part 4  [Swarm]', 'The swarm', 'A new need: one drone is not enough.', 'var(--ph-fn)');
@@ -417,40 +485,166 @@
   });
 
   /* ═════════════════════════ 7 · the box of Lego ═════════════════════════ */
-  /* legoBay, preview: a click on a brick of a drone plugs it. Buttons: 7 per drone (Zone, Flock, Track,
-     Predator, Standby, Master, Reflex), then Master on the base station. */
-  const plug = (drone, k) => (root) => {
-    const cards = [...root.querySelectorAll('button')];
-    const b = cards[drone * 7 + k];
+  /* In Cameo a brick is dragged from the library onto the diagram of a drone: here from the box of the bay onto
+     the IBD of the swarm, drawn below it. The film then plugs the same brick in the bay, whose drone builds itself
+     in 3D. Then the right-click on the diagram, Auto Connect, and the connectors draw themselves.
+     legoBay, preview: a click on a brick of a drone plugs it. Buttons: 7 per drone (Zone, Flock, Track,
+     Predator, Standby, Master, Reflex), then Master on the base station (the 22nd). */
+  const plugAt = (i) => (root) => {
+    const b = [...root.querySelectorAll('button')][i];
     if (b && b.getAttribute('aria-pressed') !== 'true') b.click();
   };
   const L7 = (x) => T.lego[0] + x;
+  const BRICKS = ((window.LEGO || {}).bricks || []).reduce((m, b) => (m[b.type] = b, m), {});
+  /* [time, host (0-2 the drones, 3 the base station), slot in the host, brick, button of the bay] */
+  const DROPS = [
+    [0.7, 0, 0, 'Zone Surveillance', 0], [2.0, 0, 1, 'Flock Watching', 1],
+    [3.3, 1, 0, 'Sheep Tracking', 7 + 2],
+    [4.6, 2, 0, 'Predator Management', 14 + 3],
+    [5.9, 3, 1, 'Swarm Master', 21]
+  ].map(([at, host, slot, type, button]) => ({ at, host, slot, type, button }));
+  const AUTO_AT = 8.4;         // the click on Auto Connect
   caption(T.lego[0], T.lego[1], {
     k: 'Build it like Lego', color: 'var(--ph-fn)', title: 'Drop a brick, Auto Connect, it flies',
     text: 'Each component is a brick of the model. Drop it on a drone in Cameo, right-click <b>Auto Connect</b>: the links appear, and the drone builds itself in 3D.',
-    list: [['Drone 1 watches the zone'], ['Drone 2 follows the strays'], ['Drone 3 handles the bear'], ['The base decides']],
-    at: [L7(0.4), L7(3.0), L7(5.4), L7(7.6)]
+    list: [['Drone 1 watches the zone'], ['Drone 2 follows the strays'], ['Drone 3 handles the bear'], ['The base decides'], ['Auto Connect links them']],
+    at: [0, 2, 3, 4].map((i) => L7(DROPS[i].at)).concat(L7(AUTO_AT))
   });
-  guide(T.lego[0], T.lego[1], {
-    label: 'Part 4 · Plug the components in the drones', src: '../part4/#plug-drone', widget: 'legoBay', ih: 1900,
-    cues: [
-      [0.4, plug(0, 0)], [1.2, plug(0, 1)], [1.9, plug(0, 4)],
-      [3.0, plug(1, 2)], [3.7, plug(1, 4)],
-      [5.4, plug(2, 3)], [6.1, plug(2, 4)],
-      [7.6, (root) => { const bs = [...root.querySelectorAll('button')]; const b = bs[21]; if (b && b.getAttribute('aria-pressed') !== 'true') b.click(); }]
-    ],
-    pan: [[0, 0], [8.6, 0], [10.2, 330]]
+  const BAY = { x: WIN.x, y: 56, w: WIN.w, h: 636 };
+  const bay = guide(T.lego[0], T.lego[1], {
+    label: 'Part 4 · Plug the components in the drones', src: '../part4/#plug-drone', widget: 'legoBay', ih: 1900, box: BAY,
+    css: 'html[data-film] [data-film-w] [data-status], html[data-film] [data-film-w] [data-budget] { display: none !important; }',
+    cues: DROPS.map((d) => [d.at, plugAt(d.button)])
   });
-  /* the right-click of Cameo, drawn over the bay */
-  const menu = el('div', 'nx-menu', '<div class="nx-menu-i">Specification</div><div class="nx-menu-i">Symbol</div><div class="nx-menu-i on">MBSE Shepherd <b>›</b><div class="nx-sub"><div>Create All Missing Signal Ports</div><div class="hot">Auto Connect</div><div>Check Signal Flow</div></div></div>', screen);
-  place(menu, WIN.x + 120, WIN.y + 330);
+
+  /* the IBD of the swarm, in Cameo's colours: 1 px of the drawing = 1 px of the stage */
+  const IB = { x: WIN.x, y: 712, w: WIN.w, h: 290 };
+  const SVGNS = 'http://www.w3.org/2000/svg';
+  function sv(tag, attrs, parent, text) {
+    const n = document.createElementNS(SVGNS, tag);
+    Object.keys(attrs || {}).forEach((k) => n.setAttribute(k, attrs[k]));
+    if (text != null) n.textContent = text;
+    if (parent) parent.appendChild(n);
+    return n;
+  }
+  const ibd = el('div', 'nx-ibd', '', screen);
+  place(ibd, IB.x, IB.y, IB.w, IB.h);
+  const isvg = sv('svg', { viewBox: `0 0 ${IB.w} ${IB.h}`, width: IB.w, height: IB.h }, ibd);
+  const grad = sv('linearGradient', { id: 'nx-part', x1: 0, y1: 0, x2: 0, y2: 1 }, sv('defs', {}, isvg));
+  sv('stop', { offset: 0, 'stop-color': '#fffdf0' }, grad);
+  sv('stop', { offset: 1, 'stop-color': '#fbe7a6' }, grad);
+  sv('rect', { x: 1, y: 1, width: IB.w - 2, height: IB.h - 2, class: 'ib-frame' }, isvg);
+  sv('path', { d: 'M1 1H318V17L306 27H1Z', class: 'ib-tab' }, isvg);
+  sv('text', { x: 10, y: 19, class: 'ib-tabt' }, isvg, 'ibd [Block] Pasture Sentinel System');
+  const HOSTS = [['Drone 1', 'Flight Orchestrator'], ['Drone 2', 'Flight Orchestrator'], ['Drone 3', 'Flight Orchestrator'], ['Base Station', 'Ground Control']];
+  const hx = (i) => 16 + i * 256;
+  const SLOT = [60, 104];
+  const PW = 154;
+  const ipart = (x, y, w, name, tone) => {
+    const g = sv('g', { class: 'ib-part' }, isvg);
+    sv('rect', { x, y, width: w, height: 34, rx: 2, class: 'ib-box' }, g);
+    if (tone) sv('rect', { x, y, width: 6, height: 34, fill: tone }, g);
+    sv('text', { x: x + (tone ? 13 : 8), y: y + 21, class: 'ib-name' }, g, ': ' + name);
+    return g;
+  };
+  const iport = (x, y, parent) => sv('rect', { x: x - 4, y: y - 4, width: 8, height: 8, class: 'ib-port' }, parent || isvg);
+  HOSTS.forEach(([name, given], i) => {
+    const x = hx(i);
+    sv('rect', { x, y: 34, width: 240, height: 196, class: 'ib-host' }, isvg);
+    sv('text', { x: x + 8, y: 52, class: 'ib-hname' }, isvg, ': ' + name);
+    const base = i === 3;
+    const g = ipart(base ? x + 20 : x + 70, 168, base ? 110 : PW, given);
+    if (base) iport(x + 50, 168, g); else iport(x + 70, 185, g);
+    if (!base) iport(x + 232, 230);
+  });
+  [0, 1, 2].forEach((k) => iport(hx(3) + 170 + k * 16, 230));
+  /* the parts dropped, hidden until their drop, and the connectors Auto Connect makes */
+  const links = [];
+  const link = (d, kind, at) => {
+    const p = sv('path', { d, pathLength: 1, class: 'ib-link ' + kind }, isvg);
+    links.push({ p, at, kind, len: 0 });
+  };
+  DROPS.forEach((d, i) => {
+    const x = hx(d.host) + 70;
+    const y = SLOT[d.slot];
+    const b = BRICKS[d.type] || {};
+    d.g = ipart(x, y, PW, d.type, b.tone || '#64748b');
+    iport(x, y + 17, d.g);
+    iport(x + PW, y + 17, d.g);
+    d.pt = [IB.x + x + PW / 2, IB.y + y + 17];
+    const fx = hx(d.host);
+    if (d.host < 3) {
+      link(`M${x} ${y + 17}H${fx + 40}V185H${fx + 70}`, 'fo', AUTO_AT + 0.2 + i * 0.1);
+      if (d.slot === 0) {
+        const k = d.host;
+        const bus = 268 - k * 10;
+        link(`M${x + PW} ${y + 17}H${fx + 232}V${bus}H${hx(3) + 202 - k * 16}V138`, 'swarm', AUTO_AT + 0.55 + k * 0.15);
+      } else link(`M${x + PW} ${y + 17}H${fx + 232}`, 'swarm', AUTO_AT + 0.5);
+    } else link(`M${x} ${y + 17}H${fx + 50}V168`, 'fo', AUTO_AT + 0.3);
+  });
+  const packets = links.filter((l) => l.kind === 'swarm' && /V138$/.test(l.p.getAttribute('d'))).concat(links.filter((l) => l.kind === 'fo'))
+    .map((l, i) => ({ l, dot: sv('circle', { r: l.kind === 'swarm' ? 5 : 4, class: 'ib-dot ' + l.kind }, isvg), i }));
+
+  /* the brick in the hand, from the box to the diagram */
+  const ghost = el('div', 'nx-ghost', '', screen);
+  const brickIn = (type) => (root) => [...root.querySelectorAll('[data-box] .lego-brick')].find((x) => x.textContent.trim() === type);
+  DROPS.forEach((d) => {
+    STOPS.push({ t: L7(d.at - 0.6), at: (t) => inWin(bay, brickIn(d.type), t), fb: [BAY.x + 200, BAY.y + 120], grab: d });
+    STOPS.push({ t: L7(d.at), at: () => d.pt, fb: d.pt, drop: d });
+  });
   at((t) => {
-    const o = env(t, L7(8.4), L7(10.0), 0.2, 0.25);
-    show(menu, o);
-    if (o) set(menu, 'transform', `scale(${(0.9 + 0.1 * eout(prog(t, L7(8.4), L7(8.7)))).toFixed(3)})`);
-    tog(menu, 'press', t > L7(9.4));
+    const o = env(t, T.lego[0] + 0.3, T.lego[1], 0.5, 0.4);
+    show(ibd, o);
+    if (o) set(ibd, 'transform', `translateY(${((1 - eout(prog(t, T.lego[0] + 0.3, T.lego[0] + 0.9))) * 60).toFixed(1)}px)`);
+    DROPS.forEach((d) => {
+      const p = prog(t, L7(d.at), L7(d.at) + 0.45);
+      show(d.g, p > 0 ? 1 : 0);
+      set(d.g, 'transform', `scale(${(0.4 + 0.6 * eback(p)).toFixed(3)})`);
+      tog(d.g, 'hl', t > L7(d.at) && t < L7(d.at) + 1.0);
+    });
+    links.forEach((l) => {
+      const p = eio(prog(t, L7(l.at), L7(l.at) + (l.kind === 'swarm' ? 0.75 : 0.4)));
+      show(l.p, p > 0 ? 1 : 0);
+      set(l.p, 'stroke-dashoffset', (1 - p).toFixed(3));
+      tog(l.p, 'fresh', t > L7(l.at) && t < L7(AUTO_AT + 2.6));
+    });
+    const live = t > L7(AUTO_AT + 1.5) && t < T.lego[1];
+    packets.forEach(({ l, dot, i }) => {
+      show(dot, live ? 1 : 0);
+      if (!live) return;
+      if (!l.len) l.len = l.p.getTotalLength();
+      const speed = l.kind === 'swarm' ? 0.42 : 0.8;
+      let q = ((t - L7(AUTO_AT + 1.5)) * speed + i * 0.37) % 2;
+      q = q > 1 ? 2 - q : q;
+      const pt = l.p.getPointAtLength(l.len * q);
+      dot.setAttribute('cx', pt.x.toFixed(1));
+      dot.setAttribute('cy', pt.y.toFixed(1));
+    });
+    const held = DROPS.find((d) => t >= L7(d.at - 0.6) && t < L7(d.at));
+    show(ghost, held ? 1 : 0);
+    if (held && ghost.dataset.type !== held.type) {
+      const b = BRICKS[held.type] || {};
+      ghost.dataset.type = held.type;
+      ghost.style.setProperty('--tone', b.tone || '#64748b');
+      ghost.innerHTML = `${b.icon ? `<svg viewBox="0 0 24 24">${b.icon}</svg>` : ''}${esc(held.type)}`;
+    }
   });
-  stamp(L7(10.0), T.lego[1] - 0.1, 'Links made', WIN.x + WIN.w - 200, WIN.y + 160);
+
+  /* the right-click of Cameo, on the diagram */
+  const MENU_AT = [800 + 34, 712 + 64];
+  const menu = el('div', 'nx-menu', '<div class="nx-menu-i">Specification</div><div class="nx-menu-i">Symbol</div><div class="nx-menu-i on">MBSE Shepherd <b>›</b><div class="nx-sub"><div>Create All Missing Signal Ports</div><div class="hot">Auto Connect</div><div>Check Signal Flow</div></div></div>', screen);
+  place(menu, MENU_AT[0], MENU_AT[1]);
+  const hot = $('.hot', menu);
+  STOPS.push({ t: L7(7.1), at: () => MENU_AT, fb: MENU_AT });
+  STOPS.push({ t: L7(AUTO_AT), at: () => onStage(hot), fb: [MENU_AT[0] + 520, MENU_AT[1] + 130] });
+  at((t) => {
+    const o = env(t, L7(7.15), L7(AUTO_AT + 0.35), 0.15, 0.25);
+    show(menu, o);
+    if (o) set(menu, 'transform', `scale(${(0.9 + 0.1 * eout(prog(t, L7(7.15), L7(7.45)))).toFixed(3)})`);
+    tog(menu, 'open', t > L7(7.6));
+    tog(menu, 'press', t > L7(AUTO_AT));
+  });
+  stamp(L7(AUTO_AT + 1.6), T.lego[1] - 0.1, 'Links made', BAY.x + BAY.w - 200, BAY.y + 150);
 
   /* ═════════════════════════ 8 · the fleet: a field, drones, a master ═════════════════════════ */
   function fleetCard(a, b, box, title, demo, steps, o) {
@@ -561,12 +755,63 @@
     legs.forEach((l, i) => tog(l, 'on', t > T.outro[0] + 1.2 + i * 0.45));
   });
 
+  /* ───────── the pointer: it goes to what the film clicks, a ring at each click ───────── */
+  function onStage(n) {
+    const s = stage.getBoundingClientRect();
+    const r = n.getBoundingClientRect();
+    if (!r.width) return null;
+    const k = s.width / 1920;
+    return [(r.left + r.width / 2 - s.left) / k, (r.top + r.height / 2 - s.top) / k];
+  }
+  STOPS.sort((x, y) => x.t - y.t);
+  const memo = STOPS.map((s) => s.fb);
+  const ptr = el('div', 'cursor nx-cursor', '<span class="ring"></span><svg viewBox="0 0 24 24"><path d="M4 2.5l15.5 9-6.8 1.6 3.9 7-2.6 1.4-3.9-7L4 19z" fill="#fff" stroke="#15221a" stroke-width="1.6" stroke-linejoin="round"/></svg>', screen);
+  const ptrRing = $('.ring', ptr);
+  const BRIDGE = 3.5;          // two clicks closer than this: the pointer glides from one to the other
+  const ENTER = [150, 120];    // where it comes from when it appears
+  at((t) => {
+    let i = 0;
+    while (i < STOPS.length && STOPS[i].t <= t) i++;
+    const prev = i > 0 ? i - 1 : -1;
+    const next = i < STOPS.length ? i : -1;
+    [prev, next].forEach((k) => { if (k >= 0) { const p = STOPS[k].at(t); if (p) memo[k] = p; } });
+    const bridged = prev >= 0 && next >= 0 && STOPS[next].t - STOPS[prev].t < BRIDGE;
+    let o = 0;
+    if (prev >= 0) o = Math.max(o, 1 - prog(t - STOPS[prev].t, 0.5, 0.8));
+    if (next >= 0) o = Math.max(o, prog(t, STOPS[next].t - 0.65, STOPS[next].t - 0.4));
+    if (bridged) o = 1;
+    show(ptr, o);
+    if (!o) { show(ghost, 0); return; }
+    let p;
+    if (next >= 0) {
+      const to = memo[next];
+      const from = bridged ? memo[prev] : [to[0] + ENTER[0], to[1] + ENTER[1]];
+      const mv = bridged ? Math.min(0.6, (STOPS[next].t - STOPS[prev].t) * 0.85) : 0.6;
+      const q = eio(prog(t, STOPS[next].t - mv, STOPS[next].t));
+      p = [lerp(from[0], to[0], q), lerp(from[1], to[1], q)];
+    } else p = memo[prev];
+    let r = 0;
+    if (prev >= 0 && !STOPS[prev].grab && t - STOPS[prev].t < 0.55) r = (t - STOPS[prev].t) / 0.55;
+    show(ptrRing, r ? 1 - r : 0);
+    set(ptrRing, 'transform', `scale(${(0.4 + r * 1.3).toFixed(3)})`);
+    const press = r && r < 0.3 ? 0.86 : 1;
+    set(ptr, 'transform', `translate(${p[0].toFixed(1)}px, ${p[1].toFixed(1)}px) scale(${press})`);
+    if (ghost.style.visibility === 'visible') set(ghost, 'transform', `translate(${(p[0] + 14).toFixed(1)}px, ${(p[1] + 18).toFixed(1)}px) rotate(-3deg)`);
+  });
+
   /* ───────── the little sheep that wander in (the film's own, js of promo.js) ───────── */
   const LAMB = `<svg viewBox="0 0 140 120" aria-hidden="true">
     <ellipse cx="72" cy="113" rx="44" ry="6" fill="rgba(0,0,0,.28)"/>
     <g fill="#2d2b33"><rect x="42" y="84" width="10" height="27" rx="5"/><rect x="58" y="88" width="10" height="24" rx="5"/><rect x="82" y="88" width="10" height="24" rx="5"/><rect x="98" y="84" width="10" height="27" rx="5"/></g>
     <g fill="#fff" stroke="#cfd8c9" stroke-width="6">${[[50, 62, 24], [72, 50, 26], [94, 60, 24], [72, 76, 24], [52, 82, 18], [92, 82, 18], [36, 70, 16], [106, 72, 16]].map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}"/>`).join('')}</g>
-    <g transform="translate(112 50)"><ellipse cx="0" cy="0" rx="20" ry="16" fill="#2d2b33"/><ellipse cx="-12" cy="-12" rx="9" ry="5" fill="#2d2b33" transform="rotate(-30 -12 -12)"/><ellipse cx="12" cy="-12" rx="9" ry="5" fill="#2d2b33" transform="rotate(30 12 -12)"/><circle cx="-6" cy="-2" r="3.4" fill="#fff"/><circle cx="6" cy="-2" r="3.4" fill="#fff"/><circle cx="-5" cy="-2" r="1.6" fill="#111"/><circle cx="7" cy="-2" r="1.6" fill="#111"/></g>
+    <g fill="#fff">${[[50, 62, 24], [72, 50, 26], [94, 60, 24], [72, 76, 24], [52, 82, 18], [92, 82, 18], [36, 70, 16], [106, 72, 16]].map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}"/>`).join('')}</g>
+    <ellipse cx="99" cy="47" rx="10" ry="5.5" fill="#2d2b33" transform="rotate(-28 99 47)"/>
+    <ellipse cx="129" cy="46" rx="10" ry="5.5" fill="#2d2b33" transform="rotate(28 129 46)"/>
+    <ellipse cx="114" cy="60" rx="18" ry="20" fill="#2d2b33"/>
+    <g fill="#fff"><circle cx="107" cy="41" r="7.5"/><circle cx="115" cy="37" r="8"/><circle cx="122" cy="42" r="7"/></g>
+    <g class="eyes"><circle cx="108" cy="59" r="5" fill="#fff"/><circle cx="121" cy="59" r="5" fill="#fff"/><circle cx="109" cy="60" r="2.8" fill="#111"/><circle cx="122" cy="60" r="2.8" fill="#111"/><circle cx="110" cy="58.6" r="1" fill="#fff"/><circle cx="123" cy="58.6" r="1" fill="#fff"/></g>
+    <g fill="#ff9cc5" opacity=".85"><ellipse cx="103" cy="68" rx="4.5" ry="2.6"/><ellipse cx="126" cy="68" rx="4.5" ry="2.6"/></g>
+    <path d="M111 70q2.5 3 5 0q2.5 3 5 0" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>
   </svg>`;
   function lamb(a, b, x0, x1, y, s, say) {
     const n = el('div', 'lamb' + (x1 < x0 ? ' flip' : ''), LAMB + `<span class="baa">${say || 'baa!'}</span>`, screen);
@@ -585,7 +830,9 @@
     });
   }
   lamb(0.6, 5.4, -120, 2040, 1065, 0.75);
+  lamb(T.goal[0] + 2, T.goal[0] + 8, 2040, -120, 1066, 0.6);
   lamb(T.band4[0] + 0.2, T.band4[1] + 0.2, 2040, -120, 1065, 0.7, 'baa?');
+  lamb(T.dilemma[0] + 0.3, T.dilemma[1], -120, 760, 1066, 0.62, 'baa?');
   lamb(T.outro[0] + 1.5, END, -140, 900, 1050, 0.8);
   lamb(T.outro[0] + 2.2, END, -300, 700, 1066, 0.62, 'baaa!');
 

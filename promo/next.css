@@ -38,7 +38,7 @@
 
 /* the windows: the guide, cut down to one widget */
 .nx-win {
-  z-index: 12; border-radius: 18px; overflow: hidden; background: var(--bg);
+  z-index: 12; border-radius: 18px; overflow: hidden; overflow: clip; background: var(--bg);
   border: 2px solid var(--line); box-shadow: 0 40px 90px -30px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.04);
 }
 .nx-bar { height: 46px; display: flex; align-items: center; gap: 9px; padding: 0 18px; background: #132019; border-bottom: 1px solid var(--line); }
@@ -47,7 +47,7 @@
 .nx-bar i:nth-child(2) { background: #f2c12e; }
 .nx-bar i:nth-child(3) { background: #8ad48f; }
 .nx-bar span { margin-left: 10px; font: 700 19px/1 var(--font-mono); color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.nx-clip { position: absolute; left: 0; right: 0; top: 46px; bottom: 0; overflow: hidden; }
+.nx-clip { position: absolute; left: 0; right: 0; top: 46px; bottom: 0; overflow: hidden; overflow: clip; }
 .nx-frame { position: absolute; left: 0; top: 0; border: 0; transform-origin: 0 0; background: transparent; pointer-events: none; }
 
 /* a stamp */
@@ -73,6 +73,45 @@
 .nx-sub div { padding: 9px 22px; }
 .nx-sub .hot { background: #dce7fe; font-weight: 700; }
 .nx-menu.press .nx-sub .hot { background: #2563eb; color: #fff; }
+.nx-menu:not(.open) .nx-sub { display: none; }
+.nx-menu:not(.open) .nx-menu-i.on { background: none; }
+
+/* the pointer, and the brick it carries */
+.nx-cursor { z-index: 60; transform-origin: 6px 4px; }
+.nx-ghost {
+  left: 0; top: 0; z-index: 59; display: flex; align-items: center; gap: 8px; white-space: nowrap;
+  padding: 8px 14px 8px 10px; border-radius: 10px; background: var(--tone); color: #fff;
+  font: 700 19px/1 var(--font-body); box-shadow: 0 18px 34px -10px rgba(0, 0, 0, 0.85), 0 0 0 3px rgba(255, 255, 255, 0.85);
+}
+.nx-ghost svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* the drone of Part 3, on its way to the swarm */
+.nx-drone {
+  left: 0; top: 0; z-index: 35; display: grid; justify-items: center; gap: 10px; color: var(--ph-lg);
+  filter: drop-shadow(0 0 18px color-mix(in srgb, var(--ph-lg) 55%, transparent));
+}
+.nx-drone svg { width: 120px; height: 120px; }
+.nx-drone span { font: 700 22px/1 var(--font-mono); white-space: nowrap; padding: 8px 14px; border-radius: 999px; background: rgba(14, 24, 20, 0.92); border: 2px solid var(--ph-lg); color: var(--ink); }
+.nx-drone span { transition: opacity 0.3s; }
+.nx-drone.landed span { opacity: 0; }
+
+/* the IBD of the swarm, in Cameo */
+.nx-ibd { z-index: 13; border-radius: 12px; overflow: hidden; background: #fff; box-shadow: 0 30px 70px -20px rgba(0, 0, 0, 0.85), 0 0 0 2px var(--line); }
+.nx-ibd svg { display: block; font-family: "Segoe UI", system-ui, sans-serif; }
+.ib-frame { fill: #fff; stroke: #59626f; stroke-width: 1.5; }
+.ib-tab { fill: #f1f3f6; stroke: #59626f; stroke-width: 1.5; }
+.ib-tabt { font-size: 13px; font-weight: 600; fill: #1b2231; }
+.ib-host { fill: #fbfcfd; stroke: #7b8492; stroke-width: 1.4; }
+.ib-hname { font-size: 13px; font-weight: 700; fill: #1b2231; }
+.ib-box { fill: url(#nx-part); stroke: #b39a52; stroke-width: 1.2; }
+.ib-name { font-size: 12px; font-weight: 700; fill: #1b2231; }
+.ib-port { fill: #fff; stroke: #3f8f52; stroke-width: 1.4; }
+.ib-part { transform-box: fill-box; transform-origin: center; }
+.ib-part.hl .ib-box { stroke: #2563eb; stroke-width: 3; }
+.ib-link { fill: none; stroke: #1b2231; stroke-width: 1.4; stroke-dasharray: 1 1; transition: stroke 0.6s, stroke-width 0.6s; }
+.ib-link.fresh { stroke: #2563eb; stroke-width: 2.4; }
+.ib-dot.swarm { fill: #d6247f; filter: drop-shadow(0 0 4px rgba(214, 36, 127, 0.9)); }
+.ib-dot.fo { fill: #2563eb; filter: drop-shadow(0 0 3px rgba(37, 99, 235, 0.9)); }
 
 /* the mission board */
 .nx-board { z-index: 16; padding: 22px 24px; border-radius: 20px; background: var(--surface); border: 2px solid var(--line); box-shadow: 0 30px 70px -20px rgba(0, 0, 0, 0.85); display: grid; gap: 10px; }

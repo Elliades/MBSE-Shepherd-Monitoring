@@ -26,10 +26,12 @@
 html, body { margin: 0; height: 100%; background: #050907; }
 body { color: var(--ink); font: 16px/1.4 var(--font-body); overflow: hidden; }
 
-.viewport { position: fixed; inset: 0; overflow: hidden; }
+/* clip, not hidden: a hidden box can still be scrolled, and a scrollIntoView in the guide or the tool (iframes)
+   scrolls its ancestors here too, which shifts the whole film by an amount that depends on the window */
+.viewport { position: fixed; inset: 0; overflow: hidden; overflow: clip; }
 .stage {
   /* centred and scaled to the window by promo.js; the film is watched, not clicked */
-  position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; overflow: hidden;
+  position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; overflow: hidden; overflow: clip;
   transform-origin: 0 0; pointer-events: none;
   background:
     radial-gradient(1200px 700px at 30% 20%, rgba(138, 212, 143, 0.07), transparent 70%),
@@ -138,9 +140,9 @@ body { color: var(--ink); font: 16px/1.4 var(--font-body); overflow: hidden; }
   background: linear-gradient(#3a423e, #20262a); box-shadow: 0 30px 50px -20px rgba(0, 0, 0, 0.9);
 }
 .laptop-base::after { content: ""; display: block; margin: 0 auto; width: 220px; height: 9px; border-radius: 0 0 10px 10px; background: #151a18; }
-.device-screen { position: relative; overflow: hidden; border-radius: 8px; background: var(--bg); }
+.device-screen { position: relative; overflow: hidden; overflow: clip; border-radius: 8px; background: var(--bg); }
 .device-screen iframe { position: absolute; left: 0; top: 0; border: 0; transform-origin: 0 0; background: var(--bg); }
-.toolwin { border-radius: 12px; overflow: hidden; z-index: 2; box-shadow: 0 0 0 2px #2c332f, 0 50px 90px -30px rgba(0, 0, 0, 0.9); }
+.toolwin { border-radius: 12px; overflow: hidden; overflow: clip; z-index: 2; box-shadow: 0 0 0 2px #2c332f, 0 50px 90px -30px rgba(0, 0, 0, 0.9); }
 .toolwin .device-screen { border-radius: 0; background: #eef0f4; }
 .phone { z-index: 3; padding: 14px; border-radius: 54px; background: #121614; box-shadow: 0 0 0 3px #2f3733, 0 50px 90px -30px rgba(0, 0, 0, 0.95); }
 .phone .device-screen { border-radius: 42px; }

@@ -5,7 +5,9 @@
 
   const W = (window.WIDGETS = {});
   const NS = 'http://www.w3.org/2000/svg';
-  const reduced = () => !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  /* ?motion=1: the promo film plays the guide in an iframe, and must move even when the system asks for calm */
+  const MOTION = /[?&]motion=1\b/.test(location.search);
+  const reduced = () => !MOTION && !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 
   /* ───────── helpers ───────── */
   function svg(viewBox, label, cls) {
