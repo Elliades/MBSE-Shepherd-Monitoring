@@ -53,7 +53,21 @@ code { font-family: var(--font-mono); font-size: .88em; background: var(--surfac
 
 .masthead { position: sticky; top: 0; z-index: 10; display: flex; justify-content: space-between; align-items: center; padding: 10px 16px; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
 .brand { font: 700 15px var(--font-display); color: var(--ink); text-decoration: none; letter-spacing: .01em; }
+.masthead-tools { display: flex; align-items: center; gap: 8px; }
+.lang-switch { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); padding: 2px; }
+.lang-btn { border: 0; background: transparent; color: var(--ink-2); font: 700 11px var(--font-mono); border-radius: 999px; padding: 3px 8px; cursor: pointer; transition: background .15s, color .15s; }
+.lang-btn:hover { color: var(--ink); }
+.lang-btn[aria-pressed="true"] { background: var(--route); color: var(--surface); }
 .theme { border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 999px; width: 34px; height: 34px; font-size: 16px; cursor: pointer; }
+
+/* Language display rules */
+html[lang="en"] [data-lang="fr"],
+html:not([lang="fr"]) [data-lang="fr"] {
+  display: none !important;
+}
+html[lang="fr"] [data-lang="en"] {
+  display: none !important;
+}
 
 .layout { max-width: 1180px; margin: 0 auto; padding: 0 16px; display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 40px; }
 .toc { position: sticky; top: 72px; align-self: start; padding: 32px 0; font-size: 14px; }
@@ -245,3 +259,66 @@ pre.code mark { background: var(--route-soft); color: var(--route); border-radiu
 .b-msgs span { font-family: var(--font-mono); color: var(--ink-3); }
 .layout > * { min-width: 0; }
 @media (max-width: 480px) { .steps { grid-template-columns: 1fr; } .fig { padding: 10px; } h2 { font-size: 24px; } }
+
+.b-stages .is-next, .seg button.is-next { box-shadow: inset 0 -3px 0 var(--route); }
+
+/* ───────── the little sheep of the promo ─────────
+   The same lamb as the film (home/lamb.svg). They sit still in the margin and dress the page.
+   One crosses once along the bottom when the page opens. One walks in once, at the very end.
+   Nothing moves while you read. */
+.passer {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 8; height: 44px;
+  overflow: hidden; pointer-events: none;
+}
+.passer img {
+  position: absolute; left: 0; bottom: -3px; width: 44px; height: auto;
+  animation: passer 8s linear .4s both, passer-bob .55s ease-in-out .4s infinite alternate;
+}
+@keyframes passer {
+  from { left: -56px; }
+  to { left: 100%; }
+}
+@keyframes passer-bob {
+  from { transform: rotate(-2deg); }
+  to { transform: rotate(2deg) translateY(-3px); }
+}
+@media (max-width: 700px) {
+  .passer { height: 36px; }
+  .passer img { width: 36px; }
+}
+
+.orn { position: relative; }
+.sit {
+  position: absolute; right: -68px; top: 2px; width: 42px; height: auto;
+  pointer-events: none; user-select: none;
+}
+.sit.flip { transform: scaleX(-1); }
+.sit.small { width: 32px; top: 8px; right: -62px; }
+.sit.bear { width: 58px; top: 6px; right: -78px; }
+@media (max-width: 1179px) { .sit { display: none; } }
+
+.pasture {
+  display: flex; align-items: flex-end; justify-content: flex-end; gap: 2px;
+  margin: 36px 0 0; min-height: 48px; pointer-events: none; user-select: none;
+}
+.pasture img, .pasture .walk { width: 48px; height: auto; display: block; }
+.pasture .small { width: 36px; }
+.pasture .bear { width: 66px; margin-bottom: -1px; }
+.pasture .flip { transform: scaleX(-1); }
+.pasture .walk img { width: 100%; }
+.pasture.arm .walk { opacity: 0; transform: translateX(-130px); }
+.pasture.play .walk { animation: pasture-join 3.2s cubic-bezier(.22, .75, .28, 1) both; }
+@keyframes pasture-join {
+  0% { opacity: 0; transform: translateX(-130px); }
+  16% { opacity: 1; }
+  100% { opacity: 1; transform: translateX(0); }
+}
+.bear { filter: drop-shadow(0 1px 1px rgba(21, 34, 26, .28)); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .bear { filter: drop-shadow(0 0 1px #fde68a) drop-shadow(0 0 3px rgba(245, 158, 11, .9)); }
+}
+:root[data-theme="dark"] .bear { filter: drop-shadow(0 0 1px #fde68a) drop-shadow(0 0 3px rgba(245, 158, 11, .9)); }
+@media (prefers-reduced-motion: reduce) {
+  .passer { display: none; }
+  .pasture.play .walk { animation: none; opacity: 1; transform: none; }
+}

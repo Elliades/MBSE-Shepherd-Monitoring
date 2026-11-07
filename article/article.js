@@ -491,6 +491,16 @@
     deter: { t: 'Dissuasion', d: 'Les modes de dissuasion' },
     full: { t: 'Tout', d: 'Le scénario complet' }
   };
+  const STAGE_EN = {
+    prep: { t: 'Core', d: 'Power-on, configuration, ground link, autopilot' },
+    start: { t: 'Launch', d: 'The orchestrator and initial modes' },
+    patrol: { t: 'Patrol', d: 'Area patrolling' },
+    sheep: { t: 'Flock', d: 'Flock monitoring' },
+    raw: { t: 'Bear (no patch)', d: 'Predator management wired, nothing else' },
+    bear: { t: 'Bear', d: 'Predator management and tracking' },
+    deter: { t: 'Deterrence', d: 'Deterrence modes' },
+    full: { t: 'Full', d: 'Complete scenario' }
+  };
   const SIG_FR = {
     'Start SOI': 'Mise sous tension', 'FlightPlan Incorrect': 'Un plan de vol faux', 'FlightPlan Correct': 'Un bon plan de vol',
     'Start Sheep Guard Mission': 'L’opérateur lance la mission', 'Sheep Signature': 'Le troupeau est en vue',
@@ -498,7 +508,15 @@
     'Predator entering safe perimiter': 'L’ours s’approche trop', 'Predator leaving safe perimiter': 'L’ours recule',
     'Predator leaving tracking perimiter': 'L’ours est parti'
   };
+  const SIG_EN = {
+    'Start SOI': 'Power on', 'FlightPlan Incorrect': 'Invalid flight plan', 'FlightPlan Correct': 'Valid flight plan',
+    'Start Sheep Guard Mission': 'Operator launches mission', 'Sheep Signature': 'Flock in sight',
+    'Sheep Out Of Zone': 'A sheep strays out of zone', 'Predator Detected inside tracking perimeter': 'Bear enters tracking perimeter',
+    'Predator entering safe perimiter': 'Bear gets too close', 'Predator leaving safe perimiter': 'The bear retreats',
+    'Predator leaving tracking perimiter': 'Bear is gone'
+  };
   const ARCH_FR = { 3: 'Orchestrateur central', 1: 'Orchestrateur et fonctionnalités autonomes', 2: 'Sans chef (le « patch »)' };
+  const ARCH_EN = { 3: 'Central orchestrator', 1: 'Orchestrator & autonomous features', 2: 'Leaderless (“the patch”)' };
 
   function buildFigure(root) {
     const ARCHS = window.LOGICAL_ARCHS || {};
@@ -537,50 +555,84 @@
       Object.keys(src).forEach((p) => { if (!stage.built || stage.built.indexOf(short(p)) >= 0) o[p] = [].concat(src[p]).map((w) => any[w] || w); });
       return o;
     }
-    const wantTxt = (w) => [].concat(w).map((x) => (x.charAt(0) === '!' ? 'pas ' + x.slice(1) : x)).join(', ');
+    const wantTxt = (w) => [].concat(w).map((x) => (x.charAt(0) === '!' ? (document.documentElement.lang === 'fr' ? 'pas ' : 'not ') + x.slice(1) : x)).join(', ');
 
     let key = '3';
     let stageId = 'prep';
     let run = 0;
-    root.innerHTML = `
-      <div class="fig-bar">
-        <div class="seg" role="group" aria-label="Architecture">
-          <button type="button" data-k="3" aria-pressed="true">${ARCH_FR[3]}</button>
-          <button type="button" data-k="2" aria-pressed="false">${ARCH_FR[2]}</button>
-        </div>
-      </div>
-      <ol class="b-stages" aria-label="Incréments"></ol>
-      <div class="b-wrap">
-        <div class="b-art"></div>
-        <aside class="m-side">
-          <p class="m-story" aria-live="polite"></p>
-          <div class="btn-row"><button type="button" class="btn" data-play>▶ Rejouer l’incrément</button></div>
-          <span class="label">Contrôles</span>
-          <ol class="m-checks"></ol>
-          <p class="m-verdict" aria-live="polite"></p>
-          <div class="b-msg-label"><span class="label">Messages échangés <b class="b-count">0</b></span><ol class="b-msgs"></ol></div>
-        </aside>
-      </div>`;
-    const stagesEl = root.querySelector('.b-stages');
-    const art = root.querySelector('.b-art');
-    const story = root.querySelector('.m-story');
-    const checks = root.querySelector('.m-checks');
-    const verdict = root.querySelector('.m-verdict');
-    const msgs = root.querySelector('.b-msgs');
-    const count = root.querySelector('.b-count');
-    let sim;
-    let stage;
-    let steps;
-    let boxes = {};
-    let total = 0;
+    let sim, stage, steps, boxes = {}, total = 0, stageIds = [], played = false;
+    let stagesEl, art, story, checks, verdict, msgs, count;
 
+    function renderUI() {
+      const isFr = document.documentElement.lang === 'fr';
+      const ARCH = isFr ? ARCH_FR : ARCH_EN;
+      root.innerHTML = `
+        <div class="fig-bar">
+          <div class="seg" role="group" aria-label="Architecture">
+            <button type="button" data-k="3" aria-pressed="${key === '3'}">${ARCH[3]}</button>
+            <button type="button" data-k="2" aria-pressed="${key === '2'}">${ARCH[2]}</button>
+          </div>
+        </div>
+        <ol class="b-stages" aria-label="${isFr ? 'Incréments' : 'Increments'}"></ol>
+        <div class="b-wrap">
+          <div class="b-art"></div>
+          <aside class="m-side">
+            <p class="m-story" aria-live="polite"></p>
+            <div class="btn-row"><button type="button" class="btn" data-play></button><button type="button" class="btn ghost" data-again hidden>${isFr ? '↻ Rejouer cet incrément' : '↻ Replay this increment'}</button></div>
+            <span class="label">${isFr ? 'Contrôles' : 'Checks'}</span>
+            <ol class="m-checks"></ol>
+            <p class="m-verdict" aria-live="polite"></p>
+            <div class="b-msg-label"><span class="label">${isFr ? 'Messages échangés' : 'Messages exchanged'} <b class="b-count">0</b></span><ol class="b-msgs"></ol></div>
+          </aside>
+        </div>`;
+      stagesEl = root.querySelector('.b-stages');
+      art = root.querySelector('.b-art');
+      story = root.querySelector('.m-story');
+      checks = root.querySelector('.m-checks');
+      verdict = root.querySelector('.m-verdict');
+      msgs = root.querySelector('.b-msgs');
+      count = root.querySelector('.b-count');
+
+      root.querySelector('[data-play]').addEventListener('click', () => {
+        const nx = stageIds[stageIds.indexOf(stageId) + 1];
+        if (played && nx) { stageId = nx; stageList(); load(); play(); } else { load(); play(); }
+      });
+      root.querySelector('[data-again]').addEventListener('click', () => { load(); play(); });
+      root.querySelectorAll('[data-k]').forEach((b) => b.addEventListener('click', () => {
+        key = b.dataset.k;
+        root.querySelectorAll('[data-k]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+        stageList();
+        load();
+      }));
+      stageList();
+      load();
+    }
+
+    /* The main button leads: play this increment, then go to the next one. Replaying is a second, quieter button. */
+    function mainButton() {
+      const isFr = document.documentElement.lang === 'fr';
+      const STAGE = isFr ? STAGE_FR : STAGE_EN;
+      const btn = root.querySelector('[data-play]');
+      const again = root.querySelector('[data-again]');
+      const nx = stageIds[stageIds.indexOf(stageId) + 1];
+      again.hidden = !played;
+      if (!played) btn.textContent = isFr ? '▶ Jouer cet incrément' : '▶ Play this increment';
+      else if (nx) btn.textContent = isFr ? `Incrément ${stageIds.indexOf(nx) + 1} : ${STAGE[nx].t} →` : `Increment ${stageIds.indexOf(nx) + 1}: ${STAGE[nx].t} →`;
+      else btn.textContent = isFr ? '↻ Rejouer cet incrément' : '↻ Replay this increment';
+      if (!nx && played) again.hidden = true;
+    }
     function stageList() {
-      const ids = ST.list.map((x) => x.id).filter((id) => STAGE_FR[id] && (id !== 'raw' || key === '2'));
+      const isFr = document.documentElement.lang === 'fr';
+      const STAGE = isFr ? STAGE_FR : STAGE_EN;
+      const ids = ST.list.map((x) => x.id).filter((id) => STAGE[id] && (id !== 'raw' || key === '2'));
       if (ids.indexOf(stageId) < 0) stageId = 'prep';
-      stagesEl.innerHTML = ids.map((id, n) => `<li><button type="button" data-stage="${id}" aria-pressed="${id === stageId}"><b>${n + 1}</b> ${esc(STAGE_FR[id].t)}</button></li>`).join('');
+      stageIds = ids;
+      const nx = ids[ids.indexOf(stageId) + 1];
+      stagesEl.innerHTML = ids.map((id, n) => `<li><button type="button" data-stage="${id}" aria-pressed="${id === stageId}"${id === nx ? ' class="is-next"' : ''}><b>${n + 1}</b> ${esc(STAGE[id].t)}</button></li>`).join('');
       stagesEl.querySelectorAll('[data-stage]').forEach((b) => b.addEventListener('click', () => { stageId = b.dataset.stage; stageList(); load(); }));
     }
     function draw() {
+      const isFr = document.documentElement.lang === 'fr';
       art.innerHTML = '';
       const arch = ARCHS[key];
       const parts = arch.soi.parts.map((p) => p.name);
@@ -591,7 +643,7 @@
       const gap = 14;
       const rowW = (n) => n * W + (n - 1) * gap;
       const vbW = Math.max(rowW(tech.length), rowW(feat.length)) + 40;
-      const s = svg(`0 0 ${vbW} 260`, 'Les composants logiques, socle et fonctionnalités, avec leur état courant.');
+      const s = svg(`0 0 ${vbW} 260`, isFr ? 'Les composants logiques, socle et fonctionnalités, avec leur état courant.' : 'Logical components, core and features, with their active state.');
       art.appendChild(s);
       boxes = {};
       const row = (list, y, title) => {
@@ -606,14 +658,14 @@
           el('rect', { x, y, width: W, height: H, rx: 10, class: 'b-box' }, g);
           el('rect', { x, y, width: 6, height: H, rx: 3, class: 'b-band' }, g);
           el('text', { x: x + 14, y: y + 22, class: 'b-name' }, g, lab(p));
-          const st = el('text', { x: x + 14, y: y + 44, class: 'b-st' }, g, built ? '' : 'pas encore construit');
+          const st = el('text', { x: x + 14, y: y + 44, class: 'b-st' }, g, built ? '' : (isFr ? 'pas encore construit' : 'not yet built'));
           const st2 = el('text', { x: x + 14, y: y + 60, class: 'b-st' }, g, '');
-          if (fresh) el('text', { x: x + W - 10, y: y + H - 8, class: 'b-new', 'text-anchor': 'end' }, g, 'nouveau');
+          if (fresh) el('text', { x: x + W - 10, y: y + H - 8, class: 'b-new', 'text-anchor': 'end' }, g, isFr ? 'nouveau' : 'new');
           boxes['soi.' + p] = { g, st, st2, built };
         });
       };
-      row(tech, 36, 'SOCLE');
-      row(feat, 166, 'FONCTIONNALITÉS');
+      row(tech, 36, isFr ? 'SOCLE' : 'CORE');
+      row(feat, 166, isFr ? 'FONCTIONNALITÉS' : 'FEATURES');
     }
     function paint() {
       Object.keys(boxes).forEach((path) => {
@@ -625,6 +677,9 @@
       });
     }
     function load() {
+      const isFr = document.documentElement.lang === 'fr';
+      const STAGE = isFr ? STAGE_FR : STAGE_EN;
+      const SIG = isFr ? SIG_FR : SIG_EN;
       run += 1;
       total = 0;
       count.textContent = '0';
@@ -637,27 +692,32 @@
       steps = stage.steps.map((i) => Object.assign({}, every[i], { expect: stageExpect(key, stage, i, every[i]) }));
       draw();
       paint();
-      const fr = STAGE_FR[stageId];
-      story.innerHTML = `<b>${esc(fr.t)} · ${esc(fr.d)}</b><br><small>${stage.setup.length ? 'Les incréments précédents sont rejoués en précondition.' : 'Premier incrément.'}</small>`;
+      const fr = STAGE[stageId];
+      story.innerHTML = `<b>${esc(fr.t)} · ${esc(fr.d)}</b><br><small>${stage.setup.length ? (isFr ? 'Les incréments précédents sont rejoués en précondition.' : 'Earlier increments replayed as preconditions.') : (isFr ? 'Premier incrément.' : 'First increment.')}</small>`;
       checks.innerHTML = steps.map((st, i) => {
         const exp = Object.keys(st.expect).map((p) => `${esc(lab(p))} : ${esc(wantTxt(st.expect[p]))}`).join('<br>');
-        return `<li data-i="${i}"><span class="mk">${i + 1}</span><span><b>${esc(SIG_FR[st.signal] || st.signal)}</b><br><small>${exp || 'rien à contrôler ici'}</small></span></li>`;
+        return `<li data-i="${i}"><span class="mk">${i + 1}</span><span><b>${esc(SIG[st.signal] || st.signal)}</b><br><small>${exp || (isFr ? 'rien à contrôler ici' : 'nothing to check here')}</small></span></li>`;
       }).join('');
       verdict.textContent = '';
       verdict.className = 'm-verdict';
+      played = false;
       root.querySelector('[data-play]').disabled = false;
+      mainButton();
     }
     async function play() {
+      const isFr = document.documentElement.lang === 'fr';
+      const SIG = isFr ? SIG_FR : SIG_EN;
       const my = run;
       const btn = root.querySelector('[data-play]');
       btn.disabled = true;
+      root.querySelector('[data-again]').disabled = true;
       let bad = 0;
       let n = 0;
       for (let i = 0; i < steps.length; i += 1) {
         const st = steps[i];
         const li = checks.querySelector(`[data-i="${i}"]`);
         li.classList.add('now');
-        story.innerHTML = `<b>${esc(SIG_FR[st.signal] || st.signal)}</b><br><small><code>${esc(st.signal)}</code>, injecté par ${st.into === 'operator' ? 'l’opérateur' : 'le pâturage'}.</small>`;
+        story.innerHTML = `<b>${esc(SIG[st.signal] || st.signal)}</b><br><small><code>${esc(st.signal)}</code>, ${isFr ? 'injecté par ' + (st.into === 'operator' ? 'l’opérateur' : 'le pâturage') : 'injected by ' + (st.into === 'operator' ? 'operator' : 'pasture')}.</small>`;
         await pause(500);
         if (my !== run) return;
         const events = sim.inject(st.signal, st.into);
@@ -683,7 +743,7 @@
         li.classList.add(ko.length ? 'ko' : 'ok');
         li.querySelector('.mk').textContent = ko.length ? '✗' : '✓';
         ko.forEach((r) => {
-          li.querySelector('small').insertAdjacentHTML('beforeend', `<br><span class="ko-t">${esc(lab(r.path))} est en ${esc(sim.leaves(r.path).join(', ') || 'aucun état')}</span>`);
+          li.querySelector('small').insertAdjacentHTML('beforeend', `<br><span class="ko-t">${esc(lab(r.path))} ${isFr ? 'est en' : 'is in'} ${esc(sim.leaves(r.path).join(', ') || (isFr ? 'aucun état' : 'no state'))}</span>`);
           if (boxes[r.path]) boxes[r.path].g.classList.add('bad');
         });
         await pause(400);
@@ -691,18 +751,20 @@
       }
       verdict.className = 'm-verdict ' + (bad ? 'ko' : 'ok');
       verdict.innerHTML = bad
-        ? `<b>${bad} étape${bad > 1 ? 's' : ''} en échec sur ${n}.</b> ${stageId === 'raw' ? 'Sans le patch, personne ne suspend la surveillance des moutons ni ne rend l’autopilote à la patrouille.' : ''}`
-        : `<b>Incrément validé : ${n} étape${n > 1 ? 's' : ''} sur ${n}.</b>`;
+        ? (isFr
+            ? `<b>${bad} étape${bad > 1 ? 's' : ''} en échec sur ${n}.</b> ${stageId === 'raw' ? 'Sans le patch, personne ne suspend la surveillance des moutons ni ne rend l’autopilote à la patrouille.' : ''}`
+            : `<b>${bad} step${bad > 1 ? 's' : ''} out of ${n} failed.</b> ${stageId === 'raw' ? 'Without the patch, nobody suspends sheep monitoring or yields autopilot back to patrol.' : ''}`)
+        : (isFr
+            ? `<b>Incrément validé : ${n} étape${n > 1 ? 's' : ''} sur ${n}.</b>`
+            : `<b>Increment validated: ${n} step${n > 1 ? 's' : ''} out of ${n}.</b>`);
+      played = true;
+      btn.disabled = false;
+      root.querySelector('[data-again]').disabled = false;
+      mainButton();
     }
-    root.querySelector('[data-play]').addEventListener('click', play);
-    root.querySelectorAll('[data-k]').forEach((b) => b.addEventListener('click', () => {
-      key = b.dataset.k;
-      root.querySelectorAll('[data-k]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
-      stageList();
-      load();
-    }));
-    stageList();
-    load();
+
+    renderUI();
+    window.addEventListener('article-lang', renderUI);
   }
 
   /* ───────── the table of contents follows the reading ───────── */
@@ -733,9 +795,28 @@
       try { localStorage.setItem(KEY, next); } catch (e) { /* private window */ }
     });
   }
+  function lang() {
+    const KEY = 'mbse-shepherd-article-lang';
+    function set(l) {
+      if (l !== 'fr') l = 'en';
+      document.documentElement.lang = l;
+      try { localStorage.setItem(KEY, l); } catch (e) {}
+      document.querySelectorAll('[data-lang-choice]').forEach((b) => {
+        b.setAttribute('aria-pressed', String(b.getAttribute('data-lang-choice') === l));
+      });
+      const t = document.querySelector('title[data-title-' + l + ']');
+      if (t) document.title = t.getAttribute('data-title-' + l);
+      window.dispatchEvent(new CustomEvent('article-lang', { detail: { lang: l } }));
+    }
+    document.querySelectorAll('[data-lang-choice]').forEach((b) => {
+      b.addEventListener('click', () => set(b.getAttribute('data-lang-choice')));
+    });
+    set(document.documentElement.lang || 'en');
+  }
 
   const FIGS = { mission: missionFigure, scenario: scenarioFigure, build: buildFigure };
   document.querySelectorAll('[data-fig]').forEach((n) => { if (!FIGS[n.dataset.fig]) return; try { FIGS[n.dataset.fig](n); } catch (e) { n.innerHTML = '<p class="fig-note">Figure indisponible.</p>'; if (window.console) console.error(e); } });
   toc();
   theme();
+  lang();
 }());
