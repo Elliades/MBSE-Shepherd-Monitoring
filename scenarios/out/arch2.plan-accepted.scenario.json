@@ -1,0 +1,117 @@
+{
+  "title": "A good flight plan is accepted",
+  "objective": "A correct flight plan is checked and accepted: the drone is ready for the mission and the operator is told.",
+  "context": "Logical SOI 2 - Patch Simulation",
+  "cut": "Logical SOI 2 - Patch",
+  "settle": 2,
+  "systems": [
+    {
+      "path": "soi.mi",
+      "label": "Manual Initialization",
+      "type": "Manual Initialization"
+    },
+    {
+      "path": "soi.mc",
+      "label": "Mission Configuration",
+      "type": "Mission Configuration"
+    },
+    {
+      "path": "soi.bsrc",
+      "label": "Base station link",
+      "type": "Base station remote communication"
+    },
+    {
+      "path": "soi.ap",
+      "label": "AutoPilot",
+      "type": "AutoPilot"
+    },
+    {
+      "path": "soi.zs",
+      "label": "Zone Surveillance",
+      "type": "Zone Surveillance"
+    },
+    {
+      "path": "soi.sm",
+      "label": "SheepMonitoring",
+      "type": "SheepMonitoring"
+    },
+    {
+      "path": "soi.pm",
+      "label": "Predator Management",
+      "type": "Predator Management"
+    }
+  ],
+  "drivers": [
+    {
+      "path": "operator",
+      "label": "Operator",
+      "type": "Operator"
+    },
+    {
+      "path": "pasture",
+      "label": "Pasture Environment",
+      "type": "Pasture Environment"
+    }
+  ],
+  "phases": [
+    {
+      "name": "Preparation",
+      "goal": "",
+      "steps": [
+        {
+          "id": "power",
+          "signal": "Start SOI",
+          "into": "operator",
+          "note": "The operator powers the drone on.",
+          "expect": {
+            "soi.mi": [
+              "Powered On"
+            ],
+            "soi.mc": [
+              "Unconfigured"
+            ]
+          }
+        }
+      ],
+      "setup": true,
+      "source": "arch2.power-on"
+    },
+    {
+      "name": "Preparation",
+      "goal": "",
+      "steps": [
+        {
+          "id": "good-plan",
+          "signal": "FlightPlan Correct",
+          "into": "operator",
+          "note": "The flight plan is loaded and checked.",
+          "expect": {
+            "soi.mc": [
+              "Ready for Mission"
+            ]
+          },
+          "messages": [
+            "Ready for mission"
+          ]
+        }
+      ],
+      "source": "arch2.plan-accepted"
+    }
+  ],
+  "meta": {
+    "id": "arch2.plan-accepted",
+    "kind": "nominal",
+    "version": "1.0",
+    "status": "in use",
+    "description": "2 - Patch, decentralized. One moment of the mission; what leads there is in its preconditions.",
+    "author": "MBSE Shepherd, Part 3",
+    "date": "2026-11-04",
+    "tags": [
+      "part3",
+      "architecture 2"
+    ],
+    "given": [
+      "arch2.power-on"
+    ]
+  }
+}

@@ -1,0 +1,185 @@
+{
+  "title": "The sheep alert is lost on the way",
+  "objective": "Without the link from Sheep Guard to the base station, a stray sheep is still counted, but the operator is never told.",
+  "context": "Logical SOI 1 - Mission orchestrator Simulation",
+  "cut": "Logical SOI 1 - Mission orchestrator",
+  "settle": 2,
+  "systems": [
+    {
+      "path": "soi.mi",
+      "label": "Manual Initialization",
+      "type": "Manual Initialization"
+    },
+    {
+      "path": "soi.mc",
+      "label": "Mission Configuration",
+      "type": "Mission Configuration"
+    },
+    {
+      "path": "soi.bsrc",
+      "label": "Base station link",
+      "type": "Base station remote communication"
+    },
+    {
+      "path": "soi.orch",
+      "label": "Mission Orchestrator",
+      "type": "Mission Orchestrator"
+    },
+    {
+      "path": "soi.ap",
+      "label": "AutoPilot",
+      "type": "AutoPilot"
+    },
+    {
+      "path": "soi.zs",
+      "label": "Zone Surveillance",
+      "type": "Zone Surveillance"
+    },
+    {
+      "path": "soi.sg",
+      "label": "Sheep Guard",
+      "type": "Sheep Guard"
+    },
+    {
+      "path": "soi.pd",
+      "label": "Predator Defense",
+      "type": "Predator Defense"
+    }
+  ],
+  "drivers": [
+    {
+      "path": "operator",
+      "label": "Operator",
+      "type": "Operator"
+    },
+    {
+      "path": "pasture",
+      "label": "Pasture Environment",
+      "type": "Pasture Environment"
+    }
+  ],
+  "phases": [
+    {
+      "name": "Preparation",
+      "goal": "",
+      "steps": [
+        {
+          "id": "power",
+          "signal": "Start SOI",
+          "into": "operator",
+          "note": "The operator powers the drone on.",
+          "expect": {
+            "soi.mi": [
+              "Powered On"
+            ],
+            "soi.mc": [
+              "Unconfigured"
+            ]
+          }
+        },
+        {
+          "id": "good-plan",
+          "signal": "FlightPlan Correct",
+          "into": "operator",
+          "note": "The flight plan is loaded and checked.",
+          "expect": {
+            "soi.mc": [
+              "Ready for Mission"
+            ]
+          },
+          "messages": [
+            "Ready for mission"
+          ]
+        }
+      ],
+      "setup": true,
+      "source": [
+        "arch1.power-on",
+        "arch1.plan-accepted"
+      ]
+    },
+    {
+      "name": "Guarding the flock",
+      "goal": "",
+      "steps": [
+        {
+          "id": "start",
+          "signal": "Start Sheep Guard Mission",
+          "into": "operator",
+          "note": "Launch: flight to the safe area, then the orchestrator activates Sheep Guard.",
+          "expect": {
+            "soi.mc": [
+              "Deployed"
+            ],
+            "soi.orch": [
+              "Sheep Guard Active"
+            ],
+            "soi.ap": [
+              "Following Watch Path"
+            ],
+            "soi.sg": [
+              "Patrol Route",
+              "Sheep Counting"
+            ],
+            "soi.pd": [
+              "Predator Watch"
+            ]
+          }
+        }
+      ],
+      "setup": true,
+      "source": "arch1.mission-start"
+    },
+    {
+      "name": "Guarding the flock",
+      "goal": "",
+      "steps": [
+        {
+          "id": "flock",
+          "signal": "Sheep Signature",
+          "into": "pasture",
+          "note": "The flock is seen and counted by Sheep Guard.",
+          "expect": {
+            "soi.sg": [
+              "Sheep Counting"
+            ]
+          }
+        },
+        {
+          "id": "sheep-out-lost",
+          "signal": "Sheep Out Of Zone",
+          "into": "pasture",
+          "note": "A sheep leaves the zone; the connector from Sheep Guard to the base station is broken.",
+          "expect": {
+            "soi.sg": [
+              "Sheep Counting"
+            ]
+          },
+          "noMessages": [
+            "Sheep Exit Alert"
+          ],
+          "fault": "connector sg.bsrc broken"
+        }
+      ],
+      "source": "arch1.sheep-alert-lost"
+    }
+  ],
+  "meta": {
+    "id": "arch1.sheep-alert-lost",
+    "kind": "dysfunctional",
+    "version": "0.1",
+    "status": "draft",
+    "description": "Shows what a broken connector does, and what the nominal scenario would have caught: the missing message, not the states.",
+    "author": "MBSE Shepherd, to review",
+    "date": "2026-11-04",
+    "tags": [
+      "part3",
+      "architecture 1",
+      "fault"
+    ],
+    "given": [
+      "arch1.mission-start"
+    ],
+    "from": "arch1.sheep-out"
+  }
+}

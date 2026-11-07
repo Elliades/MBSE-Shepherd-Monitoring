@@ -1,0 +1,11 @@
+scenario: The whole mission
+id: arch2.full
+kind: nominal
+version: 1.0
+status: in use
+goal: The whole story, preparation, patrol, sheep, bear, back to patrol: the scenario of the guide, assembled from its parts.
+description: 2 - Patch, decentralized. An assembly: each part is measured, in this order.
+author: MBSE Shepherd, Part 3
+date: 2026-11-04
+tags: part3, architecture 2
+sequence: arch2.power-on, arch2.plan-rejected, arch2.plan-accepted, arch2.mission-start, arch2.sheep-out, arch2.bear-enters, arch2.bear-deterred, arch2.bear-gone

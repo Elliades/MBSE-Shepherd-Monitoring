@@ -1,0 +1,131 @@
+{
+  "title": "The mission is started before any flight plan",
+  "objective": "Start Sheep Guard Mission before a flight plan is accepted is ignored: nothing takes off.",
+  "context": "Logical SOI 1 - Mission orchestrator Simulation",
+  "cut": "Logical SOI 1 - Mission orchestrator",
+  "settle": 2,
+  "systems": [
+    {
+      "path": "soi.mi",
+      "label": "Manual Initialization",
+      "type": "Manual Initialization"
+    },
+    {
+      "path": "soi.mc",
+      "label": "Mission Configuration",
+      "type": "Mission Configuration"
+    },
+    {
+      "path": "soi.bsrc",
+      "label": "Base station link",
+      "type": "Base station remote communication"
+    },
+    {
+      "path": "soi.orch",
+      "label": "Mission Orchestrator",
+      "type": "Mission Orchestrator"
+    },
+    {
+      "path": "soi.ap",
+      "label": "AutoPilot",
+      "type": "AutoPilot"
+    },
+    {
+      "path": "soi.zs",
+      "label": "Zone Surveillance",
+      "type": "Zone Surveillance"
+    },
+    {
+      "path": "soi.sg",
+      "label": "Sheep Guard",
+      "type": "Sheep Guard"
+    },
+    {
+      "path": "soi.pd",
+      "label": "Predator Defense",
+      "type": "Predator Defense"
+    }
+  ],
+  "drivers": [
+    {
+      "path": "operator",
+      "label": "Operator",
+      "type": "Operator"
+    },
+    {
+      "path": "pasture",
+      "label": "Pasture Environment",
+      "type": "Pasture Environment"
+    }
+  ],
+  "phases": [
+    {
+      "name": "Preparation",
+      "goal": "",
+      "steps": [
+        {
+          "id": "power",
+          "signal": "Start SOI",
+          "into": "operator",
+          "note": "The operator powers the drone on.",
+          "expect": {
+            "soi.mi": [
+              "Powered On"
+            ],
+            "soi.mc": [
+              "Unconfigured"
+            ]
+          }
+        }
+      ],
+      "setup": true,
+      "source": "arch1.power-on"
+    },
+    {
+      "name": "Preparation",
+      "goal": "",
+      "steps": [
+        {
+          "id": "early-start",
+          "signal": "Start Sheep Guard Mission",
+          "into": "operator",
+          "note": "The operator presses Start too soon: the drone has no flight plan.",
+          "expect": {
+            "soi.mc": [
+              "Unconfigured"
+            ],
+            "soi.orch": [
+              "Idle"
+            ],
+            "soi.ap": [
+              "Idle"
+            ]
+          },
+          "absent": {
+            "soi.mc": [
+              "Deployed"
+            ]
+          }
+        }
+      ],
+      "source": "arch1.start-without-plan"
+    }
+  ],
+  "meta": {
+    "id": "arch1.start-without-plan",
+    "kind": "alternative",
+    "version": "0.1",
+    "status": "draft",
+    "description": "Mission Configuration only hands the mission over from Ready for Mission. Out of that state the request must change nothing, anywhere.",
+    "author": "MBSE Shepherd, to review",
+    "date": "2026-11-04",
+    "tags": [
+      "part3",
+      "architecture 1",
+      "robustness"
+    ],
+    "given": [
+      "arch1.power-on"
+    ]
+  }
+}

@@ -1,0 +1,285 @@
+{
+  "title": "The whole mission",
+  "objective": "The whole story, preparation, patrol, sheep, bear, back to patrol: the scenario of the guide, assembled from its parts.",
+  "context": "Logical SOI 1 - Mission orchestrator Simulation",
+  "cut": "Logical SOI 1 - Mission orchestrator",
+  "settle": 2,
+  "systems": [
+    {
+      "path": "soi.mi",
+      "label": "Manual Initialization",
+      "type": "Manual Initialization"
+    },
+    {
+      "path": "soi.mc",
+      "label": "Mission Configuration",
+      "type": "Mission Configuration"
+    },
+    {
+      "path": "soi.bsrc",
+      "label": "Base station link",
+      "type": "Base station remote communication"
+    },
+    {
+      "path": "soi.orch",
+      "label": "Mission Orchestrator",
+      "type": "Mission Orchestrator"
+    },
+    {
+      "path": "soi.ap",
+      "label": "AutoPilot",
+      "type": "AutoPilot"
+    },
+    {
+      "path": "soi.zs",
+      "label": "Zone Surveillance",
+      "type": "Zone Surveillance"
+    },
+    {
+      "path": "soi.sg",
+      "label": "Sheep Guard",
+      "type": "Sheep Guard"
+    },
+    {
+      "path": "soi.pd",
+      "label": "Predator Defense",
+      "type": "Predator Defense"
+    }
+  ],
+  "drivers": [
+    {
+      "path": "operator",
+      "label": "Operator",
+      "type": "Operator"
+    },
+    {
+      "path": "pasture",
+      "label": "Pasture Environment",
+      "type": "Pasture Environment"
+    }
+  ],
+  "phases": [
+    {
+      "name": "Preparation",
+      "goal": "",
+      "steps": [
+        {
+          "id": "power",
+          "signal": "Start SOI",
+          "into": "operator",
+          "note": "The operator powers the drone on.",
+          "expect": {
+            "soi.mi": [
+              "Powered On"
+            ],
+            "soi.mc": [
+              "Unconfigured"
+            ]
+          }
+        },
+        {
+          "id": "bad-plan",
+          "signal": "FlightPlan Incorrect",
+          "into": "operator",
+          "note": "A wrong plan: Load Flight Plan refuses it, Mission Configuration goes back to Unconfigured and the operator is told.",
+          "expect": {
+            "soi.mc": [
+              "Unconfigured"
+            ]
+          },
+          "messages": [
+            "FlightPlan Check Failed"
+          ]
+        },
+        {
+          "id": "good-plan",
+          "signal": "FlightPlan Correct",
+          "into": "operator",
+          "note": "The flight plan is loaded and checked.",
+          "expect": {
+            "soi.mc": [
+              "Ready for Mission"
+            ]
+          },
+          "messages": [
+            "Ready for mission"
+          ]
+        }
+      ],
+      "source": [
+        "arch1.power-on",
+        "arch1.plan-rejected",
+        "arch1.plan-accepted"
+      ]
+    },
+    {
+      "name": "Guarding the flock",
+      "goal": "",
+      "steps": [
+        {
+          "id": "start",
+          "signal": "Start Sheep Guard Mission",
+          "into": "operator",
+          "note": "Launch: flight to the safe area, then the orchestrator activates Sheep Guard.",
+          "expect": {
+            "soi.mc": [
+              "Deployed"
+            ],
+            "soi.orch": [
+              "Sheep Guard Active"
+            ],
+            "soi.ap": [
+              "Following Watch Path"
+            ],
+            "soi.sg": [
+              "Patrol Route",
+              "Sheep Counting"
+            ],
+            "soi.pd": [
+              "Predator Watch"
+            ]
+          }
+        },
+        {
+          "id": "flock",
+          "signal": "Sheep Signature",
+          "into": "pasture",
+          "note": "The flock is seen and counted by Sheep Guard.",
+          "expect": {
+            "soi.sg": [
+              "Sheep Counting"
+            ]
+          }
+        },
+        {
+          "id": "sheep-out",
+          "signal": "Sheep Out Of Zone",
+          "into": "pasture",
+          "note": "A sheep leaves the zone: Sheep Guard alerts the operator itself.",
+          "expect": {
+            "soi.sg": [
+              "Sheep Counting"
+            ]
+          },
+          "messages": [
+            "Sheep Exit Alert"
+          ]
+        }
+      ],
+      "source": [
+        "arch1.mission-start",
+        "arch1.sheep-out"
+      ]
+    },
+    {
+      "name": "Predator response",
+      "goal": "",
+      "steps": [
+        {
+          "id": "bear",
+          "signal": "Predator Detected inside tracking perimeter",
+          "into": "pasture",
+          "note": "The bear is seen: Predator Defense asks for control, the orchestrator grants it; the feature drives the tracking.",
+          "expect": {
+            "soi.orch": [
+              "Predator Defense Active"
+            ],
+            "soi.pd": [
+              "Tracking Predator"
+            ],
+            "soi.sg": [
+              "Guard Standby"
+            ],
+            "soi.ap": [
+              "Following Predator"
+            ]
+          },
+          "messages": [
+            "Predator Alert"
+          ]
+        },
+        {
+          "id": "too-close",
+          "signal": "Predator entering safe perimiter",
+          "into": "pasture",
+          "note": "The bear enters the safe perimeter: the feature deters it on its own, the orchestrator does not move.",
+          "expect": {
+            "soi.pd": [
+              "Deterring"
+            ],
+            "soi.orch": [
+              "Predator Defense Active"
+            ]
+          },
+          "messages": [
+            "Light burst",
+            "Sound burst"
+          ]
+        },
+        {
+          "id": "backs-off",
+          "signal": "Predator leaving safe perimiter",
+          "into": "pasture",
+          "note": "The bear backs off: back to tracking, still decided by the feature.",
+          "expect": {
+            "soi.pd": [
+              "Tracking Predator"
+            ]
+          }
+        },
+        {
+          "id": "bear-gone",
+          "signal": "Predator leaving tracking perimiter",
+          "into": "pasture",
+          "note": "The bear is gone: the feature hands control back, Sheep Guard resumes the patrol.",
+          "expect": {
+            "soi.orch": [
+              "Sheep Guard Active"
+            ],
+            "soi.pd": [
+              "Predator Watch"
+            ],
+            "soi.sg": [
+              "Patrol Route",
+              "Sheep Counting"
+            ],
+            "soi.ap": [
+              "Following Watch Path"
+            ]
+          },
+          "messages": [
+            "Predator Cleared"
+          ]
+        }
+      ],
+      "source": [
+        "arch1.bear-enters",
+        "arch1.bear-deterred",
+        "arch1.bear-gone"
+      ]
+    }
+  ],
+  "meta": {
+    "id": "arch1.full",
+    "kind": "nominal",
+    "version": "1.0",
+    "status": "in use",
+    "description": "1 - Mission orchestrator, autonomous features. An assembly: each part is measured, in this order.",
+    "author": "MBSE Shepherd, Part 3",
+    "date": "2026-11-04",
+    "tags": [
+      "part3",
+      "architecture 1"
+    ],
+    "sequence": [
+      "arch1.power-on",
+      "arch1.plan-rejected",
+      "arch1.plan-accepted",
+      "arch1.mission-start",
+      "arch1.sheep-out",
+      "arch1.bear-enters",
+      "arch1.bear-deterred",
+      "arch1.bear-gone"
+    ]
+  }
+}

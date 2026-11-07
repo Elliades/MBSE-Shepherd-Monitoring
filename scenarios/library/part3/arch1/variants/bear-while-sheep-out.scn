@@ -1,0 +1,13 @@
+# Written by hand: the same moment as arch1.bear-enters, reached by another road (after a stray sheep). Not yet run in Cameo.
+scenario: A bear comes while a sheep is out
+id: arch1.bear-while-sheep-out
+kind: alternative
+version: 0.1
+status: draft
+goal: The takeover by Predator Defense does not depend on what Sheep Guard was doing: same result after a stray sheep.
+description: Same steps as arch1.bear-enters, other precondition. The patrol must still give control to Predator Defense.
+author: MBSE Shepherd, to review
+date: 2026-11-04
+tags: part3, architecture 1, composition
+from: arch1.bear-enters
+given: arch1.sheep-out

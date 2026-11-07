@@ -1,0 +1,18 @@
+scenario: A good flight plan is accepted
+id: arch2.plan-accepted
+kind: nominal
+version: 1.0
+status: in use
+goal: A correct flight plan is checked and accepted: the drone is ready for the mission and the operator is told.
+description: 2 - Patch, decentralized. One moment of the mission; what leads there is in its preconditions.
+author: MBSE Shepherd, Part 3
+date: 2026-11-04
+tags: part3, architecture 2
+given: arch2.power-on
+
+phase Preparation
+
+  step good-plan: operator sends FlightPlan Correct
+    note: The flight plan is loaded and checked.
+    then soi.mc is Ready for Mission
+    then message Ready for mission

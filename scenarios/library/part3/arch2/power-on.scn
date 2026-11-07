@@ -1,0 +1,30 @@
+scenario: Power on
+id: arch2.power-on
+kind: nominal
+version: 1.0
+status: in use
+goal: The operator powers the drone on: the power-on part wakes Mission Configuration, which waits for a flight plan.
+description: 2 - Patch, decentralized. The first scenario of the chain: it also says what is simulated and observed, for all the others.
+author: MBSE Shepherd, Part 3
+date: 2026-11-04
+tags: part3, architecture 2
+context: Logical SOI 2 - Patch Simulation
+cut: Logical SOI 2 - Patch
+settle: 2
+
+system soi.mi "Manual Initialization" : Manual Initialization
+system soi.mc "Mission Configuration" : Mission Configuration
+system soi.bsrc "Base station link" : Base station remote communication
+system soi.ap "AutoPilot" : AutoPilot
+system soi.zs "Zone Surveillance" : Zone Surveillance
+system soi.sm "SheepMonitoring" : SheepMonitoring
+system soi.pm "Predator Management" : Predator Management
+driver operator "Operator" : Operator
+driver pasture "Pasture Environment" : Pasture Environment
+
+phase Preparation
+
+  step power: operator sends Start SOI
+    note: The operator powers the drone on.
+    then soi.mi is Powered On
+    then soi.mc is Unconfigured

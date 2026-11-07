@@ -1,0 +1,21 @@
+scenario: A bear enters the tracking perimeter
+id: arch1.bear-enters
+kind: nominal
+version: 1.0
+status: in use
+goal: A bear is detected inside the tracking perimeter: predator defense takes over and the drone follows the bear.
+description: 1 - Mission orchestrator, autonomous features. One moment of the mission; what leads there is in its preconditions.
+author: MBSE Shepherd, Part 3
+date: 2026-11-04
+tags: part3, architecture 1
+given: arch1.mission-start
+
+phase Predator response
+
+  step bear: pasture sends Predator Detected inside tracking perimeter
+    note: The bear is seen: Predator Defense asks for control, the orchestrator grants it; the feature drives the tracking.
+    then soi.orch is Predator Defense Active
+    then soi.pd is Tracking Predator
+    then soi.sg is Guard Standby
+    then soi.ap is Following Predator
+    then message Predator Alert

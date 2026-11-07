@@ -1,0 +1,11 @@
+scenario: The whole mission
+id: arch1.full
+kind: nominal
+version: 1.0
+status: in use
+goal: The whole story, preparation, patrol, sheep, bear, back to patrol: the scenario of the guide, assembled from its parts.
+description: 1 - Mission orchestrator, autonomous features. An assembly: each part is measured, in this order.
+author: MBSE Shepherd, Part 3
+date: 2026-11-04
+tags: part3, architecture 1
+sequence: arch1.power-on, arch1.plan-rejected, arch1.plan-accepted, arch1.mission-start, arch1.sheep-out, arch1.bear-enters, arch1.bear-deterred, arch1.bear-gone

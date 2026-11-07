@@ -1,0 +1,21 @@
+scenario: The mission starts
+id: arch2.mission-start
+kind: nominal
+version: 1.0
+status: in use
+goal: The operator starts the guard mission: the drone flies to the safe area, then patrols its watch path.
+description: 2 - Patch, decentralized. One moment of the mission; what leads there is in its preconditions.
+author: MBSE Shepherd, Part 3
+date: 2026-11-04
+tags: part3, architecture 2
+given: arch2.plan-accepted
+
+phase Guarding the flock
+
+  step start: operator sends Start Sheep Guard Mission
+    note: The operator starts the mission.
+    then soi.mc is Deployed
+    then soi.ap is Following Watch Path
+    then soi.zs is Patrolling
+    then soi.sm is Sheep Monitoring
+    then soi.pm is No predator

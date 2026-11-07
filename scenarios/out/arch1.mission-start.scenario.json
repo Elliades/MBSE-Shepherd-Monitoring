@@ -1,0 +1,149 @@
+{
+  "title": "The mission starts",
+  "objective": "The operator starts the guard mission: the drone flies to the safe area, then patrols its watch path.",
+  "context": "Logical SOI 1 - Mission orchestrator Simulation",
+  "cut": "Logical SOI 1 - Mission orchestrator",
+  "settle": 2,
+  "systems": [
+    {
+      "path": "soi.mi",
+      "label": "Manual Initialization",
+      "type": "Manual Initialization"
+    },
+    {
+      "path": "soi.mc",
+      "label": "Mission Configuration",
+      "type": "Mission Configuration"
+    },
+    {
+      "path": "soi.bsrc",
+      "label": "Base station link",
+      "type": "Base station remote communication"
+    },
+    {
+      "path": "soi.orch",
+      "label": "Mission Orchestrator",
+      "type": "Mission Orchestrator"
+    },
+    {
+      "path": "soi.ap",
+      "label": "AutoPilot",
+      "type": "AutoPilot"
+    },
+    {
+      "path": "soi.zs",
+      "label": "Zone Surveillance",
+      "type": "Zone Surveillance"
+    },
+    {
+      "path": "soi.sg",
+      "label": "Sheep Guard",
+      "type": "Sheep Guard"
+    },
+    {
+      "path": "soi.pd",
+      "label": "Predator Defense",
+      "type": "Predator Defense"
+    }
+  ],
+  "drivers": [
+    {
+      "path": "operator",
+      "label": "Operator",
+      "type": "Operator"
+    },
+    {
+      "path": "pasture",
+      "label": "Pasture Environment",
+      "type": "Pasture Environment"
+    }
+  ],
+  "phases": [
+    {
+      "name": "Preparation",
+      "goal": "",
+      "steps": [
+        {
+          "id": "power",
+          "signal": "Start SOI",
+          "into": "operator",
+          "note": "The operator powers the drone on.",
+          "expect": {
+            "soi.mi": [
+              "Powered On"
+            ],
+            "soi.mc": [
+              "Unconfigured"
+            ]
+          }
+        },
+        {
+          "id": "good-plan",
+          "signal": "FlightPlan Correct",
+          "into": "operator",
+          "note": "The flight plan is loaded and checked.",
+          "expect": {
+            "soi.mc": [
+              "Ready for Mission"
+            ]
+          },
+          "messages": [
+            "Ready for mission"
+          ]
+        }
+      ],
+      "setup": true,
+      "source": [
+        "arch1.power-on",
+        "arch1.plan-accepted"
+      ]
+    },
+    {
+      "name": "Guarding the flock",
+      "goal": "",
+      "steps": [
+        {
+          "id": "start",
+          "signal": "Start Sheep Guard Mission",
+          "into": "operator",
+          "note": "Launch: flight to the safe area, then the orchestrator activates Sheep Guard.",
+          "expect": {
+            "soi.mc": [
+              "Deployed"
+            ],
+            "soi.orch": [
+              "Sheep Guard Active"
+            ],
+            "soi.ap": [
+              "Following Watch Path"
+            ],
+            "soi.sg": [
+              "Patrol Route",
+              "Sheep Counting"
+            ],
+            "soi.pd": [
+              "Predator Watch"
+            ]
+          }
+        }
+      ],
+      "source": "arch1.mission-start"
+    }
+  ],
+  "meta": {
+    "id": "arch1.mission-start",
+    "kind": "nominal",
+    "version": "1.0",
+    "status": "in use",
+    "description": "1 - Mission orchestrator, autonomous features. One moment of the mission; what leads there is in its preconditions.",
+    "author": "MBSE Shepherd, Part 3",
+    "date": "2026-11-04",
+    "tags": [
+      "part3",
+      "architecture 1"
+    ],
+    "given": [
+      "arch1.plan-accepted"
+    ]
+  }
+}

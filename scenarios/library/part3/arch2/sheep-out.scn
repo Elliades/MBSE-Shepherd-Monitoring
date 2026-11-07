@@ -1,0 +1,22 @@
+scenario: A sheep strays
+id: arch2.sheep-out
+kind: nominal
+version: 1.0
+status: in use
+goal: The flock is seen and counted, then a sheep leaves the zone: the operator is warned, the patrol goes on.
+description: 2 - Patch, decentralized. One moment of the mission; what leads there is in its preconditions.
+author: MBSE Shepherd, Part 3
+date: 2026-11-04
+tags: part3, architecture 2
+given: arch2.mission-start
+
+phase Guarding the flock
+
+  step flock: pasture sends Sheep Signature
+    note: The flock is seen and counted.
+    then soi.sm is Sheep Monitoring
+
+  step sheep-out: pasture sends Sheep Out Of Zone
+    note: A sheep leaves the zone: alert to the operator.
+    then soi.sm is Sheep Monitoring
+    then message Sheep Exit Alert

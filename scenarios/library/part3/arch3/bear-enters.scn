@@ -1,0 +1,22 @@
+scenario: A bear enters the tracking perimeter
+id: arch3.bear-enters
+kind: nominal
+version: 1.0
+status: in use
+goal: A bear is detected inside the tracking perimeter: predator defense takes over and the drone follows the bear.
+description: 3 - Centralized orchestrator. One moment of the mission; what leads there is in its preconditions.
+author: MBSE Shepherd, Part 3
+date: 2026-11-04
+tags: part3, architecture 3
+given: arch3.mission-start
+
+phase Predator response
+
+  step bear: pasture sends Predator Detected inside tracking perimeter
+    note: Tracking request: the predator takes priority, the orchestrator dispatches the orders.
+    then soi.orch is Predator tracking
+    then soi.zp is Path Standby
+    then soi.sm is Deactivated
+    then soi.trk is Tracking Target
+    then soi.ap is Following Predator
+    then message Predator Alert

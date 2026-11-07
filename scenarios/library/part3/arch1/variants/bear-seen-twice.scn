@@ -1,0 +1,20 @@
+# Written by hand: a variant of arch1.bear-enters, one step added after "bear". Not yet run in Cameo.
+scenario: The bear is detected twice
+id: arch1.bear-seen-twice
+kind: alternative
+version: 0.1
+status: draft
+goal: A second detection of the same bear, while it is tracked, changes nothing: no second takeover.
+description: Predator Response has no transition on a new detection. The orchestrator must not hand over control again.
+author: MBSE Shepherd, to review
+date: 2026-11-04
+tags: part3, architecture 1, robustness
+from: arch1.bear-enters
+
+after bear:
+  step bear-again: pasture sends Predator Detected inside tracking perimeter
+    note: The camera sees the bear again, still in the tracking perimeter.
+    then soi.orch is Predator Defense Active
+    then soi.pd is Tracking Predator
+    then soi.pd is not Awaiting Control
+    then soi.ap is Following Predator

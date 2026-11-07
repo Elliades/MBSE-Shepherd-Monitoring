@@ -1,0 +1,24 @@
+scenario: A sheep strays
+id: arch3.sheep-out
+kind: nominal
+version: 1.0
+status: in use
+goal: The flock is seen and counted, then a sheep leaves the zone: the operator is warned, the patrol goes on.
+description: 3 - Centralized orchestrator. One moment of the mission; what leads there is in its preconditions.
+author: MBSE Shepherd, Part 3
+date: 2026-11-04
+tags: part3, architecture 3
+given: arch3.mission-start
+
+phase Guarding the flock
+
+  step flock: pasture sends Sheep Signature
+    note: The observation goes through the orchestrator, which dispatches it to the sheep monitoring.
+    then soi.sm is Sheep Monitoring
+    then soi.orch is Patrolling
+
+  step sheep-out: pasture sends Sheep Out Of Zone
+    note: A sheep leaves the zone: report to the orchestrator, which alerts the operator.
+    then soi.sm is Sheep Monitoring
+    then soi.orch is Patrolling
+    then message Sheep Exit Alert

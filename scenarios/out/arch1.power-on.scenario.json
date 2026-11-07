@@ -1,0 +1,97 @@
+{
+  "title": "Power on",
+  "objective": "The operator powers the drone on: the power-on part wakes Mission Configuration, which waits for a flight plan.",
+  "context": "Logical SOI 1 - Mission orchestrator Simulation",
+  "cut": "Logical SOI 1 - Mission orchestrator",
+  "settle": 2,
+  "systems": [
+    {
+      "path": "soi.mi",
+      "label": "Manual Initialization",
+      "type": "Manual Initialization"
+    },
+    {
+      "path": "soi.mc",
+      "label": "Mission Configuration",
+      "type": "Mission Configuration"
+    },
+    {
+      "path": "soi.bsrc",
+      "label": "Base station link",
+      "type": "Base station remote communication"
+    },
+    {
+      "path": "soi.orch",
+      "label": "Mission Orchestrator",
+      "type": "Mission Orchestrator"
+    },
+    {
+      "path": "soi.ap",
+      "label": "AutoPilot",
+      "type": "AutoPilot"
+    },
+    {
+      "path": "soi.zs",
+      "label": "Zone Surveillance",
+      "type": "Zone Surveillance"
+    },
+    {
+      "path": "soi.sg",
+      "label": "Sheep Guard",
+      "type": "Sheep Guard"
+    },
+    {
+      "path": "soi.pd",
+      "label": "Predator Defense",
+      "type": "Predator Defense"
+    }
+  ],
+  "drivers": [
+    {
+      "path": "operator",
+      "label": "Operator",
+      "type": "Operator"
+    },
+    {
+      "path": "pasture",
+      "label": "Pasture Environment",
+      "type": "Pasture Environment"
+    }
+  ],
+  "phases": [
+    {
+      "name": "Preparation",
+      "goal": "",
+      "steps": [
+        {
+          "id": "power",
+          "signal": "Start SOI",
+          "into": "operator",
+          "note": "The operator powers the drone on.",
+          "expect": {
+            "soi.mi": [
+              "Powered On"
+            ],
+            "soi.mc": [
+              "Unconfigured"
+            ]
+          }
+        }
+      ],
+      "source": "arch1.power-on"
+    }
+  ],
+  "meta": {
+    "id": "arch1.power-on",
+    "kind": "nominal",
+    "version": "1.0",
+    "status": "in use",
+    "description": "1 - Mission orchestrator, autonomous features. The first scenario of the chain: it also says what is simulated and observed, for all the others.",
+    "author": "MBSE Shepherd, Part 3",
+    "date": "2026-11-04",
+    "tags": [
+      "part3",
+      "architecture 1"
+    ]
+  }
+}

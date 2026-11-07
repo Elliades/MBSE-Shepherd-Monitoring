@@ -5,3 +5,7 @@ relay/.data/
 
 # Teacher notes (answers of the graded seminar): deployed with the site, never pushed to the public repo.
 assets/teacher-*/
+
+# Scenarios that hold the answers of the graded Part 2 (functional mission): never pushed.
+scenarios/private/
+scenarios/library-private.js

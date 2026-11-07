@@ -1,0 +1,21 @@
+# Written by hand: a robustness case. Expected states read from the state machines of archs.js, not yet run in Cameo.
+scenario: The mission is started before any flight plan
+id: arch1.start-without-plan
+kind: alternative
+version: 0.1
+status: draft
+goal: Start Sheep Guard Mission before a flight plan is accepted is ignored: nothing takes off.
+description: Mission Configuration only hands the mission over from Ready for Mission. Out of that state the request must change nothing, anywhere.
+author: MBSE Shepherd, to review
+date: 2026-11-04
+tags: part3, architecture 1, robustness
+given: arch1.power-on
+
+phase Preparation
+
+  step early-start: operator sends Start Sheep Guard Mission
+    note: The operator presses Start too soon: the drone has no flight plan.
+    then soi.mc is Unconfigured
+    then soi.mc is not Deployed
+    then soi.orch is Idle
+    then soi.ap is Idle

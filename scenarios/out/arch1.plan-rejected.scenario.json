@@ -1,0 +1,122 @@
+{
+  "title": "A wrong flight plan is refused",
+  "objective": "An incorrect flight plan is checked and refused: the drone stays unconfigured and the operator is told why.",
+  "context": "Logical SOI 1 - Mission orchestrator Simulation",
+  "cut": "Logical SOI 1 - Mission orchestrator",
+  "settle": 2,
+  "systems": [
+    {
+      "path": "soi.mi",
+      "label": "Manual Initialization",
+      "type": "Manual Initialization"
+    },
+    {
+      "path": "soi.mc",
+      "label": "Mission Configuration",
+      "type": "Mission Configuration"
+    },
+    {
+      "path": "soi.bsrc",
+      "label": "Base station link",
+      "type": "Base station remote communication"
+    },
+    {
+      "path": "soi.orch",
+      "label": "Mission Orchestrator",
+      "type": "Mission Orchestrator"
+    },
+    {
+      "path": "soi.ap",
+      "label": "AutoPilot",
+      "type": "AutoPilot"
+    },
+    {
+      "path": "soi.zs",
+      "label": "Zone Surveillance",
+      "type": "Zone Surveillance"
+    },
+    {
+      "path": "soi.sg",
+      "label": "Sheep Guard",
+      "type": "Sheep Guard"
+    },
+    {
+      "path": "soi.pd",
+      "label": "Predator Defense",
+      "type": "Predator Defense"
+    }
+  ],
+  "drivers": [
+    {
+      "path": "operator",
+      "label": "Operator",
+      "type": "Operator"
+    },
+    {
+      "path": "pasture",
+      "label": "Pasture Environment",
+      "type": "Pasture Environment"
+    }
+  ],
+  "phases": [
+    {
+      "name": "Preparation",
+      "goal": "",
+      "steps": [
+        {
+          "id": "power",
+          "signal": "Start SOI",
+          "into": "operator",
+          "note": "The operator powers the drone on.",
+          "expect": {
+            "soi.mi": [
+              "Powered On"
+            ],
+            "soi.mc": [
+              "Unconfigured"
+            ]
+          }
+        }
+      ],
+      "setup": true,
+      "source": "arch1.power-on"
+    },
+    {
+      "name": "Preparation",
+      "goal": "",
+      "steps": [
+        {
+          "id": "bad-plan",
+          "signal": "FlightPlan Incorrect",
+          "into": "operator",
+          "note": "A wrong plan: Load Flight Plan refuses it, Mission Configuration goes back to Unconfigured and the operator is told.",
+          "expect": {
+            "soi.mc": [
+              "Unconfigured"
+            ]
+          },
+          "messages": [
+            "FlightPlan Check Failed"
+          ]
+        }
+      ],
+      "source": "arch1.plan-rejected"
+    }
+  ],
+  "meta": {
+    "id": "arch1.plan-rejected",
+    "kind": "alternative",
+    "version": "1.0",
+    "status": "in use",
+    "description": "1 - Mission orchestrator, autonomous features. One moment of the mission; what leads there is in its preconditions.",
+    "author": "MBSE Shepherd, Part 3",
+    "date": "2026-11-04",
+    "tags": [
+      "part3",
+      "architecture 1"
+    ],
+    "given": [
+      "arch1.power-on"
+    ]
+  }
+}

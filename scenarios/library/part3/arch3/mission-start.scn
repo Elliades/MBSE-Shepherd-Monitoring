@@ -1,0 +1,23 @@
+scenario: The mission starts
+id: arch3.mission-start
+kind: nominal
+version: 1.0
+status: in use
+goal: The operator starts the guard mission: the drone flies to the safe area, then patrols its watch path.
+description: 3 - Centralized orchestrator. One moment of the mission; what leads there is in its preconditions.
+author: MBSE Shepherd, Part 3
+date: 2026-11-04
+tags: part3, architecture 3
+given: arch3.plan-accepted
+
+phase Guarding the flock
+
+  step start: operator sends Start Sheep Guard Mission
+    note: Launch: safe area, then patrol.
+    then soi.mc is Deployed
+    then soi.orch is Patrolling, Dispatching
+    then soi.ap is Following Watch Path
+    then soi.zp is Perimeter watch
+    then soi.sm is Sheep Monitoring
+    then soi.pm is Monitoring predators
+    then soi.trk is Tracking Idle

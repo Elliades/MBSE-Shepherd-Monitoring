@@ -1,0 +1,171 @@
+{
+  "title": "A bear enters the tracking perimeter",
+  "objective": "A bear is detected inside the tracking perimeter: predator defense takes over and the drone follows the bear.",
+  "context": "Logical SOI 2 - Patch Simulation",
+  "cut": "Logical SOI 2 - Patch",
+  "settle": 2,
+  "systems": [
+    {
+      "path": "soi.mi",
+      "label": "Manual Initialization",
+      "type": "Manual Initialization"
+    },
+    {
+      "path": "soi.mc",
+      "label": "Mission Configuration",
+      "type": "Mission Configuration"
+    },
+    {
+      "path": "soi.bsrc",
+      "label": "Base station link",
+      "type": "Base station remote communication"
+    },
+    {
+      "path": "soi.ap",
+      "label": "AutoPilot",
+      "type": "AutoPilot"
+    },
+    {
+      "path": "soi.zs",
+      "label": "Zone Surveillance",
+      "type": "Zone Surveillance"
+    },
+    {
+      "path": "soi.sm",
+      "label": "SheepMonitoring",
+      "type": "SheepMonitoring"
+    },
+    {
+      "path": "soi.pm",
+      "label": "Predator Management",
+      "type": "Predator Management"
+    }
+  ],
+  "drivers": [
+    {
+      "path": "operator",
+      "label": "Operator",
+      "type": "Operator"
+    },
+    {
+      "path": "pasture",
+      "label": "Pasture Environment",
+      "type": "Pasture Environment"
+    }
+  ],
+  "phases": [
+    {
+      "name": "Preparation",
+      "goal": "",
+      "steps": [
+        {
+          "id": "power",
+          "signal": "Start SOI",
+          "into": "operator",
+          "note": "The operator powers the drone on.",
+          "expect": {
+            "soi.mi": [
+              "Powered On"
+            ],
+            "soi.mc": [
+              "Unconfigured"
+            ]
+          }
+        },
+        {
+          "id": "good-plan",
+          "signal": "FlightPlan Correct",
+          "into": "operator",
+          "note": "The flight plan is loaded and checked.",
+          "expect": {
+            "soi.mc": [
+              "Ready for Mission"
+            ]
+          },
+          "messages": [
+            "Ready for mission"
+          ]
+        }
+      ],
+      "setup": true,
+      "source": [
+        "arch2.power-on",
+        "arch2.plan-accepted"
+      ]
+    },
+    {
+      "name": "Guarding the flock",
+      "goal": "",
+      "steps": [
+        {
+          "id": "start",
+          "signal": "Start Sheep Guard Mission",
+          "into": "operator",
+          "note": "The operator starts the mission.",
+          "expect": {
+            "soi.mc": [
+              "Deployed"
+            ],
+            "soi.ap": [
+              "Following Watch Path"
+            ],
+            "soi.zs": [
+              "Patrolling"
+            ],
+            "soi.sm": [
+              "Sheep Monitoring"
+            ],
+            "soi.pm": [
+              "No predator"
+            ]
+          }
+        }
+      ],
+      "setup": true,
+      "source": "arch2.mission-start"
+    },
+    {
+      "name": "Predator response",
+      "goal": "",
+      "steps": [
+        {
+          "id": "bear",
+          "signal": "Predator Detected inside tracking perimeter",
+          "into": "pasture",
+          "note": "The bear is seen: Predator Management turns the sheep guard off (the patch) and takes the AutoPilot.",
+          "expect": {
+            "soi.pm": [
+              "Predator tracking"
+            ],
+            "soi.sm": [
+              "Deactivated"
+            ],
+            "soi.ap": [
+              "Following Predator"
+            ]
+          },
+          "messages": [
+            "Predator Alert"
+          ]
+        }
+      ],
+      "source": "arch2.bear-enters"
+    }
+  ],
+  "meta": {
+    "id": "arch2.bear-enters",
+    "kind": "nominal",
+    "version": "1.0",
+    "status": "in use",
+    "description": "2 - Patch, decentralized. One moment of the mission; what leads there is in its preconditions.",
+    "author": "MBSE Shepherd, Part 3",
+    "date": "2026-11-04",
+    "tags": [
+      "part3",
+      "architecture 2"
+    ],
+    "given": [
+      "arch2.mission-start"
+    ]
+  }
+}

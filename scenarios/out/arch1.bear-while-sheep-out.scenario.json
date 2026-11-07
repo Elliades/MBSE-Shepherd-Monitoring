@@ -1,0 +1,210 @@
+{
+  "title": "A bear comes while a sheep is out",
+  "objective": "The takeover by Predator Defense does not depend on what Sheep Guard was doing: same result after a stray sheep.",
+  "context": "Logical SOI 1 - Mission orchestrator Simulation",
+  "cut": "Logical SOI 1 - Mission orchestrator",
+  "settle": 2,
+  "systems": [
+    {
+      "path": "soi.mi",
+      "label": "Manual Initialization",
+      "type": "Manual Initialization"
+    },
+    {
+      "path": "soi.mc",
+      "label": "Mission Configuration",
+      "type": "Mission Configuration"
+    },
+    {
+      "path": "soi.bsrc",
+      "label": "Base station link",
+      "type": "Base station remote communication"
+    },
+    {
+      "path": "soi.orch",
+      "label": "Mission Orchestrator",
+      "type": "Mission Orchestrator"
+    },
+    {
+      "path": "soi.ap",
+      "label": "AutoPilot",
+      "type": "AutoPilot"
+    },
+    {
+      "path": "soi.zs",
+      "label": "Zone Surveillance",
+      "type": "Zone Surveillance"
+    },
+    {
+      "path": "soi.sg",
+      "label": "Sheep Guard",
+      "type": "Sheep Guard"
+    },
+    {
+      "path": "soi.pd",
+      "label": "Predator Defense",
+      "type": "Predator Defense"
+    }
+  ],
+  "drivers": [
+    {
+      "path": "operator",
+      "label": "Operator",
+      "type": "Operator"
+    },
+    {
+      "path": "pasture",
+      "label": "Pasture Environment",
+      "type": "Pasture Environment"
+    }
+  ],
+  "phases": [
+    {
+      "name": "Preparation",
+      "goal": "",
+      "steps": [
+        {
+          "id": "power",
+          "signal": "Start SOI",
+          "into": "operator",
+          "note": "The operator powers the drone on.",
+          "expect": {
+            "soi.mi": [
+              "Powered On"
+            ],
+            "soi.mc": [
+              "Unconfigured"
+            ]
+          }
+        },
+        {
+          "id": "good-plan",
+          "signal": "FlightPlan Correct",
+          "into": "operator",
+          "note": "The flight plan is loaded and checked.",
+          "expect": {
+            "soi.mc": [
+              "Ready for Mission"
+            ]
+          },
+          "messages": [
+            "Ready for mission"
+          ]
+        }
+      ],
+      "setup": true,
+      "source": [
+        "arch1.power-on",
+        "arch1.plan-accepted"
+      ]
+    },
+    {
+      "name": "Guarding the flock",
+      "goal": "",
+      "steps": [
+        {
+          "id": "start",
+          "signal": "Start Sheep Guard Mission",
+          "into": "operator",
+          "note": "Launch: flight to the safe area, then the orchestrator activates Sheep Guard.",
+          "expect": {
+            "soi.mc": [
+              "Deployed"
+            ],
+            "soi.orch": [
+              "Sheep Guard Active"
+            ],
+            "soi.ap": [
+              "Following Watch Path"
+            ],
+            "soi.sg": [
+              "Patrol Route",
+              "Sheep Counting"
+            ],
+            "soi.pd": [
+              "Predator Watch"
+            ]
+          }
+        },
+        {
+          "id": "flock",
+          "signal": "Sheep Signature",
+          "into": "pasture",
+          "note": "The flock is seen and counted by Sheep Guard.",
+          "expect": {
+            "soi.sg": [
+              "Sheep Counting"
+            ]
+          }
+        },
+        {
+          "id": "sheep-out",
+          "signal": "Sheep Out Of Zone",
+          "into": "pasture",
+          "note": "A sheep leaves the zone: Sheep Guard alerts the operator itself.",
+          "expect": {
+            "soi.sg": [
+              "Sheep Counting"
+            ]
+          },
+          "messages": [
+            "Sheep Exit Alert"
+          ]
+        }
+      ],
+      "setup": true,
+      "source": [
+        "arch1.mission-start",
+        "arch1.sheep-out"
+      ]
+    },
+    {
+      "name": "Predator response",
+      "goal": "",
+      "steps": [
+        {
+          "id": "bear",
+          "signal": "Predator Detected inside tracking perimeter",
+          "into": "pasture",
+          "note": "The bear is seen: Predator Defense asks for control, the orchestrator grants it; the feature drives the tracking.",
+          "expect": {
+            "soi.orch": [
+              "Predator Defense Active"
+            ],
+            "soi.pd": [
+              "Tracking Predator"
+            ],
+            "soi.sg": [
+              "Guard Standby"
+            ],
+            "soi.ap": [
+              "Following Predator"
+            ]
+          },
+          "messages": [
+            "Predator Alert"
+          ]
+        }
+      ],
+      "source": "arch1.bear-while-sheep-out"
+    }
+  ],
+  "meta": {
+    "id": "arch1.bear-while-sheep-out",
+    "kind": "alternative",
+    "version": "0.1",
+    "status": "draft",
+    "description": "Same steps as arch1.bear-enters, other precondition. The patrol must still give control to Predator Defense.",
+    "author": "MBSE Shepherd, to review",
+    "date": "2026-11-04",
+    "tags": [
+      "part3",
+      "architecture 1",
+      "composition"
+    ],
+    "given": [
+      "arch1.sheep-out"
+    ],
+    "from": "arch1.bear-enters"
+  }
+}

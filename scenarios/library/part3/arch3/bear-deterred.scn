@@ -1,0 +1,25 @@
+scenario: The bear comes too close, then backs off
+id: arch3.bear-deterred
+kind: nominal
+version: 1.0
+status: in use
+goal: The bear enters the safe perimeter: light and sound scare it off; it backs off and the drone tracks it again.
+description: 3 - Centralized orchestrator. One moment of the mission; what leads there is in its preconditions.
+author: MBSE Shepherd, Part 3
+date: 2026-11-04
+tags: part3, architecture 3
+given: arch3.bear-enters
+
+phase Predator response
+
+  step too-close: pasture sends Predator entering safe perimiter
+    note: Engage request: the orchestrator orders the deterrence.
+    then soi.orch is Predator counteraction
+    then soi.pm is Deterring
+    then message Light burst
+    then message Sound burst
+
+  step backs-off: pasture sends Predator leaving safe perimiter
+    note: Disengage request: back to tracking.
+    then soi.orch is Predator tracking
+    then soi.pm is Deterrence idle

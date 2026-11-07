@@ -1,0 +1,269 @@
+{
+  "title": "The whole mission",
+  "objective": "The whole story, preparation, patrol, sheep, bear, back to patrol: the scenario of the guide, assembled from its parts.",
+  "context": "Logical SOI 2 - Patch Simulation",
+  "cut": "Logical SOI 2 - Patch",
+  "settle": 2,
+  "systems": [
+    {
+      "path": "soi.mi",
+      "label": "Manual Initialization",
+      "type": "Manual Initialization"
+    },
+    {
+      "path": "soi.mc",
+      "label": "Mission Configuration",
+      "type": "Mission Configuration"
+    },
+    {
+      "path": "soi.bsrc",
+      "label": "Base station link",
+      "type": "Base station remote communication"
+    },
+    {
+      "path": "soi.ap",
+      "label": "AutoPilot",
+      "type": "AutoPilot"
+    },
+    {
+      "path": "soi.zs",
+      "label": "Zone Surveillance",
+      "type": "Zone Surveillance"
+    },
+    {
+      "path": "soi.sm",
+      "label": "SheepMonitoring",
+      "type": "SheepMonitoring"
+    },
+    {
+      "path": "soi.pm",
+      "label": "Predator Management",
+      "type": "Predator Management"
+    }
+  ],
+  "drivers": [
+    {
+      "path": "operator",
+      "label": "Operator",
+      "type": "Operator"
+    },
+    {
+      "path": "pasture",
+      "label": "Pasture Environment",
+      "type": "Pasture Environment"
+    }
+  ],
+  "phases": [
+    {
+      "name": "Preparation",
+      "goal": "",
+      "steps": [
+        {
+          "id": "power",
+          "signal": "Start SOI",
+          "into": "operator",
+          "note": "The operator powers the drone on.",
+          "expect": {
+            "soi.mi": [
+              "Powered On"
+            ],
+            "soi.mc": [
+              "Unconfigured"
+            ]
+          }
+        },
+        {
+          "id": "bad-plan",
+          "signal": "FlightPlan Incorrect",
+          "into": "operator",
+          "note": "A wrong plan: Load Flight Plan refuses it, Mission Configuration goes back to Unconfigured and the operator is told.",
+          "expect": {
+            "soi.mc": [
+              "Unconfigured"
+            ]
+          },
+          "messages": [
+            "FlightPlan Check Failed"
+          ]
+        },
+        {
+          "id": "good-plan",
+          "signal": "FlightPlan Correct",
+          "into": "operator",
+          "note": "The flight plan is loaded and checked.",
+          "expect": {
+            "soi.mc": [
+              "Ready for Mission"
+            ]
+          },
+          "messages": [
+            "Ready for mission"
+          ]
+        }
+      ],
+      "source": [
+        "arch2.power-on",
+        "arch2.plan-rejected",
+        "arch2.plan-accepted"
+      ]
+    },
+    {
+      "name": "Guarding the flock",
+      "goal": "",
+      "steps": [
+        {
+          "id": "start",
+          "signal": "Start Sheep Guard Mission",
+          "into": "operator",
+          "note": "The operator starts the mission.",
+          "expect": {
+            "soi.mc": [
+              "Deployed"
+            ],
+            "soi.ap": [
+              "Following Watch Path"
+            ],
+            "soi.zs": [
+              "Patrolling"
+            ],
+            "soi.sm": [
+              "Sheep Monitoring"
+            ],
+            "soi.pm": [
+              "No predator"
+            ]
+          }
+        },
+        {
+          "id": "flock",
+          "signal": "Sheep Signature",
+          "into": "pasture",
+          "note": "The flock is seen and counted.",
+          "expect": {
+            "soi.sm": [
+              "Sheep Monitoring"
+            ]
+          }
+        },
+        {
+          "id": "sheep-out",
+          "signal": "Sheep Out Of Zone",
+          "into": "pasture",
+          "note": "A sheep leaves the zone: alert to the operator.",
+          "expect": {
+            "soi.sm": [
+              "Sheep Monitoring"
+            ]
+          },
+          "messages": [
+            "Sheep Exit Alert"
+          ]
+        }
+      ],
+      "source": [
+        "arch2.mission-start",
+        "arch2.sheep-out"
+      ]
+    },
+    {
+      "name": "Predator response",
+      "goal": "",
+      "steps": [
+        {
+          "id": "bear",
+          "signal": "Predator Detected inside tracking perimeter",
+          "into": "pasture",
+          "note": "The bear is seen: Predator Management turns the sheep guard off (the patch) and takes the AutoPilot.",
+          "expect": {
+            "soi.pm": [
+              "Predator tracking"
+            ],
+            "soi.sm": [
+              "Deactivated"
+            ],
+            "soi.ap": [
+              "Following Predator"
+            ]
+          },
+          "messages": [
+            "Predator Alert"
+          ]
+        },
+        {
+          "id": "too-close",
+          "signal": "Predator entering safe perimiter",
+          "into": "pasture",
+          "note": "Deterrence inside the safe perimeter.",
+          "expect": {
+            "soi.pm": [
+              "Predator counteraction"
+            ]
+          },
+          "messages": [
+            "Light burst",
+            "Sound burst"
+          ]
+        },
+        {
+          "id": "backs-off",
+          "signal": "Predator leaving safe perimiter",
+          "into": "pasture",
+          "note": "The bear backs off: back to tracking.",
+          "expect": {
+            "soi.pm": [
+              "Predator tracking"
+            ]
+          }
+        },
+        {
+          "id": "bear-gone",
+          "signal": "Predator leaving tracking perimiter",
+          "into": "pasture",
+          "note": "The bear is gone: Predator Management turns the sheep guard back on.",
+          "expect": {
+            "soi.pm": [
+              "No predator"
+            ],
+            "soi.sm": [
+              "Sheep Monitoring"
+            ],
+            "soi.ap": [
+              "Following Watch Path"
+            ]
+          },
+          "messages": [
+            "Predator Cleared"
+          ]
+        }
+      ],
+      "source": [
+        "arch2.bear-enters",
+        "arch2.bear-deterred",
+        "arch2.bear-gone"
+      ]
+    }
+  ],
+  "meta": {
+    "id": "arch2.full",
+    "kind": "nominal",
+    "version": "1.0",
+    "status": "in use",
+    "description": "2 - Patch, decentralized. An assembly: each part is measured, in this order.",
+    "author": "MBSE Shepherd, Part 3",
+    "date": "2026-11-04",
+    "tags": [
+      "part3",
+      "architecture 2"
+    ],
+    "sequence": [
+      "arch2.power-on",
+      "arch2.plan-rejected",
+      "arch2.plan-accepted",
+      "arch2.mission-start",
+      "arch2.sheep-out",
+      "arch2.bear-enters",
+      "arch2.bear-deterred",
+      "arch2.bear-gone"
+    ]
+  }
+}

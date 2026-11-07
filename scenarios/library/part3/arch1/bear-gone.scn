@@ -1,0 +1,21 @@
+scenario: The bear leaves: back to patrol
+id: arch1.bear-gone
+kind: nominal
+version: 1.0
+status: in use
+goal: The bear leaves the tracking perimeter: predator defense hands control back and the patrol resumes.
+description: 1 - Mission orchestrator, autonomous features. One moment of the mission; what leads there is in its preconditions.
+author: MBSE Shepherd, Part 3
+date: 2026-11-04
+tags: part3, architecture 1
+given: arch1.bear-enters
+
+phase Predator response
+
+  step bear-gone: pasture sends Predator leaving tracking perimiter
+    note: The bear is gone: the feature hands control back, Sheep Guard resumes the patrol.
+    then soi.orch is Sheep Guard Active
+    then soi.pd is Predator Watch
+    then soi.sg is Patrol Route, Sheep Counting
+    then soi.ap is Following Watch Path
+    then message Predator Cleared
