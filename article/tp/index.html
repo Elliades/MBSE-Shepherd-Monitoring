@@ -1,15 +1,15 @@
 <!doctype html>
-<!-- Article 1 of the series: the interactive lab (docs/articles/01-note-article-1-tp-interactif.md). Page of the site,
+<!-- Article 1 of the series: interactive hands-on MBSE (docs/articles/01-note-article-1-tp-interactif.md). Page of the site,
      styled by ../article.css. Its figures (tp.js) are the site's own pieces: the promo film, the guide of Part 1 in a
      phone, the demo tool that plays Cameo (tool/), paired with it through the relay, and the pasture of js/sim-scene.js. -->
-<html lang="fr">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>J’ai viré le polycopié Word · MBSE Shepherd</title>
-<meta name="description" content="Un TP SysML repensé : un guide web sur le téléphone de l’étudiant, branché en direct sur Cameo, des concepts en petites scènes animées, et une simulation où l’on voit son drone voler.">
-<meta property="og:title" content="J’ai viré le polycopié Word : un TP MBSE façon Brilliant">
-<meta property="og:description" content="MBSE Shepherd (1/3) : rendre un TP SysML vivant, interactif et fun, par le feedback immédiat.">
+<title data-title-en="Goodbye Word… Finally, Interactive Hands-on MBSE! · MBSE Shepherd" data-title-fr="Adieu Word… Enfin un TP MBSE interactif ! · MBSE Shepherd">Goodbye Word… Finally, Interactive Hands-on MBSE! · MBSE Shepherd</title>
+<meta name="description" content="Reinventing hands-on SysML: a web guide on the student’s phone connected live to Cameo, concepts in animated scenes, and a simulation where you watch your drone fly.">
+<meta property="og:title" content="Goodbye Word… Finally, Interactive Hands-on MBSE!">
+<meta property="og:description" content="MBSE Shepherd (1/3): making hands-on SysML lively, interactive, and fun through immediate feedback.">
 <meta property="og:image" content="../../assets/img/promo-poster.jpg">
 <meta name="theme-color" content="#e8eee1" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0e1814" media="(prefers-color-scheme: dark)">
@@ -22,69 +22,134 @@
 <link rel="stylesheet" href="../article.css">
 <link rel="stylesheet" href="../../css/sim.css">
 <link rel="stylesheet" href="tp.css">
+<script>
+(function () {
+  var KEY = 'mbse-shepherd-article-lang', p = null;
+  try { p = new URLSearchParams(location.search).get('lang'); } catch (e) {}
+  var lang = p === 'fr' || p === 'en' ? p : null;
+  if (!lang) { try { lang = localStorage.getItem(KEY); } catch (e) {} }
+  if (lang !== 'fr') lang = 'en';
+  document.documentElement.lang = lang;
+}());
+</script>
 </head>
 <body>
 
+<div class="passer" aria-hidden="true"><img src="../../home/lamb.svg" alt="" draggable="false"></div>
+
 <header class="masthead">
   <a class="brand" href="../../">MBSE Shepherd</a>
-  <button class="theme" id="theme-btn" type="button" aria-label="Changer de thème">◐</button>
+  <div class="masthead-tools">
+    <div class="lang-switch" role="group" aria-label="Language / Langue">
+      <button type="button" class="lang-btn" data-lang-choice="en" aria-pressed="true">EN</button>
+      <button type="button" class="lang-btn" data-lang-choice="fr" aria-pressed="false">FR</button>
+    </div>
+    <button class="theme" id="theme-btn" type="button" aria-label="Theme">◐</button>
+  </div>
 </header>
 
 <div class="layout">
-<nav class="toc" aria-label="Sommaire">
-  <p class="toc-title">Sommaire</p>
-  <ol>
-    <li><a href="#syndrome">Le syndrome du TP</a></li>
-    <li><a href="#document">Adieu le document</a></li>
-    <li><a href="#scenes">Une idée par scène</a></li>
-    <li><a href="#mission">Voir le drone voler</a></li>
-    <li><a href="#bilan">Bilan et suite</a></li>
-    <li><a href="#capot">Sous le capot</a></li>
-  </ol>
+<nav class="toc" aria-label="Table of contents / Sommaire">
+  <div data-lang="en">
+    <p class="toc-title">Contents</p>
+    <ol>
+      <li><a href="#syndrome">The hands-on syndrome</a></li>
+      <li><a href="#document">Farewell, document</a></li>
+      <li><a href="#scenes">One idea per scene</a></li>
+      <li><a href="#mission">Watching the drone fly</a></li>
+      <li><a href="#bilan">Takeaways & next</a></li>
+      <li><a href="#capot">Under the hood</a></li>
+    </ol>
+  </div>
+  <div data-lang="fr">
+    <p class="toc-title">Sommaire</p>
+    <ol>
+      <li><a href="#syndrome">Le syndrome du TP</a></li>
+      <li><a href="#document">Adieu le document</a></li>
+      <li><a href="#scenes">Une idée par scène</a></li>
+      <li><a href="#mission">Voir le drone voler</a></li>
+      <li><a href="#bilan">Bilan et suite</a></li>
+      <li><a href="#capot">Sous le capot</a></li>
+    </ol>
+  </div>
 </nav>
 
 <article class="post">
   <header class="post-head">
-    <p class="kicker">MBSE Shepherd · 1/3 · pédagogie</p>
-    <h1>J’ai viré le polycopié Word : un TP MBSE façon Brilliant</h1>
-    <p class="lede">Un guide web sur le téléphone de l’étudiant, branché en direct sur Cameo, des concepts SysML en petites scènes animées, et une simulation où l’on voit son drone voler… ou rester au sol.</p>
-    <p class="byline">Quentin Cespédès · novembre 2026</p>
+    <p class="kicker" data-lang="en">MBSE Shepherd · 1/3 · pedagogy</p>
+    <p class="kicker" data-lang="fr">MBSE Shepherd · 1/3 · pédagogie</p>
+    <h1 data-lang="en">Goodbye Word… Finally, Interactive Hands-on MBSE!</h1>
+    <h1 data-lang="fr">Adieu Word… Enfin un TP MBSE interactif !</h1>
+    <p class="lede" data-lang="en">A web guide on the student’s phone, connected live to Cameo, SysML concepts in bite-sized animated scenes, and a simulation where you watch your drone fly… or stay grounded.</p>
+    <p class="lede" data-lang="fr">Un guide web sur le téléphone de l’étudiant, branché en direct sur Cameo, des concepts SysML en petites scènes animées, et une simulation où l’on voit son drone voler… ou rester au sol.</p>
+    <p class="byline" data-lang="en">Quentin Cespédès · November 2026</p>
+    <p class="byline" data-lang="fr">Quentin Cespédès · novembre 2026</p>
   </header>
 
   <!-- ───────── accroche ───────── -->
   <section id="syndrome">
-    <p>Vous connaissez la scène. Deux heures de slides sur la notation SysML : blocs, ports, interfaces, <i>flow properties</i>, machines d’états. Puis une salle de TP, un portable de 15 pouces, Cameo ouvert sur un modèle de plusieurs centaines d’éléments, et un énoncé Word. Le nôtre faisait <b>9 500 mots et 38 captures d’écran</b>.</p>
-    <p>Le résultat aussi, vous le connaissez. Les étudiants enchaînent les clics sans voir la démarche système. Au premier élément introuvable dans l’arbre du modèle, ils décrochent. Et du cours du matin, il ne reste pas grand-chose l’après-midi.</p>
-    <p>Mon objectif était simple : un TP plus authentique, plus fun, moins prise de tête, où les étudiants apprennent <b>vraiment</b> la démarche MBSE. Première décision : virer le document.</p>
+    <div data-lang="en">
+      <p>You know the scene. Two hours of slides on SysML notation: blocks, ports, interfaces, <i>flow properties</i>, state machines. Then a computer room, a 15-inch laptop, Cameo open to a model with hundreds of elements, and a Word handout. Ours was <b>9,500 words and 38 screenshots</b>.</p>
+      <p>You also know the outcome. Students chain clicks without seeing the systems engineering approach. At the first element they can't find in the model tree, they disengage. And of the morning lecture, hardly anything remains by the afternoon.</p>
+      <p>My goal was straightforward: a more authentic, engaging, less tedious hands-on experience where students learn the MBSE approach. First decision: get rid of the document.</p>
+    </div>
+    <div data-lang="fr">
+      <p>Vous connaissez la scène. Deux heures de slides sur la notation SysML : blocs, ports, interfaces, <i>flow properties</i>, machines d’états. Puis une salle de TP, un portable de 15 pouces, Cameo ouvert sur un modèle de plusieurs centaines d’éléments, et un énoncé Word. Le nôtre faisait <b>9 500 mots et 38 captures d’écran</b>.</p>
+      <p>Le résultat aussi, vous le connaissez. Les étudiants enchaînent les clics sans voir la démarche système. Au premier élément introuvable dans l’arbre du modèle, ils décrochent. Et du cours du matin, il ne reste pas grand-chose l’après-midi.</p>
+      <p>Mon objectif était simple : un TP plus authentique, plus stimulant, moins rébarbatif, où les étudiants apprennent la démarche MBSE. Première décision : se débarrasser du document.</p>
+    </div>
 
     <figure class="fig wide film" data-fig="film">
       <div class="film-box">
         <img src="../../assets/img/promo-poster.jpg" alt="" class="film-poster">
-        <button type="button" class="film-play" data-play><span aria-hidden="true">▶</span> Lancer le film <small>70 s</small></button>
+        <button type="button" class="film-play" data-play>
+          <span aria-hidden="true">▶</span>
+          <span data-lang="en">Play the film <small>70 s</small></span>
+          <span data-lang="fr">Lancer le film <small>70 s</small></span>
+        </button>
       </div>
-      <figcaption>Figure 1. Le TP en 70 secondes. Rien n’est enregistré : ce sont les vraies pages du site, pilotées en direct dans votre navigateur.</figcaption>
+      <figcaption>
+        <span data-lang="en">Figure 1. The experience in 70 seconds. Nothing is recorded: these are the actual pages of the site, driven live in your browser.</span>
+        <span data-lang="fr">Figure 1. Le TP en 70 secondes. Rien n’est enregistré : ce sont les vraies pages du site, pilotées en direct dans votre navigateur.</span>
+      </figcaption>
     </figure>
 
-    <div class="series">
+    <div class="series" data-lang="en">
+      <b>A three-act series</b>
+      <ol>
+        <li class="now"><span>Learn by doing</span> hands-on learning, connected live to the tool (this article)</li>
+        <li><span>Design without the plumbing</span> <a href="../logique/">the logical layer: method, automation, simulation</a></li>
+        <li><span>Delegate to AI</span> the same method, the same tools, the same judge</li>
+      </ol>
+    </div>
+    <div class="series" data-lang="fr">
       <b>Une série en trois actes</b>
       <ol>
-        <li class="now"><span>L’humain apprend</span> un TP vivant, connecté à l’outil (cet article)</li>
-        <li><span>L’humain conçoit sans souffrir</span> <a href="../logique/">la couche logique : démarche, automatisation, simulation</a></li>
-        <li><span>L’IA prend le relais du labeur</span> la même méthode, les mêmes outils, le même juge</li>
+        <li class="now"><span>Apprendre par la pratique</span> un TP vivant, connecté à l’outil (cet article)</li>
+        <li><span>Concevoir sans la plomberie</span> <a href="../logique/">la couche logique : démarche, automatisation, simulation</a></li>
+        <li><span>Déléguer à l’IA</span> la même méthode, les mêmes outils, le même juge</li>
       </ol>
     </div>
   </section>
 
   <!-- ───────── 1 ───────── -->
   <section id="document">
-    <h2><span class="n">1</span> « J’ai viré le document »</h2>
-    <p>Le premier problème est tout bête : il est ergonomique. Un énoncé décrit des clics. Pour le suivre, on fait <kbd>Alt</kbd>+<kbd>Tab</kbd> entre le Word et Cameo, on retrouve la ligne où on en était, on revient, on cherche le package. La remarque que j’entendais à chaque séance : <i>« Ce serait bien d’avoir deux écrans. »</i></p>
-    <p>Or chaque étudiant a déjà un deuxième écran dans sa poche : son téléphone. Le polycopié est donc devenu une <b>application web</b>, sans installation, qui tourne sur le PC, sur le téléphone, ou sur les deux à la fois. Les deux restent synchronisés : une étape cochée ou une réponse saisie sur l’un apparaît sur l’autre.</p>
+    <h2 data-lang="en"><span class="n">1</span> Farewell, document</h2>
+    <h2 data-lang="fr"><span class="n">1</span> Adieu le document</h2>
+    <div data-lang="en">
+      <p>The first problem is simple: it’s ergonomics. A handout describes mouse clicks. To follow it, you <kbd>Alt</kbd>+<kbd>Tab</kbd> between Word and Cameo, look for where you left off, switch back, search for the package. The remark I heard in every single session: <i>“It would be so nice to have two screens.”</i></p>
+      <p>Yet every student already carries a second screen in their pocket: their smartphone. The paper handout therefore became a <b>web application</b>, requiring zero installation, running on PC, on the phone, or on both simultaneously. Both stay synchronized: checking off a step or typing an answer on one device instantly reflects on the other.</p>
+    </div>
+    <div data-lang="fr">
+      <p>Le premier problème est tout bête : c’est l’ergonomie. Un énoncé décrit des clics. Pour le suivre, on fait <kbd>Alt</kbd>+<kbd>Tab</kbd> entre Word et Cameo, on cherche où on en était, on revient, on cherche le package. La remarque que j’entendais à chaque séance : <i>« Ce serait bien d’avoir deux écrans. »</i></p>
+      <p>Or chaque étudiant a déjà un deuxième écran dans sa poche : son téléphone. Le polycopié est donc devenu une <b>application web</b>, sans installation, qui tourne sur le PC, sur le téléphone, ou sur les deux à la fois. Les deux restent synchronisés : une étape cochée ou une réponse saisie sur l’un apparaît sur l’autre.</p>
+    </div>
 
     <figure class="fig wide" data-fig="before">
       <div class="ba">
         <div class="ba-side">
-          <span class="label">Avant · le polycopié</span>
+          <span class="label" data-lang="en">Before · The handout</span>
+          <span class="label" data-lang="fr">Avant · le polycopié</span>
           <div class="word" aria-label="Extrait du polycopié Word">
             <div class="word-bar">BE Cameo - Part 1 - Discover.docx — Word</div>
             <div class="word-page">
@@ -95,128 +160,281 @@
                 <li>Select the shape of the “Configured” state and click the Transition button on its smart manipulator toolbar and right click on ”Ready for Mission state”.</li>
                 <li>Select the “Ready for mission” signal and drag it to the transition between the “Configured” and “Ready for Mission” states</li>
               </ol>
-              <div class="word-shot">capture d’écran</div>
+              <div class="word-shot" data-lang="en">screenshot</div>
+              <div class="word-shot" data-lang="fr">capture d’écran</div>
               <p class="word-lines"><i></i><i></i><i></i><i class="s"></i></p>
             </div>
           </div>
-          <p class="ba-note">Des chemins à recopier, des clics à imaginer, des captures à déchiffrer. Extrait réel de l’énoncé.</p>
+          <p class="ba-note" data-lang="en">Paths to copy, clicks to imagine, screenshots to decipher. Actual excerpt from the handout.</p>
+          <p class="ba-note" data-lang="fr">Des chemins à recopier, des clics à imaginer, des captures à déchiffrer. Extrait réel de l’énoncé.</p>
         </div>
         <div class="ba-arrow" aria-hidden="true">→</div>
         <div class="ba-side">
-          <span class="label">Après · le guide, sur le téléphone</span>
+          <span class="label" data-lang="en">After · The guide, on the phone</span>
+          <span class="label" data-lang="fr">Après · le guide, sur le téléphone</span>
           <div class="phone-slot" data-phone="c-transition"></div>
-          <p class="ba-note">La même étape : une case à cocher, la vidéo du geste en boucle, et des liens directs vers les éléments du modèle. Faites défiler, touchez.</p>
+          <p class="ba-note" data-lang="en">The exact same step: a checkbox, a looping video of the gesture, and direct links to model elements. Scroll and tap.</p>
+          <p class="ba-note" data-lang="fr">La même étape : une case à cocher, la vidéo du geste en boucle, et des liens directs vers les éléments du modèle. Faites défiler, touchez.</p>
         </div>
       </div>
-      <figcaption>Figure 2. La même étape du TP, avant et après. À droite, c’est le vrai guide (en anglais, comme le TP).</figcaption>
+      <figcaption>
+        <span data-lang="en">Figure 2. The exact same step, before and after. On the right is the actual guide (in English, just like the real course).</span>
+        <span data-lang="fr">Figure 2. La même étape du TP, avant et après. À droite, c’est le vrai guide (en anglais, comme le TP).</span>
+      </figcaption>
     </figure>
 
-    <p>Chaque étape est une case à cocher. Une manipulation dans l’outil, clic droit compris, est montrée par une courte vidéo en boucle plutôt que décrite en trois lignes. Un nom à taper se copie d’un tap. Et un élément du modèle n’est plus un chemin à recopier : c’est un <b>lien direct vers Cameo</b>.</p>
+    <div data-lang="en">
+      <p>Each step is a checkbox. A tool manipulation, right-clicks included, is demonstrated by a short looping video rather than described in three lines of text. A name to type copies with a single tap. And a model element is no longer a path to transcribe: it is a <b>direct link to Cameo</b>.</p>
 
-    <h3>« Open in Cameo » : finie la chasse au trésor</h3>
-    <p>C’est ce lien direct qui change tout. Quand l’énoncé cite un élément — comme le bloc <i>SOI - Pasture Sentinel</i> —, un tap suffit : <b>Open in Cameo</b> ouvre le bon diagramme ou le sélectionne dans l’arbre du modèle. Pour un élément créé par l’étudiant pendant le TP, <b>Find in Cameo</b> le retrouve aussitôt par son nom. Finie la chasse au trésor dans les packages : l’énergie mentale reste sur l’ingénierie système, pas sur l’interface de l’outil.</p>
-    <p>Dans l’autre sens, le guide écoute Cameo en direct : chaque état franchi et chaque signal émis par la simulation s’affichent instantanément sur le téléphone. Zéro configuration réseau : un simple <b>code d’appairage de six lettres</b> affiché dans Cameo, saisi une fois dans le guide, et les deux outils dialoguent en temps réel.</p>
-    <p>Le plus simple est d’essayer. Ci-dessous, un faux Cameo tourne dans votre navigateur : c’est l’outil de démonstration du site, qui parle au guide exactement comme le plugin. Le vrai guide tourne dans le téléphone. Les deux sont appairés pour de bon, par le relais du site.</p>
+      <h3>“Open in Cameo”: No more treasure hunts</h3>
+      <p>That direct link changes everything. When the guide mentions an element — such as block <i>SOI - Pasture Sentinel</i> —, one tap suffices: <b>Open in Cameo</b> opens the relevant diagram or selects it in the model containment tree. And when an element is created by the student during the exercise — and thus not pre-indexed —, you find it right away by name via <b>Find in Cameo</b>. Gone is the treasure hunt through nested packages: mental bandwidth remains focused on systems engineering, not on navigating the tool's UI.</p>
+      <p>In the other direction, the guide listens to Cameo live: every traversed state and every signal emitted by the simulation displays instantly on the phone. Zero network setup: a simple <b>six-letter pairing code</b> shown in Cameo, entered once into the guide, and the two tools communicate in real time.</p>
+      <p>The easiest way to see it is to try it. Below, a simulated Cameo runs right in your browser: it is the site's demo tool, speaking to the guide exactly as the plugin does. The actual guide runs in the phone. Both are genuinely paired through the site relay.</p>
+    </div>
+    <div data-lang="fr">
+      <p>Chaque étape est une case à cocher. Une manipulation dans l’outil, clic droit compris, est montrée par une courte vidéo en boucle plutôt que décrite en trois lignes. Un nom à taper se copie d’un tap. Et un élément du modèle n’est plus un chemin à recopier : c’est un <b>lien direct vers Cameo</b>.</p>
+
+      <h3>« Open in Cameo » : finie la chasse au trésor</h3>
+      <p>C’est ce lien direct qui change tout. Quand l’énoncé cite un élément — comme le bloc <i>SOI - Pasture Sentinel</i> —, un tap suffit : <b>Open in Cameo</b> ouvre le bon diagramme ou le sélectionne dans l’arbre du modèle. Et lorsqu’un élément est créé par l’étudiant pendant le TP — donc non indexé —, on le retrouve aussitôt par son nom via <b>Find in Cameo</b>. Finie la chasse au trésor dans les packages : l’énergie mentale reste sur l’ingénierie système, pas sur l’interface de l’outil.</p>
+      <p>Dans l’autre sens, le guide écoute Cameo en direct : chaque état franchi et chaque signal émis par la simulation s’affichent instantanément sur le téléphone. Zéro configuration réseau : un simple <b>code d’appairage de six lettres</b> affiché dans Cameo, saisi une fois dans le guide, et les deux outils dialoguent en temps réel.</p>
+      <p>Le plus simple est d’essayer. Ci-dessous, un faux Cameo tourne dans votre navigateur : c’est l’outil de démonstration du site, qui parle au guide exactement comme le plugin. Le vrai guide tourne dans le téléphone. Les deux sont appairés pour de bon, par le relais du site.</p>
+    </div>
 
     <figure class="fig bleed desk" data-fig="desk">
       <ol class="desk-tasks">
-        <li><b>1</b><span>Dans le téléphone, touchez <i>SOI - Pasture Sentinel</i>, puis <b>Open in Cameo</b>.</span><button type="button" class="btn ghost" data-show="open" disabled>Montre-moi</button></li>
-        <li><b>2</b><span>Dans Cameo, cliquez sur <b>Scenario</b> : la machine d’états tourne, et le drone décolle dans le téléphone.</span><button type="button" class="btn ghost" data-show="sim" disabled>Montre-moi</button></li>
+        <li>
+          <b>1</b>
+          <span data-lang="en">In the phone, tap <i>SOI - Pasture Sentinel</i>, then <b>Open in Cameo</b>.</span>
+          <span data-lang="fr">Dans le téléphone, touchez <i>SOI - Pasture Sentinel</i>, puis <b>Open in Cameo</b>.</span>
+          <button type="button" class="btn ghost" data-show="open" disabled>
+            <span data-lang="en">Show me</span>
+            <span data-lang="fr">Montre-moi</span>
+          </button>
+        </li>
+        <li>
+          <b>2</b>
+          <span data-lang="en">In Cameo, click <b>Scenario</b>: the state machine runs, and the drone takes off in the phone.</span>
+          <span data-lang="fr">Dans Cameo, cliquez sur <b>Scenario</b> : la machine d’états tourne, et le drone décolle dans le téléphone.</span>
+          <button type="button" class="btn ghost" data-show="sim" disabled>
+            <span data-lang="en">Show me</span>
+            <span data-lang="fr">Montre-moi</span>
+          </button>
+        </li>
       </ol>
       <div class="desk-stage">
         <div class="desk-tool"><div class="desk-screen"></div></div>
         <div class="desk-phone"><div class="phone"><span class="notch"></span><div class="phone-screen"></div></div></div>
         <div class="desk-cover">
-          <button type="button" class="btn" data-start>▶ Allumer le poste</button>
-          <small>Ouvre l’outil de démonstration et le guide, et les relie par le relais du site.</small>
+          <button type="button" class="btn" data-start>
+            <span data-lang="en">▶ Power on the station</span>
+            <span data-lang="fr">▶ Allumer le poste</span>
+          </button>
+          <small data-lang="en">Opens the demo tool and the guide, connected via the site relay.</small>
+          <small data-lang="fr">Ouvre l’outil de démonstration et le guide, et les relie par le relais du site.</small>
         </div>
       </div>
-      <p class="desk-status" aria-live="polite">Poste éteint.</p>
-      <figcaption>Figure 3. Le poste de l’étudiant, en vrai : à gauche l’outil de démonstration qui joue Cameo, à droite le guide sur un téléphone. Vos données de guide sont mises de côté pendant la démo, et remises en partant.</figcaption>
+      <p class="desk-status" aria-live="polite">
+        <span data-lang="en">Station off.</span>
+        <span data-lang="fr">Poste éteint.</span>
+      </p>
+      <figcaption>
+        <span data-lang="en">Figure 3. The student's workstation, for real: on the left, the demo tool acting as Cameo; on the right, the guide on a phone. Your guide data is temporarily saved during the demo and restored when you leave.</span>
+        <span data-lang="fr">Figure 3. Le poste de l’étudiant, en vrai : à gauche l’outil de démonstration qui joue Cameo, à droite le guide sur un téléphone. Vos données de guide sont mises de côté pendant la démo, et remises en partant.</span>
+      </figcaption>
     </figure>
   </section>
 
   <!-- ───────── 2 ───────── -->
-  <section id="scenes">
-    <h2><span class="n">2</span> La démarche MBSE, une idée par scène</h2>
-    <p>Le format « deux heures de cours, deux heures de pratique » a un défaut de fond : la théorie arrive avant qu’on en ait besoin. Quand l’étudiant doit typer son premier port, le cours sur les <i>interface blocks</i> date de trois heures. Ce n’est pas qu’une impression : dans une méta-analyse de 225 études en sciences et en ingénierie, les étudiants des cours magistraux classiques avaient <b>1,5 fois plus de risques d’échouer</b> que ceux des cours où ils sont actifs (Freeman et al., 2014).</p>
-    <p>Le guide découpe donc la démarche, du besoin à la machine d’états de la mission, en scènes courtes, à la manière de Brilliant ou de Duolingo. <b>Une idée par scène</b> : le contexte opérationnel, les cas d’utilisation, les scénarios d’échange, puis les fonctions et la machine d’états. La partie 1 compte 75 scènes en 10 chapitres, et chacune annonce ce qu’on y fait :</p>
-    <div class="kinds">
-      <div><b>37</b><span>faire, dans Cameo</span></div>
-      <div><b>25</b><span>comprendre</span></div>
-      <div><b>10</b><span>essayer, dans la page</span></div>
-      <div><b>3</b><span>répondre à une question du TP</span></div>
+  <section id="scenes" class="orn">
+    <img class="sit flip" src="../../home/lamb.svg" alt="" aria-hidden="true" draggable="false">
+    <h2 data-lang="en"><span class="n">2</span> The MBSE approach, one idea per scene</h2>
+    <h2 data-lang="fr"><span class="n">2</span> La démarche MBSE, une idée par scène</h2>
+    <div data-lang="en">
+      <p>The “two hours of lecture, two hours of practice” format has a fundamental flaw: theory arrives long before it is needed. When the student has to type their first port, the lecture on <i>interface blocks</i> is already three hours old. This is not just an impression: in a meta-analysis of 225 studies across STEM disciplines, students in traditional lecture courses were <b>1.5 times more likely to fail</b> than those in active-learning classrooms (Freeman et al., 2014).</p>
+      <p>The guide therefore breaks down the process, from stakeholder needs to the mission state machine, into short, interactive scenes, built like a modern learning app. <b>One idea per scene</b>: operational context, use cases, exchange scenarios, then functions and the state machine. Part 1 features 75 scenes across 10 chapters, each declaring what you will do:</p>
+      <div class="kinds">
+        <div><b>37</b><span>do, in Cameo</span></div>
+        <div><b>25</b><span>understand</span></div>
+        <div><b>10</b><span>try, in the page</span></div>
+        <div><b>3</b><span>answer a course question</span></div>
+      </div>
+      <p>Each SysML concept arrives right when it is needed, almost always with something tangible to manipulate <b>before</b> touching Cameo: lighting up the anatomy of a connection, choosing what flows between a kettle and a cup, firing signals at a miniature state machine. These are tiny interactions, but they fundamentally shift attention: you develop an intuition for the concept before formalizing it.</p>
     </div>
-    <p>Chaque concept SysML arrive au moment où on en a besoin, et presque toujours avec quelque chose à manipuler <b>avant</b> de toucher à Cameo : allumer les pièces d’une connexion, choisir ce qui coule entre une bouilloire et une tasse, envoyer des signaux à une machine d’états miniature. Ce sont de toutes petites interactions, mais elles changent l’attention : on sent le concept avant de le modéliser.</p>
+    <div data-lang="fr">
+      <p>Le format « deux heures de cours, deux heures de pratique » a un défaut de fond : la théorie arrive avant qu’on en ait besoin. Quand l’étudiant doit typer son premier port, le cours sur les <i>interface blocks</i> date de trois heures. Ce n’est pas qu’une impression : dans une méta-analyse de 225 études en sciences et en ingénierie, les étudiants des cours magistraux classiques avaient <b>1,5 fois plus de risques d’échouer</b> que ceux des cours où ils sont actifs (Freeman et al., 2014).</p>
+      <p>Le guide découpe donc la démarche, du besoin à la machine d’états de la mission, en scènes courtes et interactives, à la manière d’une application d’apprentissage moderne. <b>Une idée par scène</b> : le contexte opérationnel, les cas d’utilisation, les scénarios d’échange, puis les fonctions et la machine d’états. La partie 1 compte 75 scènes en 10 chapitres, et chacune annonce ce qu’on y fait :</p>
+      <div class="kinds">
+        <div><b>37</b><span>faire, dans Cameo</span></div>
+        <div><b>25</b><span>comprendre</span></div>
+        <div><b>10</b><span>essayer, dans la page</span></div>
+        <div><b>3</b><span>répondre à une question du TP</span></div>
+      </div>
+      <p>Chaque concept SysML arrive au moment où on en a besoin, et presque toujours avec quelque chose à manipuler <b>avant</b> de toucher à Cameo : allumer les pièces d’une connexion, choisir ce qui coule entre une bouilloire et une tasse, envoyer des signaux à une machine d’états miniature. Ce sont de toutes petites interactions, mais elles changent l’attention : on sent le concept avant de le modéliser.</p>
+    </div>
 
     <figure class="fig wide gallery" data-fig="gallery">
       <div class="gal">
-        <div class="phone-slot" data-phone="m-fp-port"></div>
+        <div class="focus-slot" data-focus></div>
         <ol class="gal-list">
-          <li><button type="button" data-scene="m-fp-port" aria-pressed="true"><b>Six concepts pour une connexion</b><span>Port, interface block, flow property, port conjugué, connecteur, item flow : on touche un concept, il s’allume sur le dessin.</span></button></li>
-          <li><button type="button" data-scene="m-item-flow-why" aria-pressed="false"><b>L’item flow, avec une bouilloire</b><span>L’interface dit ce que la tasse peut recevoir, l’item flow ce qui coule vraiment. Choisissez <i>Coffee</i> : le port l’accepterait, la bouilloire n’en verse jamais.</span></button></li>
-          <li><button type="button" data-scene="a-sunny-rainy" aria-pressed="false"><b>Sunny day, rainy day</b><span>Le scénario nominal et le scénario dégradé du chargement du plan de vol, avant d’en dessiner le diagramme de séquence.</span></button></li>
-          <li><button type="button" data-scene="c-playground" aria-pressed="false"><b>Une machine d’états dans la page</b><span>On envoie des signaux, on voit quelle transition part, et ce qui arrive quand l’état courant n’attend pas ce signal.</span></button></li>
-          <li><button type="button" data-scene="d-decision" aria-pressed="false"><b>Le nœud de décision</b><span>Dans un diagramme d’activité, un flux bifurque selon des gardes. Glissez la vitesse du vent : le jeton choisit sa branche.</span></button></li>
+          <li><button type="button" data-scene="m-fp-port" data-widget="portAnatomy" aria-pressed="true">
+            <b data-lang="en">Six concepts for one connection</b>
+            <b data-lang="fr">Six concepts pour une connexion</b>
+            <span data-lang="en">Port, interface block, flow property, conjugated port, connector, item flow: tap a concept, it lights up on the diagram.</span>
+            <span data-lang="fr">Port, interface block, flow property, port conjugué, connecteur, item flow : on touche un concept, il s’allume sur le dessin.</span>
+          </button></li>
+          <li><button type="button" data-scene="m-item-flow-why" data-widget="itemFlow" aria-pressed="false">
+            <b data-lang="en">Item flow, with a kettle</b>
+            <b data-lang="fr">L’item flow, avec une bouilloire</b>
+            <span data-lang="en">The interface defines what the cup can receive, the item flow what actually pours. Choose <i>Coffee</i>: the port would accept it, but the kettle never pours it.</span>
+            <span data-lang="fr">L’interface dit ce que la tasse peut recevoir, l’item flow ce qui coule vraiment. Choisissez <i>Coffee</i> : le port l’accepterait, la bouilloire n’en verse jamais.</span>
+          </button></li>
+          <li><button type="button" data-scene="a-sunny-rainy" data-widget="weather" aria-pressed="false">
+            <b data-lang="en">Sunny day, rainy day</b>
+            <b data-lang="fr">Sunny day, rainy day</b>
+            <span data-lang="en">The nominal scenario and the degraded scenario for loading the flight plan, explored before drawing the sequence diagram.</span>
+            <span data-lang="fr">Le scénario nominal et le scénario dégradé du chargement du plan de vol, avant d’en dessiner le diagramme de séquence.</span>
+          </button></li>
+          <li><button type="button" data-scene="c-playground" data-widget="smSim" aria-pressed="false">
+            <b data-lang="en">An in-page state machine</b>
+            <b data-lang="fr">Une machine d’états dans la page</b>
+            <span data-lang="en">Fire signals, watch which transition triggers, and see what happens when the current state does not expect that signal.</span>
+            <span data-lang="fr">On envoie des signaux, on voit quelle transition part, et ce qui arrive quand l’état courant n’attend pas ce signal.</span>
+          </button></li>
+          <li><button type="button" data-scene="d-decision" data-widget="decision" aria-pressed="false">
+            <b data-lang="en">The decision node</b>
+            <b data-lang="fr">Le nœud de décision</b>
+            <span data-lang="en">In an activity diagram, a flow branches according to guards. Slide the wind speed: the token picks its branch.</span>
+            <span data-lang="fr">Dans un diagramme d’activité, un flux bifurque selon des gardes. Glissez la vitesse du vent : le jeton choisit sa branche.</span>
+          </button></li>
         </ol>
       </div>
-      <figcaption>Figure 4. Cinq scènes du guide, telles que les étudiants les voient. Choisissez-en une, puis jouez dans le téléphone.</figcaption>
+      <figcaption>
+        <span data-lang="en">Figure 4. Five scenes from the guide, exactly as students see them. Pick one, then interact directly inside the figure.</span>
+        <span data-lang="fr">Figure 4. Cinq scènes du guide, telles que les étudiants les voient. Choisissez-en une, puis jouez directement dans la figure.</span>
+      </figcaption>
     </figure>
   </section>
 
   <!-- ───────── 3 ───────── -->
-  <section id="mission">
-    <h2><span class="n">3</span> Modéliser la mission, et voir le drone voler</h2>
-    <p>Quand on démarre la modélisation d’un système, le piège classique en ingénierie système est d’attaquer de partout à la fois : les exigences apportent des dizaines de fonctions et de contraintes hétérogènes, les scénarios font pleuvoir signaux et interfaces, et chacun pousse ses propres concepts techniques. Sans fil conducteur, on fonce vers la paralysie ou vers un modèle illisible.</p>
-    <p>C’est tout l’intérêt de <b>modéliser la mission en premier</b> : elle donne un guide clair pour savoir par où commencer. Plutôt que de tout concevoir en même temps, on pose le cycle de vie opérationnel :</p>
-    <ul>
-      <li>Quelles sont les grandes étapes de la mission ?</li>
-      <li>Que doit faire le système à chaque étape ?</li>
-      <li>Quelles transitions doit-on actionner pour passer à l’étape suivante ?</li>
-    </ul>
-    <p>Une fois cette colonne vertébrale posée, on peut <b>raffiner au fur et à mesure</b> :</p>
-    <ol>
-      <li><b>Poser la machine d’états (STM) :</b> les grands états de vie du système (<i>Off</i>, <i>Unconfigured</i>, <i>Configured</i>, <i>Ready for Mission</i>, <i>Patrolling</i>…).</li>
-      <li><b>Définir les transitions par signaux :</b> d’abord pilotées manuellement (ordres de l’opérateur, événements du monde extérieur).</li>
-      <li><b>Allouer les fonctions aux états :</b> spécifier ce que le drone exécute dans chaque état (les <i>do activities</i>).</li>
-      <li><b>Détailler les fonctions importantes :</b> ouvrir leur logique interne (diagramme d’activité, enchaînement d’actions, nœuds de décision).</li>
-      <li><b>Boucler sur les transitions :</b> ces fonctions émettent à leur tour des signaux qui viennent déclencher automatiquement les conditions de transition de la mission.</li>
-    </ol>
+  <section id="mission" class="orn">
+    <img class="sit bear" src="../../assets/sim/bear.svg" alt="" aria-hidden="true" draggable="false">
+    <h2 data-lang="en"><span class="n">3</span> Modeling the mission, and watching the drone fly</h2>
+    <h2 data-lang="fr"><span class="n">3</span> Modéliser la mission, et voir le drone voler</h2>
+    <div data-lang="en">
+      <p>When beginning system modeling, the classic systems engineering pitfall is attacking everything at once: requirements bring dozens of heterogeneous functions and constraints, scenarios trigger a barrage of signals and interfaces, and everyone pushes their own technical concepts. Without a guiding thread, you quickly head toward paralysis or an unreadable model.</p>
+      <p>That is the whole point of <b>modeling the mission first</b>: it provides a clear compass for where to begin. Rather than designing everything simultaneously, we lay down the operational lifecycle:</p>
+      <ul>
+        <li>What are the major stages of the mission?</li>
+        <li>What must the system do at each stage?</li>
+        <li>Which transitions must be triggered to move to the next stage?</li>
+      </ul>
+      <p>Once this operational backbone is in place, we can <b>refine incrementally</b>:</p>
+      <ol>
+        <li><b>Lay down the state machine (STM):</b> the system's high-level lifecycle states (<i>Off</i>, <i>Unconfigured</i>, <i>Configured</i>, <i>Ready for Mission</i>, <i>Patrolling</i>…).</li>
+        <li><b>Define transitions via signals:</b> initially triggered manually (operator commands, external world events).</li>
+        <li><b>Allocate functions to states:</b> specify what the drone executes in each state (the <i>do activities</i>).</li>
+        <li><b>Detail key functions:</b> flesh out their internal logic (activity diagram, action flows, decision nodes).</li>
+        <li><b>Close the loop on transitions:</b> these functions in turn emit signals that automatically trigger the mission's transition guards.</li>
+      </ol>
+    </div>
+    <div data-lang="fr">
+      <p>Quand on démarre la modélisation d’un système, le piège classique en ingénierie système est d’attaquer de partout à la fois : les exigences apportent des dizaines de fonctions et de contraintes hétérogènes, les scénarios font pleuvoir signaux et interfaces, et chacun pousse ses propres concepts techniques. Sans fil conducteur, on fonce vers la paralysie ou vers un modèle illisible.</p>
+      <p>C’est tout l’intérêt de <b>modéliser la mission en premier</b> : elle donne un guide clair pour savoir par où commencer. Plutôt que de tout concevoir en même temps, on pose le cycle de vie opérationnel :</p>
+      <ul>
+        <li>Quelles sont les grandes étapes de la mission ?</li>
+        <li>Que doit faire le système à chaque étape ?</li>
+        <li>Quelles transitions doit-on actionner pour passer à l’étape suivante ?</li>
+      </ul>
+      <p>Une fois cette colonne vertébrale posée, on peut <b>raffiner au fur et à mesure</b> :</p>
+      <ol>
+        <li><b>Poser la machine d’états (STM) :</b> les grands états de vie du système (<i>Off</i>, <i>Unconfigured</i>, <i>Configured</i>, <i>Ready for Mission</i>, <i>Patrolling</i>…).</li>
+        <li><b>Définir les transitions par signaux :</b> d’abord pilotées manuellement (ordres de l’opérateur, événements du monde extérieur).</li>
+        <li><b>Allouer les fonctions aux états :</b> spécifier ce que le drone exécute dans chaque état (les <i>do activities</i>).</li>
+        <li><b>Détailler les fonctions importantes :</b> ouvrir leur logique interne (diagramme d’activité, enchaînement d’actions, nœuds de décision).</li>
+        <li><b>Boucler sur les transitions :</b> ces fonctions émettent à leur tour des signaux qui viennent déclencher automatiquement les conditions de transition de la mission.</li>
+      </ol>
+    </div>
 
     <figure class="fig wide bd" data-fig="build"></figure>
-    <p class="fig-cap">Figure 5. Les cinq étapes, sur le début de la mission du TP. À la dernière, plus personne n’envoie <i>Ready for mission</i> : c’est la fonction <i>Load Flight Plan</i> qui le fait.</p>
-    <p>Même quand le système se complexifie, <b>la mission reste le guide</b>. On ne perd jamais de vue la finalité opérationnelle. Et à chaque étape de ce raffinement, la simulation permet de valider le comportement.</p>
+    <p class="fig-cap">
+      <span data-lang="en">Figure 5. The five steps, illustrated on the opening of the mission. By the final step, no one triggers <i>Ready for mission</i> manually: the <i>Load Flight Plan</i> function fires it autonomously.</span>
+      <span data-lang="fr">Figure 5. Les cinq étapes, sur le début de la mission du TP. À la dernière, plus personne n’envoie <i>Ready for mission</i> : c’est la fonction <i>Load Flight Plan</i> qui le fait.</span>
+    </p>
 
-    <h3>Le diagnostic est visuel</h3>
-    <p>Une machine d’états a une propriété précieuse en pédagogie comme en ingénierie : <b>elle s’exécute</b>. Le simulateur de Cameo la joue, et ce qu’il joue, le guide le reflète en direct dans le pâturage : la base, le troupeau, la zone sûre, le drone. Chaque état publié par Cameo met le drone en mouvement : sur <i>Ready for Mission</i>, il attend à la base ; sur <i>Going to Safe Area</i>, il décolle ; sur <i>Patrolling</i>, il fait le tour du troupeau ; sur <i>Predator tracking</i>, il prend en chasse l’ours. Les objectifs de la mission se cochent au passage.</p>
-    <p>C’est là que le feedback devient immédiat. Un signal oublié sur une transition, et le drone ne décolle jamais. Une transition manquante, et il continue sa patrouille placide pendant que l’ours traverse le troupeau. Personne n’a besoin de dire à l’étudiant que son modèle est faux : il le voit. Et la bonne question d’ingénierie se pose d’elle-même : <b>quel état n’est jamais atteint, et quel signal aurait dû l’y mener ?</b></p>
-    <p>Voici trois modèles d’étudiants. Lancez leur simulation.</p>
+    <div data-lang="en">
+      <p>Even as the system grows more complex, <b>the mission remains the compass</b>. The operational purpose is never lost from view. And at every step of this refinement, simulation enables behavioral validation.</p>
+
+      <h3>Diagnosis is visual</h3>
+      <p>A state machine possesses an invaluable property in education as in engineering: <b>it executes</b>. Cameo's simulation engine plays it, and what it plays, the guide reflects live in the pasture: the base station, the flock, the safe area, the drone. Every state published by Cameo puts the drone in motion: on <i>Ready for Mission</i>, it stands by at base; on <i>Going to Safe Area</i>, it takes off; on <i>Patrolling</i>, it orbits the flock; on <i>Predator tracking</i>, it hunts down the bear. Mission objectives get checked off along the way.</p>
+      <p>This is where feedback becomes immediate. A forgotten signal on a transition, and the drone never takes off. A missing transition, and it continues its placid patrol while the bear plows through the flock. Nobody needs to tell the student their model is wrong: they see it with their own eyes. And the right engineering question naturally arises: <b>which state is never reached, and which signal should have driven it there?</b></p>
+      <p>Here are three student models. Run their simulation.</p>
+    </div>
+    <div data-lang="fr">
+      <p>Même quand le système se complexifie, <b>la mission reste le guide</b>. On ne perd jamais de vue la finalité opérationnelle. Et à chaque étape de ce raffinement, la simulation permet de valider le comportement.</p>
+
+      <h3>Le diagnostic est visuel</h3>
+      <p>Une machine d’états a une propriété précieuse en pédagogie comme en ingénierie : <b>elle s’exécute</b>. Le simulateur de Cameo la joue, et ce qu’il joue, le guide le reflète en direct dans le pâturage : la base, le troupeau, la zone sûre, le drone. Chaque état publié par Cameo met le drone en mouvement : sur <i>Ready for Mission</i>, il attend à la base ; sur <i>Going to Safe Area</i>, il décolle ; sur <i>Patrolling</i>, il fait le tour du troupeau ; sur <i>Predator tracking</i>, il prend en chasse l’ours. Les objectifs de la mission se cochent au passage.</p>
+      <p>C’est là que le feedback devient immédiat. Un signal oublié sur une transition, et le drone ne décolle jamais. Une transition manquante, et il continue sa patrouille placide pendant que l’ours traverse le troupeau. Personne n’a besoin de dire à l’étudiant que son modèle est faux : il le voit. Et la bonne question d’ingénierie se pose d’elle-même : <b>quel état n’est jamais atteint, et quel signal aurait dû l’y mener ?</b></p>
+      <p>Voici trois modèles d’étudiants. Lancez leur simulation.</p>
+    </div>
 
     <figure class="fig wide mis" data-fig="mission"></figure>
-    <p class="fig-cap">Figure 6. Le pâturage du guide, piloté par trois versions de la machine d’états. Les noms d’états sont ceux du modèle.</p>
+    <p class="fig-cap">
+      <span data-lang="en">Figure 6. The guide’s pasture, driven by three versions of the state machine. State names match those in the model.</span>
+      <span data-lang="fr">Figure 6. Le pâturage du guide, piloté par trois versions de la machine d’états. Les noms d’états sont ceux du modèle.</span>
+    </p>
 
-    <p>Et quand tout passe : des confettis. Ça paraît anecdotique, ça ne l’est pas. D’abord parce que les étudiants <b>adorent</b> les confettis. Ensuite parce que chacun sait que sa modélisation est correcte sans attendre qu’on passe derrière lui. La simulation est un juge impartial, disponible pour toute la salle à la fois.</p>
-    <p>La partie 2 du TP, notée, repose sur ce mécanisme : l’arrivée du prédateur. Les étudiants complètent le contexte, les cas d’utilisation, les scénarios et la machine d’états, puis la simulation dit si leur drone suit l’ours et le repousse.</p>
+    <div data-lang="en">
+      <p>And when everything passes: confetti. It may sound frivolous, but it is not. First, because students <b>love</b> confetti. Second, because each student knows their model is correct without waiting for an instructor to look over their shoulder. The simulator acts as an impartial judge, available to the entire classroom at once.</p>
+      <p>Part 2 of the course, which is graded, builds on this mechanism: the arrival of the predator. Students expand the context, use cases, scenarios, and state machine, and the simulation verifies whether their drone tracks and repels the bear.</p>
+    </div>
+    <div data-lang="fr">
+      <p>Et quand tout passe : des confettis. Ça paraît anecdotique, ça ne l’est pas. D’abord parce que les étudiants <b>adorent</b> les confettis. Ensuite parce que chacun sait que sa modélisation est correcte sans attendre qu’on passe derrière lui. La simulation est un juge impartial, disponible pour toute la salle à la fois.</p>
+      <p>La partie 2 du TP, notée, repose sur ce mécanisme : l’arrivée du prédateur. Les étudiants complètent le contexte, les cas d’utilisation, les scénarios et la machine d’états, puis la simulation dit si leur drone suit l’ours et le repousse.</p>
+    </div>
   </section>
 
   <!-- ───────── 4 ───────── -->
-  <section id="bilan">
-    <h2><span class="n">4</span> Bilan, et la suite</h2>
-    <p>Côté salle : un vrai engagement, des étudiants qui voient leur système progresser au fil du TP, et une compréhension solide des couches opérationnelle et fonctionnelle : une partie 1 guidée, puis une partie 2 évaluée sur l’arrivée du prédateur. Côté enseignant, la progression se suit en direct : chaque poste signale la scène où il en est, sous un code anonyme tiré au hasard (aucun nom, aucune réponse), et un tableau de bord montre où la salle bloque.</p>
-    <div class="cards">
-      <div class="card"><b>Un écran de plus</b><span>le téléphone, synchronisé avec le PC, pour l’énoncé.</span></div>
-      <div class="card"><b>Zéro chasse au trésor</b><span><i>Open in Cameo</i>, <i>Find in Cameo</i> : l’outil s’ouvre au bon endroit.</span></div>
-      <div class="card"><b>Un juge visible</b><span>la simulation de la mission : le drone vole, ou pas.</span></div>
+  <section id="bilan" class="orn">
+    <img class="sit small flip" src="../../home/lamb.svg" alt="" aria-hidden="true" draggable="false">
+    <h2 data-lang="en"><span class="n">4</span> Takeaways, and what's next</h2>
+    <h2 data-lang="fr"><span class="n">4</span> Bilan, et la suite</h2>
+    <div data-lang="en">
+      <p>In the classroom: genuine engagement, students who see their system come alive and progress throughout the course, and a solid grasp of the operational and functional layers: a guided Part 1, followed by a graded Part 2 on predator defense. For instructors, cohort progress is tracked live: each station reports its active scene under a randomly generated anonymous token (no names, no submitted answers), and a real-time dashboard highlights where the room gets stuck.</p>
+      <div class="cards">
+        <div class="card"><b>One more screen</b><span>the phone, synced with the PC, for the guide.</span></div>
+        <div class="card"><b>Zero treasure hunt</b><span><i>Open in Cameo</i>, <i>Find in Cameo</i>: the tool jumps to the right place.</span></div>
+        <div class="card"><b>A visible judge</b><span>the mission simulation: the drone flies, or it doesn't.</span></div>
+      </div>
+      <blockquote class="tease">
+        <p>Mastering stakeholder needs and functional behavior is a vital first step. But in systems engineering, the real challenge begins right after: designing the logical architecture, allocating these behaviors across subsystems, exploring multiple candidate concepts, and making trade-offs. In practice, this is where everyone gets bogged down: SysML and fUML plumbing demand such an overwhelming amount of clicks and rigor that nobody has time left to actually design. How can we tool the logical layer to make it fluid, fast, and simulatable at last?</p>
+      </blockquote>
+      <p>This will be the topic of the <a href="../logique/">second article</a>: <b>method, automation, and simulation</b>. How to turn hours of tedious wiring into a few architectural right-clicks, and replay mission scenarios at zero cost to validate every choice. The complete course, models, and simulation are online: <a href="../../">shepherd.chaos-art.fr</a>.</p>
     </div>
-    <blockquote class="tease">
-      <p>Maîtriser le besoin et le fonctionnel est une première étape indispensable. Mais en ingénierie système, le véritable enjeu commence juste après : concevoir l’architecture logique, allouer ces comportements sur des sous-systèmes, explorer plusieurs concepts candidats et trancher par des trade-offs. En pratique, c’est là que tout le monde s’enlise : la plomberie SysML et fUML demande une telle débauche de clics et de rigueur que personne n’a le temps de concevoir. Comment outiller la couche logique pour la rendre enfin fluide, rapide et simulable ?</p>
-    </blockquote>
-    <p>Ce sera l’objet du <a href="../logique/">deuxième article</a> : <b>démarche, automatisation et simulation</b>. Comment transformer des heures de câblage fastidieux en quelques clics droits d’architecture, et rejouer les scénarios de la mission à coût zéro pour valider chaque choix. Le TP complet, ses modèles et la simulation sont en ligne : <a href="../../">shepherd.chaos-art.fr</a>.</p>
+    <div data-lang="fr">
+      <p>Côté salle : un vrai engagement, des étudiants qui voient leur système progresser au fil du TP, et une compréhension solide des couches opérationnelle et fonctionnelle : une partie 1 guidée, puis une partie 2 évaluée sur l’arrivée du prédateur. Côté enseignant, la progression se suit en direct : chaque poste signale la scène où il en est, sous un code anonyme tiré au hasard (aucun nom, aucune réponse), et un tableau de bord montre où la salle bloque.</p>
+      <div class="cards">
+        <div class="card"><b>Un écran de plus</b><span>le téléphone, synchronisé avec le PC, pour l’énoncé.</span></div>
+        <div class="card"><b>Zéro chasse au trésor</b><span><i>Open in Cameo</i>, <i>Find in Cameo</i> : l’outil s’ouvre au bon endroit.</span></div>
+        <div class="card"><b>Un juge visible</b><span>la simulation de la mission : le drone vole, ou pas.</span></div>
+      </div>
+      <blockquote class="tease">
+        <p>Maîtriser le besoin et le fonctionnel est une première étape indispensable. Mais en ingénierie système, le véritable enjeu commence juste après : concevoir l’architecture logique, allouer ces comportements sur des sous-systèmes, explorer plusieurs concepts candidats et trancher par des trade-offs. En pratique, c’est là que tout le monde s’enlise : la plomberie SysML et fUML demande une telle débauche de clics et de rigueur que personne n’a le temps de concevoir. Comment outiller la couche logique pour la rendre enfin fluide, rapide et simulable ?</p>
+      </blockquote>
+      <p>Ce sera l’objet du <a href="../logique/">deuxième article</a> : <b>démarche, automatisation et simulation</b>. Comment transformer des heures de câblage fastidieux en quelques clics droits d’architecture, et rejouer les scénarios de la mission à coût zéro pour valider chaque choix. Le TP complet, ses modèles et la simulation sont en ligne : <a href="../../">shepherd.chaos-art.fr</a>.</p>
+    </div>
   </section>
 
   <section id="refs">
-    <h2>Références</h2>
-    <ul class="refs">
+    <h2 data-lang="en">References</h2>
+    <h2 data-lang="fr">Références</h2>
+    <ul class="refs" data-lang="en">
+      <li>S. Freeman et al., <a href="https://doi.org/10.1073/pnas.1319030111"><i>Active learning increases student performance in science, engineering, and mathematics</i></a>, PNAS, vol. 111, no. 23, 2014.</li>
+      <li>ISO/IEC/IEEE 15288:2023, <i>Systems and software engineering — System life cycle processes</i> (mission analysis and early validation processes).</li>
+      <li>INCOSE, <a href="https://www.incose.org/publications/se-handbook-5th-edition"><i>Systems Engineering Handbook: A Guide for System Life Cycle Processes and Activities</i></a>, 5th ed., Wiley, 2023 and ISO/IEC/IEEE 29148:2018 (breaking down the mission lifecycle into operational phases: <i>Plan, Prepare, Deploy, Execute, Supervise, Sustain, Undeploy, Assess</i>).</li>
+      <li>J. M. Stecklein et al., <a href="https://ntrs.nasa.gov/citations/20100036670"><i>Error Cost Escalation Through the Project Life Cycle</i></a>, NASA JSC, 2004 (the foundation of <i>early validation</i>: detecting and fixing architectural flaws on executable models right from early design phases).</li>
+    </ul>
+    <ul class="refs" data-lang="fr">
       <li>S. Freeman et al., <a href="https://doi.org/10.1073/pnas.1319030111"><i>Active learning increases student performance in science, engineering, and mathematics</i></a>, PNAS, vol. 111, n° 23, 2014.</li>
       <li>ISO/IEC/IEEE 15288:2023, <i>Systems and software engineering — System life cycle processes</i> (processus d’analyse de mission et validation précoce).</li>
       <li>INCOSE, <a href="https://www.incose.org/publications/se-handbook-5th-edition"><i>Systems Engineering Handbook: A Guide for System Life Cycle Processes and Activities</i></a>, 5<sup>e</sup> éd., Wiley, 2023 et ISO/IEC/IEEE 29148:2018 (le découpage du cycle de mission en phases opérationnelles : <i>Plan, Prepare, Deploy, Execute, Supervise, Sustain, Undeploy, Assess</i>).</li>
@@ -226,18 +444,40 @@
 
   <!-- ───────── sous le capot ───────── -->
   <section id="capot">
-    <h2>Sous le capot</h2>
-    <p class="aside"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align: -2px; margin-right: 6px; display: inline-block;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>Pour les curieux</p>
-    <details open><summary>Un serveur WebSocket (WSS) intégré au plugin</summary>
-      <p>Le navigateur et Cameo communiquent en direct grâce à un serveur WebSocket sécurisé (WSS) directement embarqué dans le plugin MBSE Shepherd de Cameo. Le guide web sur le téléphone rejoint le plugin via une « salle » isolée par le code d’appairage de six lettres. La liaison transmet instantanément les requêtes du guide vers Cameo (<i>Open in Cameo</i>, sélections d’éléments) et remonte les événements de simulation vers le téléphone en temps réel.</p>
-    </details>
-    <details><summary>Retrouver un élément que l’étudiant vient de créer</summary>
-      <p>Les éléments du modèle de départ ont un identifiant connu du guide : <i>Open in Cameo</i> le sélectionne directement. Un élément créé pendant le TP n’en a pas. Le guide demande alors à Cameo de le chercher par son nom, son type et son chemin attendu (<code>selectByName</code>) ; s’il en trouve plusieurs, il liste les éléments de ce nom et garde celui qui a le bon type.</p>
-    </details>
-    <details><summary>OMF et ALH, le moteur de simulation</summary>
-      <p>Le plugin MBSE Shepherd s’appuie sur OMF, le framework qui connecte Cameo et la webapp en temps réel. Côté simulation, OMF se branche directement sur le moteur ALH (<i>Action Language for Foundational UML</i>) de Cameo Simulation Toolkit : il intercepte chaque franchissement d’état ou émission de signal pour animer la scène web (le drone dans le pâturage). Dans l’autre sens, les commandes envoyées par la webapp sont retranscrites en triggers injectés directement dans la session d’exécution ALH pour faire progresser le scénario.</p>
-    </details>
+    <h2 data-lang="en">Under the hood</h2>
+    <h2 data-lang="fr">Sous le capot</h2>
+    <p class="aside" data-lang="en"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align: -2px; margin-right: 6px; display: inline-block;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>For the curious</p>
+    <p class="aside" data-lang="fr"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align: -2px; margin-right: 6px; display: inline-block;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>Pour les curieux</p>
+
+    <div data-lang="en">
+      <details open><summary>An embedded WebSocket (WSS) server in the plugin</summary>
+        <p>The browser and Cameo communicate live via a secure WebSocket server (WSS) directly embedded in Cameo's MBSE Shepherd plugin. The web guide on the phone joins the plugin through a room isolated by the six-letter pairing code. The link instantly routes guide requests to Cameo (<i>Open in Cameo</i>, element selection) and streams simulation events back to the phone in real time.</p>
+      </details>
+      <details><summary>Finding an element the student just created</summary>
+        <p>Elements present in the starting model have a known identifier in the guide: <i>Open in Cameo</i> selects them directly. An element created during the exercise does not have one yet. The guide asks Cameo to find it by name, type, and expected package path (<code>selectByName</code>); if multiple matches exist, it lists candidates with that name and keeps the one with the correct type.</p>
+      </details>
+      <details><summary>OMF and ALH, the simulation engine</summary>
+        <p>The MBSE Shepherd plugin relies on OMF, the framework connecting Cameo and the web app in real time. On the simulation side, OMF taps directly into Cameo Simulation Toolkit’s ALH (<i>Action Language for Foundational UML</i>) engine: it intercepts every state transition or signal emission to animate the web scene (the drone in the pasture). In the opposite direction, commands sent from the web app are translated into triggers injected directly into the ALH execution session to advance the scenario.</p>
+      </details>
+    </div>
+    <div data-lang="fr">
+      <details open><summary>Un serveur WebSocket (WSS) intégré au plugin</summary>
+        <p>Le navigateur et Cameo communiquent en direct grâce à un serveur WebSocket sécurisé (WSS) directement embarqué dans le plugin MBSE Shepherd de Cameo. Le guide web sur le téléphone rejoint le plugin via une « salle » isolée par le code d’appairage de six lettres. La liaison transmet instantanément les requêtes du guide vers Cameo (<i>Open in Cameo</i>, sélections d’éléments) et remonte les événements de simulation vers le téléphone en temps réel.</p>
+      </details>
+      <details><summary>Retrouver un élément que l’étudiant vient de créer</summary>
+        <p>Les éléments du modèle de départ ont un identifiant connu du guide : <i>Open in Cameo</i> le sélectionne directement. Un élément créé pendant le TP n’en a pas. Le guide demande alors à Cameo de le chercher par son nom, son type et son chemin attendu (<code>selectByName</code>) ; s’il en trouve plusieurs, il liste les éléments de ce nom et garde celui qui a le bon type.</p>
+      </details>
+      <details><summary>OMF et ALH, le moteur de simulation</summary>
+        <p>Le plugin MBSE Shepherd s’appuie sur OMF, le framework qui connecte Cameo et la webapp en temps réel. Côté simulation, OMF se branche directement sur le moteur ALH (<i>Action Language for Foundational UML</i>) de Cameo Simulation Toolkit : il intercepte chaque franchissement d’état ou émission de signal pour animer la scène web (le drone dans le pâturage). Dans l’autre sens, les commandes envoyées par la webapp sont retranscrites en triggers injectés directement dans la session d’exécution ALH pour faire progresser le scénario.</p>
+      </details>
+    </div>
   </section>
+  <div class="pasture" aria-hidden="true">
+    <span class="walk"><img src="../../home/lamb.svg" alt="" draggable="false"></span>
+    <img class="flip" src="../../home/lamb.svg" alt="" draggable="false">
+    <img class="bear" src="../../assets/sim/bear.svg" alt="" draggable="false">
+    <img class="small" src="../../home/lamb.svg" alt="" draggable="false">
+  </div>
 </article>
 </div>
 
@@ -246,5 +486,6 @@
 <script src="../../js/sim-motion.js"></script>
 <script src="../../js/sim-scene.js"></script>
 <script src="tp.js"></script>
+<script src="../flock.js"></script>
 </body>
 </html>
