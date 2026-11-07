@@ -1,0 +1,332 @@
+<!doctype html>
+<!-- Article de blog : valider la mission jusqu'à l'architecture logique. Page autonome du site ; elle réutilise
+     les spécifications et les incréments de la Part 3 (part3/content/archs.js, part3/content/config.js) et le
+     simulateur js/logical-engine.js. Ses figures sont dans article.js. -->
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rejouer la mission · MBSE Shepherd</title>
+<meta name="description" content="Valider une mission tôt, du fonctionnel jusqu'à l'architecture logique, en rejouant les mêmes scénarios : l'approche, appliquée à un drone berger modélisé en SysML.">
+<meta property="og:title" content="Rejouer la mission pour valider l'architecture logique">
+<meta property="og:description" content="Une approche d'early validation en SysML : la mission validée par ses scénarios, dupliquée dans un orchestrateur et des sous-systèmes, construite et rejouée incrément par incrément.">
+<meta property="og:image" content="../assets/img/promo-parts34-poster.jpg">
+<meta name="theme-color" content="#e8eee1" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0e1814" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2315221a'/%3E%3Crect x='11' y='11' width='10' height='10' rx='2' fill='%23fbfdf8'/%3E%3Cg fill='none' stroke='%23fbfdf8' stroke-width='2.4'%3E%3Ccircle cx='9' cy='9' r='4'/%3E%3Ccircle cx='23' cy='9' r='4'/%3E%3Ccircle cx='9' cy='23' r='4'/%3E%3Ccircle cx='23' cy='23' r='4'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:ital,wght@0,400;0,600;0,700;1,400&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:wght@400;700&display=swap">
+<link rel="stylesheet" href="article.css">
+</head>
+<body>
+
+<header class="masthead">
+  <a class="brand" href="../">MBSE Shepherd</a>
+  <button class="theme" id="theme-btn" type="button" aria-label="Changer de thème">◐</button>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="Sommaire">
+  <p class="toc-title">Sommaire</p>
+  <ol>
+    <li><a href="#approche">L’approche</a></li>
+    <li><a href="#early">Early validation</a></li>
+    <li><a href="#mission">La mission</a></li>
+    <li><a href="#scenarios">Les scénarios</a></li>
+    <li><a href="#simuler">Simuler du SysML</a></li>
+    <li><a href="#logique">L’architecture logique</a></li>
+    <li><a href="#limites">Limites et suite</a></li>
+    <li><a href="#annexes">Annexes</a></li>
+  </ol>
+</nav>
+
+<article class="post">
+  <header class="post-head">
+    <p class="kicker">MBSE · SysML · early validation</p>
+    <h1>Rejouer la mission pour valider l’architecture logique</h1>
+    <p class="lede">La mission validée en fonctionnel, dupliquée dans un orchestrateur et des sous-systèmes, construite incrément par incrément, et jugée à chaque fois par les mêmes scénarios. Démonstration sur un drone berger modélisé en SysML.</p>
+    <p class="byline">Quentin Cespédès · novembre 2026</p>
+  </header>
+
+  <p>Dans un projet MBSE, la couche logique est souvent celle qu’on saute. Elle devrait servir à comparer plusieurs architectures avant de figer le physique. Mais chaque modification y coûte cher : on recâble des ports, on reprend des interfaces, on refait des diagrammes. Alors on passe au physique, et la mission validée en fonctionnel n’est plus vérifiée jusqu’aux essais.</p>
+  <p>Cet article montre, sur un cas concret, une façon de garder cette couche et de la valider à coût maîtrisé. Toutes les figures sont jouables : cliquez sur les scénarios et les incréments.</p>
+
+  <!-- ───────── 1 ───────── -->
+  <section id="approche">
+    <h2><span class="n">1</span> L’approche en quatre étapes</h2>
+    <ol class="steps">
+      <li><b>Décrire les scénarios</b><span>Pour un cas d’utilisation : nominal, alternatifs, dysfonctionnels, sous une forme qu’une machine peut rejouer.</span><a href="#scenarios">section 4</a></li>
+      <li><b>Valider la mission</b><span>La mission est une machine d’états ; on la valide en rejouant ces scénarios.</span><a href="#mission">section 3</a></li>
+      <li><b>Dupliquer vers le logique</b><span>États et fonctions copiés dans un orchestrateur et des sous-systèmes ; le fonctionnel reste intact.</span><a href="#logique">section 6</a></li>
+      <li><b>Construire et rejouer</b><span>Un socle, puis une fonctionnalité à la fois ; les mêmes scénarios à chaque incrément.</span><a href="#construire">section 6</a></li>
+    </ol>
+    <figure class="fig">
+      <svg class="hero" viewBox="0 0 760 520" role="img" aria-label="Une mission, dupliquée puis retravaillée, jugée par les mêmes scénarios.">
+        <defs><marker id="h-head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="a-head"/></marker></defs>
+        <g class="h-step h1"><rect x="20" y="20" width="176" height="480" rx="12" class="h-scen"/>
+          <text x="36" y="48" class="h-name">Scénarios</text><text x="36" y="66" class="h-sub">écrits une fois</text>
+          <text x="36" y="104" class="h-fam">nominal</text><text x="36" y="124" class="h-it">Un ours passe</text>
+          <text x="36" y="160" class="h-fam">alternatif</text><text x="36" y="180" class="h-it">L’ours approche</text><text x="36" y="198" class="h-it">puis recule</text>
+          <text x="36" y="234" class="h-fam">dysfonctionnel</text><text x="36" y="254" class="h-it">L’ours ne fuit pas</text>
+          <text x="36" y="470" class="h-sub">rejoués à chaque</text><text x="36" y="486" class="h-sub">itération</text></g>
+        <path d="M196 120 H226" class="h-replay" marker-end="url(#h-head)"/>
+        <path d="M196 380 H226" class="h-replay r2" marker-end="url(#h-head)"/>
+        <g class="h-step h2"><rect x="228" y="20" width="512" height="190" rx="12" class="h-band"/>
+          <text x="244" y="44" class="h-name">Fonctionnel : la mission</text>
+          <rect x="244" y="60" width="236" height="134" rx="10" class="h-box"/><text x="258" y="80" class="h-name s">Patrolling</text>
+          <rect x="258" y="92" width="208" height="26" rx="7" class="h-box"/><text x="362" y="110" class="h-it" text-anchor="middle">Perimeter watch</text>
+          <rect x="258" y="124" width="208" height="26" rx="7" class="h-box"/><text x="362" y="142" class="h-it" text-anchor="middle">Sheep Monitoring</text>
+          <rect x="258" y="156" width="208" height="26" rx="7" class="h-box"/><text x="362" y="174" class="h-it" text-anchor="middle">Predator Monitoring</text>
+          <rect x="500" y="60" width="224" height="134" rx="10" class="h-box"/><text x="612" y="88" class="h-name s" text-anchor="middle">Predator Detected</text>
+          <text x="612" y="120" class="h-it" text-anchor="middle">Predator tracking</text><text x="612" y="142" class="h-sub" text-anchor="middle">⇅</text><text x="612" y="164" class="h-it" text-anchor="middle">Predator counteraction</text></g>
+        <g class="h-step h3"><path d="M484 210 V256" class="a-arrow" marker-end="url(#h-head)"/>
+          <text x="498" y="232" class="h-name s">dupliquée : états et fonctions</text><text x="498" y="250" class="h-sub">le fonctionnel reste intact</text></g>
+        <g class="h-step h4"><rect x="228" y="262" width="512" height="238" rx="12" class="h-band"/>
+          <text x="244" y="286" class="h-name">Logique : orchestrateur et sous-systèmes</text>
+          <rect x="244" y="298" width="480" height="46" rx="10" class="h-box h-orch"/><text x="484" y="318" class="h-name s" text-anchor="middle">Mission Orchestrator</text><text x="484" y="334" class="h-sub" text-anchor="middle">Transit → Patrolling → Predator tracking ⇄ counteraction</text>
+          <path d="M484 344 V444 M476 384 H492 M476 444 H492" class="h-line"/>
+          <rect x="244" y="360" width="232" height="46" rx="10" class="h-box"/><text x="360" y="380" class="h-name s" text-anchor="middle">Zone Patrolling</text><text x="360" y="396" class="h-sub" text-anchor="middle">Path Standby ⇄ Perimeter watch</text>
+          <rect x="492" y="360" width="232" height="46" rx="10" class="h-box"/><text x="608" y="380" class="h-name s" text-anchor="middle">SheepMonitoring</text><text x="608" y="396" class="h-sub" text-anchor="middle">Sheep Monitoring ⇄ Deactivated</text>
+          <rect x="244" y="420" width="232" height="46" rx="10" class="h-box"/><text x="360" y="440" class="h-name s" text-anchor="middle">Predator Management</text><text x="360" y="456" class="h-sub" text-anchor="middle">Monitoring · Deterring</text>
+          <rect x="492" y="420" width="232" height="46" rx="10" class="h-box"/><text x="608" y="440" class="h-name s" text-anchor="middle">Tracking</text><text x="608" y="456" class="h-sub" text-anchor="middle">Tracking Idle ⇄ Tracking Target</text>
+          <text x="244" y="488" class="h-sub">puis retravaillée : états, fonctions, échanges, un sous-système à la fois</text></g>
+      </svg>
+      <figcaption>Figure 1. Les scénarios sont écrits une fois et jugent les deux couches.</figcaption>
+    </figure>
+    <p>Le fil rouge : <i>Pasture Sentinel</i>, un drone berger qui garde un troupeau et éloigne les prédateurs, modélisé en SysML dans Cameo pour un bureau d’études de l’ISAE. Un seul cas d’utilisation sert d’exemple de bout en bout : <b>protéger le troupeau d’un prédateur</b>.</p>
+  </section>
+
+  <!-- ───────── 2 ───────── -->
+  <section id="early">
+    <h2><span class="n">2</span> Le principe de l’early validation</h2>
+    <p>L’ingénierie système distingue deux questions (ISO/IEC/IEEE 15288). <b>Vérifier</b>, c’est montrer que le système est conforme à ce qui est spécifié. <b>Valider</b>, c’est montrer qu’il répond au besoin, dans son usage prévu. L’early validation consiste à valider tôt, sur des modèles, avant que le physique existe. Le SEBoK le recommande pour l’architecture logique : la vérifier et la valider autant que possible avec des modèles exécutables.</p>
+    <figure class="fig">
+      <svg viewBox="0 0 760 236" role="img" aria-label="Coût relatif de correction d'une erreur d'exigence selon la phase où on la trouve : 1 en exigences, 3 à 8 en conception, 21 à 78 en intégration et essais, 29 à plus de 1500 en exploitation.">
+        <text x="20" y="24" class="h-name">Corriger une erreur d’exigence coûte plus cher à chaque phase</text>
+        <text x="20" y="42" class="h-sub">Coût relatif, échelle logarithmique (Stecklein et al., NASA, 2004)</text>
+        <g class="cost">
+          <line x1="220" x2="220" y1="56" y2="214" class="c-axis"/>
+          <text x="210" y="80" class="h-it" text-anchor="end">Exigences</text><rect x="220" y="66" width="6" height="20" rx="3" class="c-bar"/><text x="236" y="81" class="c-val">1</text>
+          <text x="210" y="120" class="h-it" text-anchor="end">Conception</text><rect x="292" y="106" width="65" height="20" rx="4" class="c-bar"/><text x="367" y="121" class="c-val">3 à 8</text>
+          <text x="210" y="160" class="h-it" text-anchor="end">Intégration et essais</text><rect x="420" y="146" width="87" height="20" rx="4" class="c-bar"/><text x="517" y="161" class="c-val">21 à 78</text>
+          <text x="210" y="200" class="h-it" text-anchor="end">Exploitation</text><rect x="441" y="186" width="260" height="20" rx="4" class="c-bar c-hot"/><text x="695" y="201" class="c-val c-in" text-anchor="end">29 à plus de 1 500</text>
+        </g>
+      </svg>
+    </figure>
+    <p>Ici, valider veut dire une chose précise : <b>la mission se déroule comme les scénarios opérationnels le prévoient</b>. Les bons états sont atteints dans le bon ordre, les décisions sont prises, les acteurs reçoivent ce qu’ils doivent recevoir. Trois conditions la rendent possible :</p>
+    <div class="cards">
+      <div class="card"><b>Un référentiel de scénarios</b><span>écrit une fois en opérationnel : le juge commun aux deux couches.</span></div>
+      <div class="card"><b>Un modèle exécutable</b><span>à chaque couche : sans simulation, on relit, on ne valide pas.</span></div>
+      <div class="card"><b>Un rejeu bon marché</b><span>on ne rejoue que ce qui coûte peu à rejouer.</span></div>
+    </div>
+    <p class="aside">Ce que l’approche ne valide pas : les performances, la physique du vol, les flux continus. Elle valide la logique de la mission : qui fait quoi, quand, et qui prévient qui.</p>
+  </section>
+
+  <!-- ───────── 3 ───────── -->
+  <section id="mission">
+    <h2><span class="n">3</span> D’abord, valider la mission</h2>
+    <p>La couche fonctionnelle dit <b>quoi faire, et quand, pour remplir la mission</b>, sans dire qui le fait. Le SEBoK sépare ces deux aspects : les fonctions, ce que le système transforme pour sa mission, et le comportement, la façon dont elles s’enchaînent selon les modes et les scénarios. Arcadia place ce niveau dans l’analyse système, où le système est une boîte noire (Voirin, 2017), et Harmony aMBSE fait de la machine d’états la spécification de référence d’un cas d’utilisation.</p>
+    <div class="cards">
+      <div class="card"><b>Quand</b><span>une machine d’états de mission : les étapes, leurs transitions, ce qui tourne en parallèle.</span></div>
+      <div class="card"><b>Quoi</b><span>des fonctions de service, portées par les états : surveiller le périmètre, suivre l’ours…</span></div>
+      <div class="card"><b>Avec qui</b><span>les échanges avec les acteurs : ce que l’opérateur envoie, ce qu’il doit apprendre.</span></div>
+    </div>
+    <p><b>Ne détailler que ce qui éclaire la mission.</b> Le critère habituel est de décomposer une fonction jusqu’à pouvoir l’allouer à un composant ; ici, il est reporté à la couche logique. Ce qui n’est pas modélisé va dans la spécification. Savoir si l’ours est trop près suppose une géométrie de zone, une position, un seuil : ce sont des exigences rattachées à la fonction. La machine d’états reçoit seulement le résultat, un signal envoyé par l’environnement simulé.</p>
+
+    <h3>Un cas d’utilisation, trois scénarios</h3>
+    <p>Précondition commune : le drone est prêt et patrouille. Choisissez un scénario et rejouez-le sur la mission.</p>
+    <figure class="fig wide" data-fig="mission"></figure>
+    <p class="fig-cap">Figure 2. La mission de l’UC « protéger le troupeau d’un prédateur ». Chaque étape du scénario a ses états attendus ; un ✗ signale un état jamais atteint.</p>
+    <p><b>Ce que montre la figure.</b> Sur la mission du TP, les scénarios nominal et alternatif passent. Le scénario dysfonctionnel échoue : la mission dissuade l’ours indéfiniment, et personne ne mesure le temps qu’il passe dans la zone de sécurité. L’échec de la dissuasion n’est jamais détecté, et l’opérateur n’est jamais prévenu. C’est exactement ce qu’on veut trouver tôt.</p>
+    <p>La correction se fait dans la mission : la région <i>Mission Monitoring</i> gagne trois états. Elle entre en <i>Safe Area Intrusion</i> quand l’ours s’approche, mesure le temps, et passe en <i>Predator Not Repelled</i> au bout de 30 s, ce qui alerte l’opérateur. Le même scénario, rejoué, passe.</p>
+  </section>
+
+  <!-- ───────── 4 ───────── -->
+  <section id="scenarios">
+    <h2><span class="n">4</span> Des scénarios qu’une machine peut rejouer</h2>
+    <p>En SysML, un scénario se décrit par un diagramme de séquence rattaché à son cas d’utilisation. C’est lisible, mais il dit ce qui est échangé, pas dans quel état chaque partie doit être ensuite. On peut l’ajouter : UML prévoit des invariants d’état sur les lignes de vie, et les <i>Live Sequence Charts</i> ont montré dès 2001 des scénarios exécutables et vérifiables (Damm et Harel, 2001). Mais avec des régions parallèles, plusieurs états sont actifs à la fois, le diagramme se charge vite, et chaque renommage d’état oblige à le reprendre.</p>
+    <figure class="fig wide" data-fig="scenario"></figure>
+    <p class="fig-cap">Figure 3. Le même scénario en trois vues. Passez d’une vue à l’autre.</p>
+    <p>Le choix fait ici : <b>le scénario est un fichier de données</b> qui étend le diagramme de séquence avec les états attendus, et le diagramme de séquence en est régénéré, en boîte noire ou en boîte blanche, coloré selon le résultat. Chaque étape donne un verdict sur l’état de tout le système. Une phase peut être une précondition, jouée mais pas mesurée, pour ne rejouer que ce qu’on vient de construire. Deux contrôles ne figent pas l’ordre : un état atteint au moins une fois pendant une phase, un état jamais atteint.</p>
+    <h3>Rejouer beaucoup de scénarios</h3>
+    <p>Rejouer vingt scénarios après chaque changement n’est réaliste que si c’est automatique. Sur ce cas d’étude, une vingtaine de fichiers couvrent la mission et les architectures logiques, et trois mécanismes les rendent gérables :</p>
+    <ul>
+      <li><b>Des scénarios ciblés.</b> Le nominal est découpé en phases ; on en tire un scénario par phase, les phases d’avant devenant sa précondition.</li>
+      <li><b>La couverture.</b> Après un rejeu, on obtient les états et transitions couverts, et les branches jamais empruntées, avec le scénario ciblé qui les jouerait.</li>
+      <li><b>Un rejeu sans interface.</b> La simulation se pilote par appels API : démarrer, envoyer un signal, lire les états. Un script ou une page web rejoue la liste et rend un rapport, comme dans un pipeline.</li>
+    </ul>
+    <p class="aside">Limites du format : il vit hors du modèle (la traçabilité vers le cas d’utilisation passe par un champ et par le diagramme régénéré), les étapes sont des signaux injectés un par un, sans valeurs, et les états attendus s’écrivent par leur nom.</p>
+  </section>
+
+  <!-- ───────── 5 ───────── -->
+  <section id="simuler">
+    <h2><span class="n">5</span> Ce qu’il faut pour qu’un modèle SysML simule</h2>
+    <p>Un diagramme SysML ne s’exécute pas tout seul. Le simulateur de Cameo s’appuie sur les sémantiques exécutables de l’OMG, fUML pour les activités et PSSM pour les machines d’états : il exécute ce que le modèle dit, et seulement ça. Chaque composant a sa machine d’états ; un envoi de signal vise un port relié au bon destinataire, avec une interface compatible des deux côtés ; une garde que le simulateur ne sait pas évaluer ouvre une fenêtre de dialogue à chaque passage. Ces règles sont simples une à une, mais une architecture à dix composants demande de les appliquer des centaines de fois. C’est ce coût qui fait sauter la couche logique.</p>
+    <table>
+      <thead><tr><th>Choix</th><th>Ce qu’il permet</th><th>Ce qu’il coûte</th></tr></thead>
+      <tbody>
+        <tr><td><b>Une logique à base de signaux</b></td><td>Une simulation rapide, à événements, facile à rejouer</td><td>Tout n’est pas signal : énergie, flux de données, grandeurs continues manquent</td></tr>
+        <tr><td><b>Des acteurs joués par des pilotes</b></td><td>L’opérateur et le pâturage relaient les signaux du scénario : aucun clic</td><td>Les acteurs n’ont que le comportement qu’on leur donne</td></tr>
+        <tr><td><b>Des calculs remplacés par leur résultat</b></td><td>Plus de fenêtre de dialogue, des décisions explicites</td><td>La décision est supposée, pas démontrée</td></tr>
+      </tbody>
+    </table>
+    <p>Les gestes répétitifs sont automatisés par le plugin MBSE Shepherd : dupliquer, créer les ports et les interfaces à partir des signaux de chaque machine d’états, connecter, vérifier que chaque signal a un destinataire. <b>Sans cette automatisation, simuler une architecture logique coûterait trop cher pour qu’on le fasse.</b> Le détail est en <a href="#annexe-b">annexe B</a> et <a href="#annexe-c">annexe C</a>.</p>
+  </section>
+
+  <!-- ───────── 6 ───────── -->
+  <section id="logique">
+    <h2><span class="n">6</span> Puis, valider l’architecture logique</h2>
+    <p>La couche logique dit <b>qui fait quoi, et si l’ensemble tient la mission</b>. Le SEBoK la définit comme un ensemble de concepts et de principes techniques qui supportent le fonctionnement du système, sans choix d’implémentation ; plusieurs candidates y sont comparées, une est retenue. Les analyses commencées en fonctionnel (analyse préliminaire des risques, arbres de défaillance) s’y affinent par composant, et de nouvelles deviennent possibles : performances, interfaces, couplage.</p>
+
+    <h3>Le pattern orchestrateur</h3>
+    <p>Les sous-systèmes portent leurs propres états et signalent ce qu’ils observent. L’orchestrateur porte les modes de la mission et décide. Une règle : <b>un seul décideur par décision</b>. Le pattern vient de trois traditions : le séquenceur des architectures robotiques à trois couches, qui choisit les comportements à activer (Gat, 1998) ; le patron <i>Médiateur</i>, qui centralise les interactions (Gamma et al., 1994) ; l’orchestration des services, opposée à la chorégraphie où chacun décrit sa part (Peltz, 2003). C’est un choix, et le TP le met en concurrence avec deux autres architectures.</p>
+
+    <h3>Dupliquer, puis faire diverger</h3>
+    <p>On sélectionne un état de la mission et on le copie dans un composant logique, avec ses sous-états, ses transitions et toutes les fonctions qu’il appelle. Chaque copie garde un lien de traçabilité <code>«refine»</code> vers l’original, et la mission n’est jamais modifiée. Pourquoi copier ? Parce que les fonctions logiques divergent des fonctions de la mission :</p>
+    <figure class="fig">
+      <svg viewBox="0 0 760 300" role="img" aria-label="La fonction Sheep monitoring de la mission se répartit entre Zone Patrolling, SheepMonitoring et Predator Management.">
+        <defs><marker id="d-head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="a-head"/></marker></defs>
+        <text x="20" y="24" class="h-name">Une fonction de la mission devient trois fonctions logiques</text>
+        <rect x="20" y="44" width="230" height="236" rx="12" class="h-band"/>
+        <text x="36" y="70" class="h-name s">Sheep monitoring</text><text x="36" y="88" class="h-sub">fonctionnel, état Sheep Monitoring</text>
+        <text x="36" y="122" class="h-it d-zp">1. Capture surrounding</text>
+        <text x="36" y="148" class="h-it d-zp">2. Analyse surrounding signature</text>
+        <text x="36" y="174" class="h-it d-sm">3. Detect Sheeps</text>
+        <text x="36" y="200" class="h-it d-sm">4. Store sheeps location</text>
+        <text x="36" y="226" class="h-it d-pm">5. Detect Predator</text>
+        <path d="M252 134 C 320 134, 320 76, 386 76" class="a-arrow" marker-end="url(#d-head)"/>
+        <path d="M252 187 C 320 187, 320 168, 386 168" class="a-arrow" marker-end="url(#d-head)"/>
+        <path d="M252 226 C 320 226, 320 254, 386 254" class="a-arrow" marker-end="url(#d-head)"/>
+        <rect x="388" y="44" width="352" height="66" rx="10" class="h-box d-box-zp"/><text x="404" y="68" class="h-name s">Zone Patrolling · Capture surrounding</text><text x="404" y="88" class="h-sub">capte, analyse, et envoie chaque observation à l’orchestrateur</text>
+        <rect x="388" y="124" width="352" height="86" rx="10" class="h-box d-box-sm"/><text x="404" y="148" class="h-name s">SheepMonitoring · Sheep monitoring</text><text x="404" y="168" class="h-sub">réagit au troupeau en vue : Detect Sheeps, store location</text><text x="404" y="188" class="h-sub">réagit au mouton sorti : nouvelle alerte Sheep Exit Alert</text>
+        <rect x="388" y="224" width="352" height="56" rx="10" class="h-box d-box-pm"/><text x="404" y="248" class="h-name s">Predator Management</text><text x="404" y="266" class="h-sub">garde Detect Predator, demande le suivi à l’orchestrateur</text>
+      </svg>
+      <figcaption>Figure 4. La mission reste la référence validée ; la copie, elle, se redécoupe entre composants.</figcaption>
+    </figure>
+    <p>Un indice pour découper : une région parallèle de la mission est souvent un sous-système. <i>Patrolling</i> donne la patrouille, les moutons, le prédateur. La copie fait aussi apparaître des questions que la mission ne posait pas, et chaque candidate y répond autrement :</p>
+    <table>
+      <thead><tr><th>Question</th><th>Orchestrateur central</th><th>Orchestrateur et fonctionnalités autonomes</th><th>Sans chef</th></tr></thead>
+      <tbody>
+        <tr><td>Qui tient la caméra, pour les moutons et pour l’ours ?</td><td><i>Zone Patrolling</i> capte et envoie tout à l’orchestrateur, qui répartit</td><td>Un composant dédié, <i>Zone Surveillance</i>, envoie à chaque fonctionnalité</td><td><i>Zone Surveillance</i> envoie directement aux surveillances</td></tr>
+        <tr><td>Qui pilote l’autopilote quand l’ours arrive ?</td><td>L’orchestrateur accorde le suivi, coupe la patrouille et les moutons</td><td>La défense prédateur demande la main, puis pilote elle-même</td><td>La gestion prédateur décide seule et coupe les moutons (le « patch »)</td></tr>
+        <tr><td>Qui prévient l’opérateur ?</td><td>L’orchestrateur</td><td>L’orchestrateur et la garde des moutons</td><td>Chaque composant, directement</td></tr>
+      </tbody>
+    </table>
+    <p>Pour chaque échange, deux questions suffisent : <b>qui déclenche la transition, et qui d’autre doit savoir ?</b> Si personne d’autre, l’envoi reste interne ; sinon il devient un échange sur un port ; et si l’information sort du système, elle devient un signal externe distinct.</p>
+
+    <h3 id="construire">Un socle, puis une fonctionnalité à la fois</h3>
+    <p>C’est ce qui rend l’approche praticable. On ne construit pas l’architecture d’un bloc : on pose <b>un socle</b>, les composants techniques sans enjeu d’architecture (mise sous tension, configuration, liaison sol, autopilote), puis on ajoute <b>les fonctionnalités</b> une par une. À chaque incrément, on rejoue la phase du scénario qui le concerne, les incréments précédents servant de précondition. Rejouez-les :</p>
+    <figure class="fig wide" data-fig="build"></figure>
+    <p class="fig-cap">Figure 5. La construction de l’architecture logique, rejouée incrément par incrément avec le simulateur du site, sur les spécifications des modèles de correction.</p>
+    <p><b>Le rejeu attrape de vraies erreurs.</b> Passez sur l’architecture sans chef et rejouez « Ours, sans patch » : la gestion prédateur est branchée, mais personne ne suspend la surveillance des moutons ni ne rend l’autopilote à la patrouille. Deux étapes passent au rouge. On ajoute le patch, on rejoue « Ours » : c’est vert.</p>
+    <figure class="fig">
+      <svg viewBox="0 0 760 300" role="img" aria-label="Boucle : construire un incrément, rejouer, corriger dans le logique ou remonter au fonctionnel, puis incrément suivant.">
+        <defs><marker id="l-head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="a-head"/></marker></defs>
+        <text x="20" y="24" class="h-name">On ne quitte un incrément que quand ses scénarios repassent</text>
+        <rect x="20" y="60" width="180" height="56" rx="10" class="h-box"/><text x="110" y="84" class="h-name s" text-anchor="middle">Ajouter un incrément</text><text x="110" y="102" class="h-sub" text-anchor="middle">états, fonctions, échanges</text>
+        <path d="M200 88 H262" class="a-arrow" marker-end="url(#l-head)"/>
+        <rect x="264" y="60" width="200" height="56" rx="10" class="h-box"/><text x="364" y="84" class="h-name s" text-anchor="middle">Rejouer sa phase</text><text x="364" y="102" class="h-sub" text-anchor="middle">précédents en précondition</text>
+        <path d="M464 88 H524" class="a-arrow" marker-end="url(#l-head)"/>
+        <polygon points="530,88 610,48 690,88 610,128" class="h-box"/><text x="610" y="86" class="h-name s" text-anchor="middle">Mission</text><text x="610" y="102" class="h-name s" text-anchor="middle">tenue ?</text>
+        <path d="M610 128 V188" class="a-arrow" marker-end="url(#l-head)"/><text x="620" y="164" class="h-sub">oui</text>
+        <rect x="510" y="190" width="200" height="56" rx="10" class="h-box h-orch"/><text x="610" y="214" class="h-name s" text-anchor="middle">Incrément suivant</text><text x="610" y="232" class="h-sub" text-anchor="middle">et tout rejouer à la fin</text>
+        <path d="M530 88 C 500 160, 300 170, 110 118" class="a-arrow" marker-end="url(#l-head)"/><text x="300" y="168" class="h-sub" text-anchor="middle">non : corriger dans le logique</text>
+        <path d="M690 88 C 740 88, 740 20, 520 20" class="a-arrow dashed" marker-end="url(#l-head)"/><text x="512" y="24" class="h-sub" text-anchor="end">mission fausse : remonter au fonctionnel, la traçabilité dit quoi reprendre</text>
+        <path d="M610 246 V270 H110 V118" class="a-arrow" marker-end="url(#l-head)"/>
+      </svg>
+      <figcaption>Figure 6. Quand un scénario casse dans le logique, on corrige dans le logique ; quand il révèle une mission fausse, on remonte au fonctionnel.</figcaption>
+    </figure>
+  </section>
+
+  <!-- ───────── 7 ───────── -->
+  <section id="limites">
+    <h2><span class="n">7</span> Limites connues et suite</h2>
+    <p>On obtient une méthode guidée par la validation, à trois niveaux : le modèle est correct en SysML, il est exécutable, et il rejoue la mission. On sait ce qui est couvert et ce qui ne l’est pas. Ses limites sont connues :</p>
+    <table>
+      <thead><tr><th>Limite</th><th>Conséquence</th><th>Piste</th></tr></thead>
+      <tbody>
+        <tr><td>Une logique à base de signaux</td><td>Énergie, flux de données, grandeurs continues absents</td><td>Étendre aux flux, avec des valeurs portées par les ports</td></tr>
+        <tr><td>Des fonctions de haut niveau</td><td>Une décision supposée (l’ours est trop près) n’est pas démontrée</td><td>Raffiner les fonctions critiques, et seulement celles-là</td></tr>
+        <tr><td>Une comparaison sur la seule réponse aux scénarios</td><td>On sait qu’une candidate tient la mission, pas qu’elle est la meilleure</td><td>Des mesures d’efficacité tirées du rejeu (part du temps en garde, temps de réaction), puis masse, coût, couplage</td></tr>
+        <tr><td>Des scénarios hors du modèle</td><td>Une traçabilité vers les cas d’utilisation qui n’est pas native</td><td>Générer le fichier depuis le diagramme de séquence, et non l’inverse</td></tr>
+      </tbody>
+    </table>
+    <p>Deux suites sont déjà à portée. Une deuxième candidate coûte peu : on repart de la même mission, on regroupe ou on scinde des composants, on reconnecte, on rejoue. Et comme la simulation s’ouvre par API, on peut y brancher d’autres outils : une scène 3D qui montre le drone au-dessus du troupeau, des outils qui jouent les scénarios, réagissent, journalisent et aident au diagnostic.</p>
+    <figure class="fig">
+      <video controls preload="none" playsinline poster="../assets/img/promo-parts34-poster.jpg" src="../assets/video/promo-parts34-en.mp4"></video>
+      <figcaption>Figure 7. Le TP en film (en anglais) : la scène 3D du pâturage pilotée par la simulation de Cameo.</figcaption>
+    </figure>
+    <p>Le TP complet, ses modèles et la simulation sont en ligne : <a href="../">shepherd.chaos-art.fr</a>.</p>
+  </section>
+
+  <section id="refs">
+    <h2>Références</h2>
+    <ul class="refs">
+      <li>J. M. Stecklein et al., <a href="https://ntrs.nasa.gov/citations/20100036670"><i>Error Cost Escalation Through the Project Life Cycle</i></a>, NASA JSC, 2004.</li>
+      <li>ISO/IEC/IEEE 15288:2023, <i>Systems and software engineering — System life cycle processes</i>.</li>
+      <li>SEBoK, <a href="https://sebokwiki.org/wiki/Functional_Architecture"><i>Functional Architecture</i></a> et <a href="https://sebokwiki.org/wiki/Logical_Architecture"><i>Logical Architecture</i></a>.</li>
+      <li>J.-L. Voirin, <i>Model-based System and Architecture Engineering with the Arcadia Method</i>, ISTE Press, 2017.</li>
+      <li>B. P. Douglass, <a href="https://www.bruce-douglass.com/harmony-ambse-functional-analysis"><i>Harmony aMBSE: functional analysis</i></a>.</li>
+      <li>W. Damm et D. Harel, <i>LSCs: Breathing Life into Message Sequence Charts</i>, Formal Methods in System Design, 2001.</li>
+      <li>OMG, <i>Semantics of a Foundational Subset for Executable UML Models</i> (fUML) et <i>Precise Semantics of UML State Machines</i> (PSSM).</li>
+      <li>E. Gat, <a href="https://u.cs.biu.ac.il/~galk/teach/current/intsys/readings/on-three-layer-arch-tla-1998.pdf"><i>On Three-Layer Architectures</i></a>, dans <i>Artificial Intelligence and Mobile Robots</i>, AAAI Press, 1998.</li>
+      <li>E. Gamma, R. Helm, R. Johnson, J. Vlissides, <i>Design Patterns</i>, Addison-Wesley, 1994.</li>
+      <li>C. Peltz, <a href="https://doi.org/10.1109/MC.2003.1236471"><i>Web Services Orchestration and Choreography</i></a>, IEEE Computer, vol. 36, n° 10, 2003.</li>
+    </ul>
+  </section>
+
+  <section id="annexes">
+    <h2>Annexes</h2>
+    <details id="annexe-a"><summary>A. Les champs d’un scénario</summary>
+      <table>
+        <thead><tr><th>Champ</th><th>Rôle</th></tr></thead>
+        <tbody>
+          <tr><td><code>context</code></td><td>Le bloc simulé : le bloc de mission seul en fonctionnel, le contexte de simulation en logique</td></tr>
+          <tr><td><code>systems</code>, <code>drivers</code></td><td>Les parties observées, et les pilotes qui injectent les signaux</td></tr>
+          <tr><td><code>phases</code></td><td>Un but par phase ; <code>setup: true</code> en fait une précondition, jouée et non mesurée</td></tr>
+          <tr><td><code>steps</code></td><td>Un signal, le pilote qui l’envoie (<code>into</code>), une note</td></tr>
+          <tr><td><code>expect</code></td><td>Un état, ou une liste d’états tous actifs (régions parallèles), par partie</td></tr>
+          <tr><td><code>absent</code></td><td>Les états qui ne doivent pas être actifs après l’étape</td></tr>
+          <tr><td><code>settle</code>, <code>timeout</code></td><td>L’attente après chaque signal, puis la durée pendant laquelle les états sont relus jusqu’à ce que l’étape tienne</td></tr>
+          <tr><td><code>reached</code>, <code>never</code></td><td>Atteint au moins une fois pendant la phase ; jamais atteint pendant le scénario</td></tr>
+        </tbody>
+      </table>
+    </details>
+    <details id="annexe-b"><summary>B. Règles de modélisation simulable</summary>
+      <ul>
+        <li>Une machine d’états par composant, en comportement du bloc. Seuls les changements de mode sont des transitions.</li>
+        <li>Réagir sans changer de mode : une activité en boucle dans l’état (attendre, traiter, recommencer), jamais une auto-transition.</li>
+        <li>Un envoi de signal porte toujours son port ; sans port, il n’atteint que son propre bloc.</li>
+        <li>Un port par paire de composants, typé par une interface dont les propriétés de flux sont orientées vues du bloc.</li>
+        <li>Un état qui attend une réponse envoie sa demande en entrée d’état, pas dans l’effet de la transition.</li>
+        <li>Aucun ordre diffusé sans preneur : un événement que rien n’attend peut bloquer le composant.</li>
+        <li>Les acteurs sont des pilotes dans un contexte de simulation ; une décision sans données devient un signal d’observation.</li>
+      </ul>
+      <p>Est « simulable » un modèle qui se construit sans avertissement, passe la validation SysML sans résultat, n’a aucun signal sans destinataire, démarre avec toutes ses machines d’états dans leur état initial, et rejoue chaque étape de ses scénarios.</p>
+    </details>
+    <details id="annexe-c"><summary>C. Les automatisations du plugin</summary>
+      <table>
+        <thead><tr><th>Famille</th><th>Commandes</th><th>Ce qu’elles font</th></tr></thead>
+        <tbody>
+          <tr><td>Transition</td><td><i>Logical Transition</i></td><td>Copie des états de la mission dans un composant, sous-états, transitions et fonctions appelées compris, avec <code>«refine»</code></td></tr>
+          <tr><td>Ports et interfaces</td><td><i>Create All Missing Signal Ports</i>, <i>Propagate Interface To Connected Port</i></td><td>Un port par signal envoyé ou attendu, typé par une interface ; la même, conjuguée, en face</td></tr>
+          <tr><td>Échanges externes</td><td><i>Delegate to external systems</i></td><td>Duplique un signal en signal externe et le délègue au port frontière</td></tr>
+          <tr><td>Organisation</td><td><i>Merge Blocks</i>, <i>Merge Parts</i>, <i>Merge Ports</i>, <i>Logical Organizer</i></td><td>Regrouper ou scinder des composants, ranger par couche</td></tr>
+          <tr><td>Connexion</td><td><i>Auto Connect</i></td><td>Relie les ports dont les interfaces sont compatibles</td></tr>
+          <tr><td>Contrôle et rejeu</td><td><i>Check Signal Flow</i>, <i>Simulation Scenarios</i></td><td>Chaque signal a-t-il un destinataire ? Rejeu, rapport, couverture</td></tr>
+        </tbody>
+      </table>
+    </details>
+  </section>
+</article>
+</div>
+
+<script src="../part3/content/config.js"></script>
+<script src="../part3/content/archs.js"></script>
+<script src="../js/logical-engine.js"></script>
+<script src="article.js"></script>
+</body>
+</html>
