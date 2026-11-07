@@ -1461,3 +1461,13 @@ body.teacher {
 .pair-how li { padding-left: 0.2rem; }
 .pair-how li::before { content: none; }
 .pair-tip [data-widget="linkStatus"] { margin-top: 0.7rem; }
+
+/* Embedded in an article (?embed=...): the guide shows no way to leave the page it is quoted in.
+   nodock = the scene as is, without Back / Next; scene = also without the top bar; widget = the interactive piece alone
+   (js/engine.js hides the other blocks, ?w= names the widget). */
+.embed .dock, .embed #toast { display: none !important; }
+.embed #stage { padding-bottom: 1.2rem; min-height: 0; }
+.embed-scene .top, .embed-widget .top, .embed-scene .sim-drawer, .embed-widget .sim-drawer, .embed-widget .chart-bg { display: none !important; }
+.embed-widget body, .embed-scene body { background: transparent; }
+.embed-widget #stage { padding: .6rem var(--gutter) 1rem; }
+.embed-widget .scene { max-width: none; }

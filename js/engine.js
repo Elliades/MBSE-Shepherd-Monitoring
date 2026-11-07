@@ -147,6 +147,12 @@
   function stepId(scene, path, i) { return scene.id + '/' + path + '/' + i; }
   function todoId(sceneId, path, i) { return sceneId + '/' + path + '/t' + i; }
 
+  /* ───────── embedded in an article: ?embed=nodock | scene | widget  (&w=<widget>) ─────────
+     The article quotes a piece of the guide; the reader must not be able to leave it (no Next, no swipe, no arrow keys). */
+  const EMBED = (/[?&]embed=([a-z]+)/.exec(location.search) || [])[1] || '';
+  const EMBED_W = (/[?&]w=([A-Za-z0-9_]+)/.exec(location.search) || [])[1] || '';
+  if (EMBED) document.documentElement.classList.add('embed', 'embed-' + EMBED);
+
   /* ───────── state ───────── */
   const DEFAULTS = { v: 1, scene: null, last: null, seen: {}, steps: {}, answers: {}, syncT: {}, widgets: {}, todos: {}, author: !!CFG.authorMode, theme: null };
   let S = loadState();
@@ -755,6 +761,7 @@
     if (!same && !opts.quiet) art.classList.add('enter');
     $$('.scene-head, .blocks > *', art).forEach((el, i) => el.style.setProperty('--i', Math.min(i, 8)));
     mountWidgets(art, scene);
+    if (EMBED === 'widget') focusWidget(art);
     refreshChrome();
     if (!same) syncPeer();
     if (!same && window.Track) window.Track.scene();
@@ -763,6 +770,17 @@
       window.scrollTo(0, 0);
       if (opts.focus !== false) stage.focus({ preventScroll: true });
     }
+  }
+
+  /* Embedded view: only the interactive piece of the scene, with the one-line call to action just above it. */
+  function focusWidget(art) {
+    const head = $('.scene-head', art);
+    if (head) head.style.display = 'none';
+    const w = (EMBED_W && $(`[data-widget="${EMBED_W}"]`, art)) || $('[data-widget]', art);
+    const keep = w && w.closest('.blocks > *');
+    if (!keep) return;
+    const prev = keep.previousElementSibling;
+    $$('.blocks > *', art).forEach((b) => { if (b !== keep && !(b === prev && b.matches('.b-p'))) b.style.display = 'none'; });
   }
 
   function mountWidgets(root, scene) {
@@ -1171,7 +1189,7 @@
     const t = e.target;
     if (e.key === 'Escape' && ovRoot.firstChild) { closeOverlay(); return; }
     if (t instanceof Element && t.matches('.step') && (e.key === ' ' || e.key === 'Enter')) { e.preventDefault(); toggleStep(t); return; }
-    if (ovRoot.firstChild || e.altKey || e.ctrlKey || e.metaKey) return;
+    if (EMBED || ovRoot.firstChild || e.altKey || e.ctrlKey || e.metaKey) return;
     if (t instanceof Element && t.closest('input, textarea, select, [contenteditable]')) return;
     if (e.key === 'ArrowRight' || e.key === 'PageDown') { e.preventDefault(); step(1); }
     if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); step(-1); }
@@ -1180,7 +1198,7 @@
   /* swipe between scenes on touch screens */
   let touch = null;
   stage.addEventListener('touchstart', (e) => {
-    if (e.touches.length !== 1 || (e.target instanceof Element && e.target.closest('input, textarea, [data-noswipe], .fig-frame'))) { touch = null; return; }
+    if (EMBED || e.touches.length !== 1 || (e.target instanceof Element && e.target.closest('input, textarea, [data-noswipe], .fig-frame'))) { touch = null; return; }
     touch = { x: e.touches[0].clientX, y: e.touches[0].clientY, t: Date.now() };
   }, { passive: true });
   stage.addEventListener('touchend', (e) => {
