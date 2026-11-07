@@ -20,6 +20,7 @@ COPY bridge /usr/share/nginx/html/bridge
 COPY monitor /usr/share/nginx/html/monitor
 COPY tool /usr/share/nginx/html/tool
 COPY promo /usr/share/nginx/html/promo
+COPY article /usr/share/nginx/html/article
 COPY api/health.json /usr/share/nginx/html/api/health.json
 EXPOSE 80
 HEALTHCHECK --interval=15s --timeout=5s --retries=3 \

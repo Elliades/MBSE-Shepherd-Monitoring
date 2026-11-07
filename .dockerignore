@@ -8,3 +8,5 @@ Dockerfile
 # Corrections of the exercises stay off the public site (graded seminar).
 **/*orrection*
 **/*.bak
+# Cameo models of the blog article, kept local
+article/models
