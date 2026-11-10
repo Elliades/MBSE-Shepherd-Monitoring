@@ -3,6 +3,8 @@
      Cameo → online: signals (without their local seq) and the simulation state;
      online → Cameo: signals and calls of the guides (calls get a local id; the answer goes back
                      under the id the online relay gave).
+     Both ways: what the guides share with each other (their answers, `peer` frames), so the phone on
+     the online code and the guide on this PC see the same answers.
    The browser reaches the online relay with its own proxy and certificates, which a school proxy lets
    through when it blocks MagicDraw's Java. */
 (function () {
@@ -32,12 +34,21 @@
     el.textContent += `${((Date.now() - t0) / 1000).toFixed(1).padStart(7)}s  ${text}\n`;
     el.scrollTop = el.scrollHeight;
   }
+  const sides = { local: false, online: false };
   function show(side, verdict, text) {
-    const chip = $(`${side}-chip`);
-    chip.className = `chip ${verdict}`;
-    chip.textContent = { ok: 'connected', warn: 'waiting', fail: 'error', run: 'connecting' }[verdict] || verdict;
+    sides[side] = verdict === 'ok';
     $(`${side}-text`).textContent = text;
+    refreshDot();
   }
+  function refreshDot() {
+    const up = running && sides.local && sides.online;
+    $('bridge-dot').className = `dot${up ? ' up' : ''}`;
+    $('bridge-text').textContent = up ? 'Bridge is up' : 'Bridge is down';
+  }
+  function showCode(code) {
+    $('online-code').innerHTML = code.split('').map((c) => `<span>${c}</span>`).join('');
+  }
+  showCode('······');
   function counters() {
     $('n-down').textContent = counts.down;
     $('n-up').textContent = counts.up;
@@ -62,6 +73,8 @@
         if (f.event === 'plugin-online') { localUp = true; show('local', 'ok', `Cameo ${localCode} is online.`); }
         if (f.event === 'plugin-offline') { localUp = false; show('local', 'warn', 'Cameo went offline.'); }
         if (f.event === 'state') { lastState = { type: 'info', event: 'state', status: f.status, step: f.step }; send(online, lastState); counts.down += 1; }
+        /* What a guide on this PC shares (its answers) goes to the guides of the online code (the phone). */
+        if (f.event === 'peer' && f.data) send(online, { peer: f.data });
         return;
       }
       if (typeof f.res === 'string') {
@@ -134,7 +147,7 @@
           if (!http) wsFails = 0;
           onlineCode = f.code;
           try { localStorage.setItem(ONLINE_CODE_KEY, onlineCode); } catch (e) { /* not kept */ }
-          $('online-code').textContent = onlineCode.split('').join(' ');
+          showCode(onlineCode);
           const guide = `${location.origin}/?code=${onlineCode}`;
           $('guide-link').innerHTML = `On the phone: scan the code, open <a href="${guide}" target="_blank" rel="noopener">${guide}</a>, or type the 6 letters in the guide.`;
           drawQr(guide);
@@ -144,6 +157,7 @@
           if (lastState) send(online, lastState);
         }
         if (f.event === 'viewers') $('n-viewers').textContent = f.count;
+        if (f.event === 'peer' && f.data) send(local, { peer: f.data });
         return;
       }
       if (typeof f.req === 'string') {
@@ -222,6 +236,8 @@
     $('stop').disabled = true;
     if (releaseLock) { releaseLock(); releaseLock = null; }
     document.title = 'Cameo browser bridge';
+    sides.local = sides.online = false;
+    refreshDot();
     log('stopped');
   }
 
@@ -232,5 +248,6 @@
   if (params.get('start') === '1' && params.get('code')) setTimeout(start, 0);
   $('setup').addEventListener('submit', (e) => { e.preventDefault(); start(); });
   $('stop').addEventListener('click', stop);
+  $('gear').addEventListener('click', () => { const open = $('conf').hidden; $('conf').hidden = !open; $('gear').setAttribute('aria-expanded', String(open)); });
   window.addEventListener('beforeunload', () => { if (running) stop(); });
 })();

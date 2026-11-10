@@ -24,6 +24,14 @@ window.COURSE_CONFIG = {
   /* The marked seminar must not show the expected signals: the simulation panel only follows Cameo. */
   simPreview: false,
 
+  /* Timing of the session (js/track.js, monitor/ of the site): which guide, and its version. Change
+     tpVersion when the exercise changes, so the stats of the new content are kept apart. */
+  trackPart: "part2",
+  tpVersion: "2026.10",
+
+  /* Where the timing goes: "auto" = the relay of this site (<site>/relay); empty = nothing is sent. */
+  trackUrl: "auto",
+
   /* Address of the relay that links this guide to the Cameo of the student (wss://host).
      "auto" = the relay served next to the guide (wss://<this site>/relay), then the relay inside Cameo
      (ws://127.0.0.1:8787) for a code the online one does not know; on this computer, ws://127.0.0.1:8787.

@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Session monitor</title>
+<link rel="stylesheet" href="monitor.css">
+</head>
+<body>
+<main class="wrap">
+  <header class="top">
+    <div>
+      <p class="eyebrow">MBSE Shepherd · Teachers</p>
+      <h1>Session monitor</h1>
+      <p class="lead">Where the class is, and how long each scene takes. Students are anonymous: a code drawn by their browser, shown in their Flight plan.</p>
+    </div>
+    <nav class="tabs" role="tablist">
+      <button type="button" role="tab" data-view="day">Session</button>
+      <button type="button" role="tab" data-view="all">Overall</button>
+    </nav>
+  </header>
+
+  <section class="card filters">
+    <label id="f-day">Day <select id="day"></select></label>
+    <label>Guide <select id="part"></select></label>
+    <label id="f-ver">Version <select id="ver"></select></label>
+    <label id="f-min" title="Leaves out the runs that stopped early: tests, a student who only looked">Reached at least <select id="min">
+      <option value="1">1 scene</option><option value="3" selected>3 scenes</option><option value="10">10 scenes</option><option value="20">20 scenes</option>
+    </select></label>
+    <label class="check"><input type="checkbox" id="show-hidden"> Show hidden codes</label>
+    <span class="grow"></span>
+    <label class="check" id="f-live"><input type="checkbox" id="live" checked> Refresh every 20 s</label>
+    <button type="button" class="btn" id="reload">Reload</button>
+  </section>
+
+  <p class="status" id="status" role="status"></p>
+  <div id="view"></div>
+</main>
+<div class="tip" id="tip" hidden></div>
+<script src="monitor.js"></script>
+</body>
+</html>

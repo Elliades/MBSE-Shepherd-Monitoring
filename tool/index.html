@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>SysMLv1 MBSE Tool — Pasture Sentinel</title>
+  <link rel="stylesheet" href="tool.css">
+</head>
+<body>
+  <div class="win">
+    <header class="titlebar">
+      <svg class="app-ic" viewBox="0 0 20 20" aria-hidden="true"><rect x="1.5" y="1.5" width="17" height="17" rx="4"/><path d="M5.5 7h4M5.5 10h6M5.5 13h3"/><circle cx="14" cy="13" r="2"/></svg>
+      <span class="tb-app">SysMLv1 MBSE Tool</span>
+      <span class="tb-doc">Pasture Sentinel.model</span>
+      <span class="tb-fill"></span>
+      <span class="tb-btn" aria-hidden="true"><svg viewBox="0 0 10 10"><path d="M1 5h8"/></svg></span>
+      <span class="tb-btn" aria-hidden="true"><svg viewBox="0 0 10 10"><rect x="1.5" y="1.5" width="7" height="7"/></svg></span>
+      <span class="tb-btn close" aria-hidden="true"><svg viewBox="0 0 10 10"><path d="M1.5 1.5l7 7M8.5 1.5l-7 7"/></svg></span>
+    </header>
+
+    <div class="toolbar" role="toolbar" aria-label="Tools">
+      <span class="tl-group" aria-hidden="true">
+        <span class="tl-ic" title="New project"><svg viewBox="0 0 16 16"><path d="M4 1.5h5.5l3 3v10H4z"/><path d="M9.5 1.5v3h3"/></svg></span>
+        <span class="tl-ic" title="Open project"><svg viewBox="0 0 16 16"><path d="M1.5 4h5l1.5 2h6.5v7.5h-13z"/></svg></span>
+        <span class="tl-ic" title="Save"><svg viewBox="0 0 16 16"><path d="M2 2h10l2 2v10H2z"/><path d="M5 2v4h6V2M5 14v-4h6v4"/></svg></span>
+      </span>
+      <span class="tl-sep"></span>
+      <span class="tl-group" aria-hidden="true">
+        <span class="tl-ic" title="Undo"><svg viewBox="0 0 16 16"><path d="M5 4L2 7l3 3"/><path d="M2 7h8a4 4 0 0 1 0 8H7"/></svg></span>
+        <span class="tl-ic" title="Redo"><svg viewBox="0 0 16 16"><path d="M11 4l3 3-3 3"/><path d="M14 7H6a4 4 0 0 0 0 8h3"/></svg></span>
+      </span>
+      <span class="tl-sep"></span>
+      <span class="tl-group sim-group">
+        <span class="tl-label">Simulation</span>
+        <button type="button" class="tl-btn run" id="run" title="Run the simulation (F5)"><svg viewBox="0 0 16 16"><path d="M4 2.5v11l9-5.5z"/></svg>Run</button>
+        <button type="button" class="tl-btn" id="play" title="Play the nominal scenario"><svg viewBox="0 0 16 16"><path d="M2 3v10l6-5zM8 3v10l6-5z"/></svg>Scenario</button>
+        <button type="button" class="tl-btn stop" id="stop" title="Terminate the simulation"><svg viewBox="0 0 16 16"><rect x="3.5" y="3.5" width="9" height="9" rx="1"/></svg>Stop</button>
+      </span>
+      <span class="tb-fill"></span>
+      <div class="link-wrap">
+        <button type="button" class="link-pill" id="link" data-status="off" aria-haspopup="dialog"><i></i><span>Relay: off</span></button>
+        <div class="link-pop" id="link-pop" role="dialog" aria-label="Pairing with the guide" hidden>
+          <span class="lp-label">Pairing code</span>
+          <strong class="lp-code" id="lp-code">——</strong>
+          <label class="lp-field"><span>Relay</span>
+            <select id="lp-relay-pick">
+              <option value="online">Online relay (the online guide)</option>
+              <option value="here">This server (the guide served here)</option>
+              <option value="custom">Other address…</option>
+            </select>
+          </label>
+          <input class="lp-custom mono" id="lp-relay-custom" type="text" placeholder="wss://host/relay" spellcheck="false" hidden>
+          <dl>
+            <dt>Address</dt><dd id="lp-relay" class="mono"></dd>
+            <dt>Guides connected</dt><dd id="lp-viewers">0</dd>
+          </dl>
+          <p class="lp-hint" id="lp-hint"></p>
+          <div class="lp-btns">
+            <a class="btn primary small" id="lp-open" target="_blank" rel="noopener">Open the guide, paired</a>
+            <button type="button" class="btn small" id="lp-copy">Copy code</button>
+            <button type="button" class="btn small" id="lp-new">New code</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <main class="work">
+      <aside class="pane left" id="pane-left" aria-label="Containment tree">
+        <div class="pane-head"><span class="ph-title">Containment</span><span class="tb-fill"></span><button type="button" class="ph-fold" data-fold="left" aria-label="Collapse the containment tree"><svg viewBox="0 0 10 10"><path d="M6.5 2L3.5 5l3 3"/></svg></button></div>
+        <div class="tree" id="tree" role="tree" aria-label="Model"></div>
+      </aside>
+      <div class="split v" data-split="left" role="separator" aria-orientation="vertical" aria-label="Resize the containment tree"></div>
+
+      <section class="center">
+        <div class="tabs" id="tabs" role="tablist" aria-label="Open diagrams"></div>
+        <div class="canvas-wrap">
+          <div class="canvas" id="canvas"></div>
+          <div class="canvas-flash" id="canvas-flash" hidden></div>
+          <div class="zoom" id="zoom">
+            <button type="button" data-zoom="out" aria-label="Zoom out">−</button>
+            <span id="zoom-val"></span>
+            <button type="button" data-zoom="in" aria-label="Zoom in">+</button>
+            <button type="button" data-zoom="fit">Fit</button>
+          </div>
+          <aside class="presenter" id="presenter" aria-label="Exercise" hidden>
+            <div class="pr-head"><b>Exercise</b><span>What the students build</span><button type="button" id="pr-close" aria-label="Close">×</button></div>
+            <ol id="pr-stages"></ol>
+            <div class="pr-foot">
+              <button type="button" class="btn small" id="pr-reset">Reset to start</button>
+              <button type="button" class="btn small" id="pr-all">Build all</button>
+            </div>
+            <p class="pr-keys">P show/hide · N build next · F5 run</p>
+          </aside>
+        </div>
+      </section>
+
+      <div class="split v" data-split="right" role="separator" aria-orientation="vertical" aria-label="Resize the specification"></div>
+      <aside class="pane right" id="pane-right" aria-label="Specification">
+        <div class="pane-head"><span class="ph-title">Specification</span><span class="tb-fill"></span><button type="button" class="ph-fold" data-fold="right" aria-label="Collapse the specification"><svg viewBox="0 0 10 10"><path d="M3.5 2l3 3-3 3"/></svg></button></div>
+        <div class="spec" id="spec"></div>
+      </aside>
+    </main>
+
+    <div class="split h" data-split="console" role="separator" aria-orientation="horizontal" aria-label="Resize the simulation console"></div>
+    <section class="console" id="pane-console" aria-label="Simulation console">
+      <div class="pane-head">
+        <button type="button" class="ph-fold" data-fold="console" aria-label="Collapse the simulation console"><svg viewBox="0 0 10 10"><path d="M2 3.5l3 3 3-3"/></svg></button>
+        <span class="ph-title">Simulation console</span>
+        <span class="sim-state" id="sim-state"></span>
+        <span class="tb-fill"></span>
+        <label class="chk" id="rainy-row"><input type="checkbox" id="rainy"> Flight plan out of range</label>
+        <label class="chk"><input type="checkbox" id="follow" checked> Follow do activities</label>
+        <button type="button" class="lnk" id="log-clear">Clear</button>
+      </div>
+      <div class="console-body">
+        <div class="triggers">
+          <span class="mini-label">Triggers</span>
+          <div id="triggers"></div>
+        </div>
+        <ol class="log" id="log" aria-live="polite"></ol>
+      </div>
+    </section>
+
+    <footer class="statusbar">
+      <span id="sb-msg">Ready</span>
+      <span class="tb-fill"></span>
+      <span id="sb-sim"></span>
+      <span id="sb-elements"></span>
+      <span id="sb-link"></span>
+    </footer>
+  </div>
+
+  <script src="../content/model-links.js"></script>
+  <script src="model.js"></script>
+  <script src="diagrams.js"></script>
+  <script src="tool.js"></script>
+</body>
+</html>

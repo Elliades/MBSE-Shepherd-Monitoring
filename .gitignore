@@ -2,3 +2,6 @@ api/health.json
 instructor-only/
 node_modules/
 relay/.data/
+
+# Teacher notes (answers of the graded seminar): deployed with the site, never pushed to the public repo.
+assets/teacher-*/

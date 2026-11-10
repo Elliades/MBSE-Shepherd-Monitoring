@@ -1,0 +1,307 @@
+/* Part 3 (logical architecture) and Part 4 (the swarm): the logical level of the method, and the widgets of
+   js/widgets-logical.js. Loaded by part3/ and part4/ only, after css/app.css whose tokens it uses. */
+
+/* ───────── the logical level ───────── */
+:root { --ph-lg: #0f7a6c; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --ph-lg: #5fd4c0; } }
+:root[data-theme="dark"] { --ph-lg: #5fd4c0; }
+[data-phase="lg"] { --phase: var(--ph-lg); }
+
+/* ───────── shared vocabulary ───────── */
+.w svg text.lg-tag { font-family: var(--font-mono); font-size: 9.5px; font-weight: 700; letter-spacing: 0.06em; fill: var(--ph-lg); }
+.w svg text.lg-do { font-size: 9px; fill: var(--ink-2); font-style: italic; }
+.lg-box { fill: var(--surface); stroke: var(--ph-lg); stroke-width: 1.6; }
+.lg-soi { fill: color-mix(in srgb, var(--ph-lg) 7%, var(--surface-2)); stroke: var(--ph-lg); stroke-dasharray: 6 4; }
+.lg-st-box { fill: color-mix(in srgb, var(--ph-fn) 10%, var(--surface)); stroke: var(--ph-fn); stroke-width: 1.3; }
+.lg-fade { opacity: 0; transition: opacity 0.45s var(--ease); }
+.lg-fade.on { opacity: 1; }
+.lg-port-sq { fill: var(--surface); stroke: var(--ph-lg); stroke-width: 1.6; }
+.lg-port-dir { fill: var(--ph-lg); }
+.w svg text.lg-port-t { font-family: var(--font-mono); font-size: 8.5px; font-weight: 700; fill: var(--ph-lg); }
+.lg-conn { stroke: var(--ph-lg); stroke-width: 2; }
+.lg-flow { fill: var(--route); }
+.w svg text.lg-flow-t { font-size: 9px; font-weight: 700; fill: var(--route); }
+.lg-token { fill: var(--route); stroke: var(--surface); stroke-width: 2; }
+.lg-token-fuel { fill: var(--amber); }
+.lg-gauge { fill: var(--surface-2); stroke: var(--ink-3); }
+.lg-gauge-fill { fill: var(--amber); }
+.lg-state.lit .lg-st-box, .lg-node.lit .lg-box { fill: color-mix(in srgb, var(--ph-lg) 22%, var(--surface)); stroke-width: 2.4; }
+.lg-chips .chip { min-height: 2.3rem; padding: 0.2rem 0.75rem; font-size: 0.92rem; }
+.lg-chip-n { display: inline-grid; place-items: center; min-width: 1.35rem; height: 1.35rem; border-radius: 999px; background: var(--surface-2); font-size: 0.78rem; }
+.chip[aria-pressed="true"] .lg-chip-n { background: var(--route); color: var(--on-route); }
+.lg-auto { margin-left: auto; }
+.lg-live { min-height: 4.4em; }
+.lg-live b, .lg-trade .w-live b, .lg-map .w-live b { color: var(--ph-lg); }
+
+/* ───────── trade-off ───────── */
+.lg-trade-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); align-items: center; }
+.lg-ring { fill: none; stroke: var(--line); stroke-width: 1; }
+.w svg text.lg-axis { font-size: 9.5px; font-weight: 700; fill: var(--ink-2); }
+.lg-poly { fill: color-mix(in srgb, var(--ph-lg) 26%, transparent); stroke: var(--ph-lg); stroke-width: 2.2; stroke-linejoin: round; }
+.lg-poly-dot { fill: var(--ph-lg); }
+.lg-ghost-poly { fill: none; stroke: var(--ink-3); stroke-width: 1; stroke-dasharray: 3 3; opacity: 0; transition: opacity 0.3s; }
+.lg-ghost-poly.on { opacity: 0.6; }
+.lg-hub { fill: color-mix(in srgb, var(--ph-lg) 18%, var(--surface)); }
+.lg-bus { fill: var(--ph-lg); opacity: 0.7; }
+.lg-trade-link { stroke: var(--ink-3); }
+.lg-pop { animation: lg-pop 0.35s var(--ease) both; }
+@keyframes lg-pop { from { opacity: 0; transform: translateY(4px); } }
+
+/* ───────── make or buy ───────── */
+.lg-mob g.lit .lg-box { fill: color-mix(in srgb, var(--route) 14%, var(--surface)); stroke: var(--route); stroke-width: 2.2; }
+.lg-phase-lg .lg-box { stroke: var(--ph-lg); }
+.lg-phase-ph .lg-box { stroke: var(--ph-ph); }
+.lg-tick { fill: none; stroke: var(--grass); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; transition: opacity 0.3s; opacity: 0; }
+
+/* ───────── the package tree ───────── */
+.lg-tree-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.25rem; }
+.lg-tree-list li { padding-left: calc(var(--d) * 1.4rem); }
+.lg-tree-list button { display: inline-flex; align-items: center; gap: 0.5rem; min-height: 2.4rem; padding: 0.2rem 0.7rem; border-radius: var(--r-sm); border: 1.5px solid transparent; background: none; font: inherit; font-weight: 700; color: var(--ink); cursor: pointer; text-align: left; }
+.lg-tree-list button:hover { border-color: var(--line); }
+.lg-tree-list button[aria-pressed="true"] { border-color: var(--ph-lg); background: color-mix(in srgb, var(--ph-lg) 12%, var(--surface)); }
+.lg-tree-ico { font-style: normal; display: inline-grid; place-items: center; width: 1.4rem; height: 1.4rem; border-radius: 5px; background: var(--surface-2); color: var(--ph-lg); font-size: 0.85rem; }
+.lg-k-package { color: var(--amber); }
+.lg-k-signal { color: var(--route); }
+.lg-k-activity { color: var(--ph-fn); }
+.lg-k-stm, .lg-k-ibd { color: var(--ph-lg); }
+
+/* ───────── the guided example (Mission Configuration) ───────── */
+.lg-select { fill: color-mix(in srgb, var(--route) 8%, transparent); stroke: var(--route); stroke-width: 2; stroke-dasharray: 6 4; }
+.lg-menu-box { fill: var(--surface); stroke: var(--ink-2); stroke-width: 1.2; filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.18)); }
+.lg-menu-hl { fill: var(--sky-soft); stroke: var(--sky); stroke-width: 1; }
+
+.w svg text.lg-trig { font-size: 8.5px; fill: var(--ink-2); }
+.w svg text.lg-eff { font-size: 8.5px; font-weight: 700; fill: var(--route); }
+.w svg text.lg-new-t { fill: var(--grass); font-weight: 700; }
+.w svg text.lg-red { fill: var(--danger); }
+.lg-initial { fill: var(--ink); }
+.lg-ghosted { opacity: 0.45; stroke-dasharray: 4 3; }
+.lg-rename { stroke: var(--danger); stroke-dasharray: 4 3; fill: var(--danger-soft); }
+.lg-new { stroke: var(--grass); stroke-width: 2; }
+.lg-pointer { fill: var(--ink); stroke: var(--surface); stroke-width: 1; }
+.lg-mini svg { max-width: 460px; }
+.lg-mp-route { fill: none; stroke: none; }
+.lg-mp-row.lg-mp-on text { fill: var(--route); font-weight: 700; }
+.lg-out .s-line { stroke-dasharray: 4 3; }
+
+/* ───────── an architecture running its scenario ───────── */
+.lg-arch-sum { margin: 0; color: var(--ink-2); }
+.lg-arch-sum b { color: var(--ink); }
+.lg-conn-line { fill: none; stroke: var(--ink-3); stroke-width: 1.6; }
+.lg-msg-path { fill: none; stroke: var(--route); stroke-width: 2.6; opacity: 0.6; }
+.lg-ap-box { fill: var(--surface); stroke: var(--pc); stroke-width: 1.8; }
+.lg-ap-band { fill: var(--pc); }
+.lg-ap-tech .lg-ap-box { stroke-dasharray: 5 3; }
+.w svg text.lg-ap-tag { font-family: var(--font-mono); font-size: 8.5px; font-weight: 700; fill: #fff; }
+.w svg text.lg-ap-name { font-size: 10px; font-weight: 700; }
+.w svg text.lg-ap-state { font-size: 8.5px; font-style: italic; fill: var(--ph-lg); font-weight: 700; }
+.lg-ap.pulse .lg-ap-box { animation: lg-pulse 0.7s ease-out; }
+@keyframes lg-pulse { 40% { fill: color-mix(in srgb, var(--route) 26%, var(--surface)); stroke: var(--route); } }
+.lg-driver-box { fill: var(--surface-2); stroke: var(--ink-3); stroke-width: 1.4; stroke-dasharray: 3 3; }
+.w svg text.lg-driver-t { font-family: var(--font-mono); font-size: 11px; font-weight: 700; fill: var(--ink-2); letter-spacing: 0.08em; text-transform: uppercase; }
+.w svg text.lg-tok-t { font-size: 10px; font-weight: 700; fill: var(--route); paint-order: stroke; stroke: var(--surface); stroke-width: 3px; }
+.w svg text.lg-tok-t { font-size: 8.5px; opacity: 0.7; }
+.lg-ap-ghost { opacity: 0.28; }
+.lg-ap-ghost .lg-ap-box { stroke-dasharray: 4 3; }
+.lg-conn-line.ghost { opacity: 0.25; stroke-dasharray: 4 4; }
+/* what happens in the pasture, said big over the drawing */
+.lg-arch-art { position: relative; padding-top: 2.6rem; }
+.lg-story { position: absolute; left: 50%; top: 0.2rem; transform: translateX(-50%); display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.35rem 0.9rem 0.35rem 0.6rem; border-radius: 999px; background: var(--ink); color: var(--surface); box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+  font-family: var(--font-display); font-weight: 700; font-size: clamp(0.85rem, 2.4vw, 1.1rem); white-space: nowrap; max-width: calc(100% - 1rem);
+  opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+.lg-story.on { opacity: 0.95; animation: lg-story-in 0.45s ease-out; }
+.lg-story.idle { opacity: 0.45; animation: none; background: var(--surface-2); color: var(--ink-2); box-shadow: none; }
+.lg-story-i { font-size: 1.35em; line-height: 1; }
+.lg-story-t { overflow: hidden; text-overflow: ellipsis; }
+@keyframes lg-story-in { from { transform: translate(-50%, -8px) scale(0.92); opacity: 0; } }
+/* the messages worth reading */
+.lg-badge { animation: lg-badge 2.8s ease-out forwards; }
+.lg-badge-box { fill: var(--route); }
+.w svg text.lg-badge-t { font-size: 11px; font-weight: 700; fill: #fff; }
+@keyframes lg-badge { 0% { opacity: 0; transform: translateY(6px); } 10% { opacity: 1; transform: none; } 75% { opacity: 1; } 100% { opacity: 0; } }
+.lg-badge { transform-box: fill-box; }
+.lg-arch-warn { margin: 0; color: var(--danger); font-weight: 700; }
+.lg-validate { display: grid; gap: 0.5rem; padding-top: 0.75rem; border-top: 1px dashed var(--line, rgba(127,127,127,.35)); }
+.lg-validate-out { margin: 0; }
+.lg-validate-out:empty { display: none; }
+.lg-validate-res { margin: 0; padding: 0; list-style: none; display: grid; gap: 0.25rem; font-size: 0.9rem; }
+.lg-validate-res li { padding: 0.3rem 0.55rem; border-radius: 8px; background: var(--surface-2); }
+.lg-validate-res li.ok { background: var(--grass-soft); color: var(--grass); }
+.lg-validate-res li.no { background: var(--danger-soft); color: var(--danger); }
+.lg-arch-ctl { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.6rem 1rem; }
+.lg-arch-step { display: grid; gap: 0.1rem; min-width: min(100%, 18rem); flex: 1; }
+.lg-arch-step strong { font-family: var(--font-display); font-size: 1.1rem; }
+.lg-arch-step small { font-family: var(--font-mono); font-size: 0.75rem; color: var(--ink-3); font-weight: 400; }
+.lg-arch-note { color: var(--ink-2); font-size: 0.95rem; }
+.lg-arch-cols { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)); }
+.lg-expect, .lg-msgs { margin: 0.35rem 0 0; padding: 0; list-style: none; display: grid; gap: 0.25rem; font-size: 0.9rem; }
+.lg-expect li, .lg-msgs li { padding: 0.3rem 0.55rem; border-radius: 8px; background: var(--surface-2); }
+.lg-expect li.ok { background: var(--grass-soft); color: var(--grass); }
+.lg-expect li.no { background: var(--danger-soft); color: var(--danger); }
+.lg-expect code, .lg-msgs code { font-size: 0.82rem; }
+.lg-msgs li:first-child { background: color-mix(in srgb, var(--route) 10%, var(--surface-2)); }
+.lg-count { margin-left: 0.3rem; color: var(--route); }
+.lg-sig-name { font-family: var(--font-mono); font-size: 0.82rem; color: var(--route); }
+.lg-pc { margin: 0.5rem 0 0; padding: 0; list-style: none; display: grid; gap: 0.25rem; }
+.lg-pc li { position: relative; padding-left: 1.3rem; }
+.lg-pc li::before { position: absolute; left: 0.2rem; font-weight: 700; }
+.lg-pc li.pro::before { content: '+'; color: var(--grass); }
+.lg-pc li.con::before { content: '−'; color: var(--danger); }
+
+/* ───────── who receives which state ───────── */
+.lg-ms-box { fill: color-mix(in srgb, #f4e48c 55%, var(--surface)); stroke: #b39a2e; stroke-width: 1.2; transition: fill 0.35s, stroke 0.35s; }
+.lg-ms-frame .lg-ms-box { fill: color-mix(in srgb, #f4e48c 18%, var(--surface)); }
+.lg-ms.given .lg-ms-box { fill: color-mix(in srgb, var(--pc) 42%, var(--surface)); stroke: var(--pc); stroke-width: 1.8; }
+.lg-ms-frame.given .lg-ms-box { fill: color-mix(in srgb, var(--pc) 20%, var(--surface)); }
+.w svg text.lg-ms-t { font-size: 9px; font-weight: 700; }
+.w svg text.lg-ms-ft { font-size: 9.5px; font-weight: 700; fill: var(--ink-2); }
+.lg-legend { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 0.35rem 1rem; font-size: 0.9rem; }
+.lg-legend li { display: inline-flex; align-items: center; gap: 0.4rem; }
+.lg-legend i { width: 0.9rem; height: 0.9rem; border-radius: 4px; background: var(--pc); border: 1.5px solid color-mix(in srgb, var(--pc) 70%, var(--ink)); }
+.lg-legend li.none i { background: color-mix(in srgb, #f4e48c 55%, var(--surface)); border-color: #b39a2e; }
+.lg-legend li.none { color: var(--ink-3); }
+
+/* ───────── Part 4: scope ───────── */
+.lg-soi-big { fill: var(--route-soft); stroke: var(--route); stroke-width: 2; stroke-dasharray: 8 6; animation: march-14 2.4s linear infinite; }
+.lg-scope .out { fill: var(--surface-2); stroke: var(--ink-3); stroke-width: 1.4; stroke-dasharray: 3 3; }
+.lg-cmd { stroke: var(--ph-lg); }
+.lg-cloud { fill: var(--sky-soft); stroke: var(--sky); stroke-width: 1.2; }
+
+/* ───────── Part 4: the dilemma ───────── */
+.lg-dil-ctl { display: flex; flex-wrap: wrap; gap: 0.8rem 1.6rem; }
+.lg-dil-ctl .chips { margin-top: 0.35rem; }
+.lg-field { fill: color-mix(in srgb, var(--pasture) 40%, var(--surface)); stroke: var(--pasture-edge); stroke-width: 1.4; stroke-dasharray: 4 3; }
+.lg-flock { fill: color-mix(in srgb, var(--pasture) 60%, var(--surface)); stroke: var(--pasture-edge); stroke-width: 1.2; transition: fill 0.3s, stroke 0.3s; }
+.lg-flock.alone { fill: var(--danger-soft); stroke: var(--danger); stroke-width: 2.4; }
+.lg-flock.kept { stroke: var(--grass); stroke-width: 2.4; }
+
+/* ───────── Part 4: parallel regions ───────── */
+.w svg text.lg-reg-t { font-family: var(--font-mono); font-size: 9.5px; font-weight: 700; fill: var(--ink-3); text-transform: uppercase; }
+.w svg text.lg-st-t { font-size: 10px; font-weight: 700; }
+.lg-st .lg-st-box { transition: fill 0.25s, stroke-width 0.25s; }
+.lg-st.on .lg-st-box { fill: color-mix(in srgb, var(--ph-lg) 26%, var(--surface)); stroke: var(--ph-lg); stroke-width: 2.6; }
+.lg-par-ev { margin-top: 0.4rem; }
+
+/* ───────── Part 4: options of the swarm ───────── */
+.lg-cmd-line { stroke: var(--route); stroke-width: 2; stroke-dasharray: 8 6; }
+.lg-role-drone .drone-body { fill: var(--role); }
+.lg-role-drone .drone-rotor { stroke: var(--role); }
+.w svg text.lg-role-tag { font-family: var(--font-mono); font-size: 10px; font-weight: 700; }
+.w svg text.lg-master { font-size: 10px; font-weight: 700; fill: var(--amber); }
+.lg-proscons { display: grid; gap: 0.8rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); }
+.lg-swarm-txt { display: grid; gap: 0.8rem; justify-items: start; }
+
+@media (prefers-reduced-motion: reduce) {
+  .lg-soi-big, .lg-pop, .lg-ap.pulse .lg-ap-box, .lg-story.on { animation: none !important; }
+  .lg-badge { animation: none !important; }
+}
+
+/* ───────── same states, other behaviour (behaviourAB) ───────── */
+.lg-act { fill: var(--surface); stroke: var(--ph-fn); stroke-width: 1.2; }
+.lg-act-send { fill: color-mix(in srgb, var(--danger) 10%, var(--surface)); stroke: var(--danger); }
+.w svg text.lg-act-t { font-size: 8.5px; font-weight: 700; }
+.lg-ab-loop { fill: none; stroke: var(--danger); stroke-width: 1.6; stroke-dasharray: 4 3; }
+.lg-ab-route { fill: none; stroke: var(--route); stroke-width: 2.2; opacity: 0; transition: opacity 0.3s; }
+.lg-ab-route.on { opacity: 0.45; }
+.lg-ab-a { transition: opacity 0.4s; }
+.lg-ab-a.lg-dim { opacity: 0.4; }
+.lg-ab-note { fill: color-mix(in srgb, var(--ph-lg) 12%, var(--surface)); stroke: var(--ph-lg); stroke-width: 1.2; }
+.lg-ab-out .s-box, rect.lg-ab-out { stroke-dasharray: 4 3; }
+.w svg text.lg-ab-tok-t { font-size: 9.5px; opacity: 1; }
+
+/* ───────── Part 3, second pass: illustrations ───────── */
+.lg-validate .btn svg, .lg-check .btn svg { width: 1.15rem; height: 1.15rem; display: inline-block; }
+/* ports of the guided example */
+.w svg text.lg-mcp-t { font-size: 9.5px; fill: var(--ink-2); }
+.w svg text.lg-mcp-name { font-family: var(--font-mono); font-size: 11px; font-weight: 700; fill: var(--ph-lg); }
+.lg-port-big { stroke-width: 1.8; }
+.lg-mcp-c { stroke: var(--ph-lg); stroke-width: 2; }
+/* what for */
+.lg-wf-check { opacity: 0; transition: opacity 0.3s; }
+.lg-wf-check.on { opacity: 1; }
+.w svg text.lg-wf-ok { font-size: 12px; font-weight: 700; fill: var(--grass); }
+/* safety, performance */
+.lg-x { stroke: var(--danger); stroke-width: 3; stroke-linecap: round; fill: none; }
+.lg-fha { fill: color-mix(in srgb, var(--danger) 7%, var(--surface)); stroke: color-mix(in srgb, var(--danger) 50%, var(--line)); stroke-width: 1.2; }
+.w svg text.lg-sev { font-size: 11px; font-weight: 700; fill: var(--danger); }
+.w svg text.lg-sev.ok { fill: var(--grass); }
+.lg-vote { fill: color-mix(in srgb, var(--ph-lg) 14%, var(--surface)); stroke: var(--ph-lg); stroke-width: 1.6; }
+.lg-bad .pf-fn { stroke: var(--danger); fill: color-mix(in srgb, var(--danger) 14%, var(--surface)); }
+.lg-cam { fill: var(--surface-2); stroke: var(--ink-3); stroke-dasharray: 3 3; }
+.w svg text.lg-ms { font-family: var(--font-mono); font-size: 13px; font-weight: 700; fill: var(--danger); }
+.w svg text.lg-ms.ok { fill: var(--grass); }
+/* sequence check */
+.lg-seq-m, .lg-seq-end { opacity: 0; transition: opacity 0.2s; }
+.lg-seq-m.on, .lg-seq-end.on { opacity: 1; }
+.lg-broken { stroke: var(--danger); stroke-width: 1.8; stroke-dasharray: 5 4; fill: none; }
+/* versions */
+.lg-versions { display: grid; gap: 0.75rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr)); }
+.lg-versions figure { margin: 0; display: grid; gap: 0.35rem; }
+.lg-versions figcaption { font-size: 0.9rem; color: var(--ink-2); }
+.lg-versions figcaption b { color: var(--ph-lg); }
+/* the cut of Mission Configuration */
+.lg-cut-rest { transition: opacity 0.4s; }
+.lg-cut-rest.lg-dim { opacity: 0.35; }
+/* where the logic is */
+.lg-spotting .lg-ap { opacity: 0.35; }
+.lg-spotting .lg-ap.spot { opacity: 1; }
+.lg-spotting .lg-ap.spot .lg-ap-box { stroke-width: 3.2; }
+.lg-spotting .lg-conn-line { opacity: 0.3; }
+.lg-spotting .lg-conn-line.spot { opacity: 1; stroke: var(--route); stroke-width: 3; }
+/* blanks to name */
+.lg-ap-blank .lg-ap-box { stroke-dasharray: 5 4; fill: var(--surface-2); }
+.lg-ap-blank { --pc: var(--ph-lg); }
+.lg-ap-blank .lg-ap-band { opacity: 0.35; }
+.w svg text.lg-q { font-family: var(--font-display); font-size: 26px; font-weight: 700; fill: var(--ph-lg); }
+.lg-cq-hot .lg-st-box { stroke: var(--route); stroke-width: 2.4; animation: lg-cq 2s ease-in-out infinite; }
+@keyframes lg-cq { 50% { fill: color-mix(in srgb, var(--route) 18%, var(--surface)); } }
+/* tidy up */
+.lg-tidy-full, .lg-tidy-short { transition: opacity 0.5s; }
+/* the patch, and the other exchanges that make an architecture */
+.lg-msg-path.hot { stroke: var(--amber, #d98b00); stroke-width: 4.5; opacity: 0.9; }
+.lg-token.hot, g.hot .lg-token { fill: var(--amber, #d98b00); }
+.lg-badge.hot { animation: none; }
+.lg-badge.hot .lg-badge-box { fill: var(--amber, #d98b00); }
+.w svg .lg-badge.hot text.lg-badge-t { font-size: 13px; }
+/* what Cameo must show */
+.lg-check-steps { margin: 0; padding: 0; list-style: none; display: grid; gap: 0.4rem; }
+.lg-check-steps li { display: grid; gap: 0.15rem; padding: 0.55rem 0.75rem; border-radius: 8px; background: var(--surface-2); }
+.lg-check-ev { font-family: var(--font-display); font-weight: 700; display: flex; gap: 0.45rem; align-items: center; }
+.lg-check-ev i { font-style: normal; }
+.lg-check-ex { font-size: 0.9rem; color: var(--ink-2); }
+/* a bigger star diagram */
+.lg-trade-grid { grid-template-columns: 1fr; }
+.lg-radar svg { max-width: 620px; margin: 0 auto; }
+.lg-ibd svg { max-width: 560px; margin: 0 auto; }
+.w svg text.lg-axis { font-size: 10.5px; }
+@media (prefers-reduced-motion: reduce) { .lg-cq-hot .lg-st-box { animation: none; } }
+.lg-spotting .lg-ap.near { opacity: 0.8; }
+
+/* ───────── Part 3, third pass ───────── */
+.lg-mst.now .lg-st-box { fill: color-mix(in srgb, var(--route) 28%, var(--surface)); stroke: var(--route); stroke-width: 2.6; }
+.w svg text.lg-perf-t { font-size: 7.6px; font-weight: 700; }
+.lg-ap-good .lg-ap-box { stroke: var(--grass); stroke-width: 3; }
+.lg-ap-bad .lg-ap-box { stroke: var(--danger); stroke-width: 3.4; fill: color-mix(in srgb, var(--danger) 16%, var(--surface)); }
+.lg-spotting .lg-conn-line.hot { stroke: var(--danger); stroke-width: 4; }
+.lg-msg-path.hot { stroke: var(--danger); }
+.lg-token.hot, g.hot .lg-token { fill: var(--danger); }
+.lg-badge.hot .lg-badge-box { fill: var(--danger); }
+.lg-red-t { color: var(--danger); }
+.lg-validate-have { font-weight: 700; }
+.lg-check-sig { font-size: 0.8rem; color: var(--ink-3); }
+.lg-check-ex { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+.lg-check-it { padding: 0.1rem 0.5rem; border-radius: 6px; background: var(--surface); }
+.lg-check-it b { font-weight: 700; }
+.lg-check-it.ok { background: var(--grass-soft); color: var(--grass); }
+.lg-check-it.no { background: var(--danger-soft); color: var(--danger); }
+
+.lg-table-w { overflow-x: auto; }
+.lg-table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+.lg-table th { text-align: left; padding: 0.5rem 0.7rem; font-family: var(--font-display); color: var(--ph-lg); border-bottom: 2px solid var(--ph-lg); }
+.lg-table td { padding: 0.5rem 0.7rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+.lg-table td:first-child { font-weight: 700; white-space: nowrap; }
+
+.lg-live { display: inline-flex; align-items: center; gap: 6px; font-size: .85rem; cursor: pointer; }
+.lg-live-out { min-height: 1.2em; margin: 6px 0 0; font-size: .85rem; }
+.lg-live-ok { font-weight: 700; color: var(--ok, #1a7f37); }

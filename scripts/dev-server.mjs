@@ -18,7 +18,7 @@ const TYPES = {
   '.jpg': 'image/jpeg', '.webp': 'image/webp', '.zip': 'application/zip', '.mdzip': 'application/octet-stream',
 }
 
-const relay = createRelay({ log: (line) => console.log(`[relay] ${line}`), diagDir: join(root, 'relay', '.data') })
+const relay = createRelay({ log: (line) => console.log(`[relay] ${line}`), diagDir: join(root, 'relay', '.data'), trackDir: join(root, 'relay', '.data') })
 const relayPort = (await relay.listen(0, '127.0.0.1')).port
 
 const server = createServer(async (req, res) => {
