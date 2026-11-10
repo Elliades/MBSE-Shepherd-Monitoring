@@ -136,8 +136,8 @@ window.COURSE = {
     },
     {
       id: "settings", ch: "setup", kind: "do",
-      title: "Plugin, perspective, language, Expert mode",
-      lead: "Check the OMF-ISAE plugin first, then the same three settings as in Part 1.",
+      title: "Plugin, language, Expert mode",
+      lead: "Check the OMF-ISAE plugin first, then the same two settings as in Part 1.",
       blocks: [
         {
           steps: [
@@ -150,15 +150,61 @@ window.COURSE = {
             text: "The plugin is already installed. Go on with the settings below."
           }
         },
+        { h: "No ISAE menu? Install the plugin, then restart Cameo" },
         {
-          recall: {
-            label: "No ISAE menu? Install the plugin as in Part 1, then restart Cameo",
-            items: [{ id: "install-plugin", title: "Install the OMF-ISAE plugin" }]
-          }
+          tabs: [
+            {
+              label: "Standard", sub: "Cameo's plugin manager",
+              blocks: [
+                { download: { label: "Plugin to install", file: "com.elliades.isae.mbseShepherd_1.1.0.zip", src: "../assets/plugins/com.elliades.isae.mbseShepherd_1.1.0.zip", size: "18 MB" } },
+                {
+                  steps: [
+                    "In Cameo, choose {{Help > Resource & Plugin Manager}}, then click {{Import}}.",
+                    "Select the plugin file you downloaded."
+                  ]
+                },
+                {
+                  callout: {
+                    tone: "warn", title: "Restart MagicDraw",
+                    text: "Close and restart Cameo (MagicDraw) once the plugin is imported. The plugin is only loaded at startup."
+                  }
+                }
+              ]
+            },
+            {
+              label: "No admin rights", sub: "a script, no installer",
+              blocks: [
+                { download: { label: "Plugin archive", file: "com.elliades.isae.mbseShepherd_1.1.0.zip", src: "../assets/plugins/com.elliades.isae.mbseShepherd_1.1.0.zip", size: "18 MB" } },
+                { download: { label: "Install script", file: "install-plugin.ps1", src: "../assets/plugins/install-plugin.ps1", size: "2 KB" } },
+                {
+                  steps: [
+                    "Save both files in the same folder, for example your Downloads folder.",
+                    "Close Cameo (MagicDraw) if it is open.",
+                    "Open the folder, right-click **install-plugin.ps1** and choose **Run with PowerShell**.",
+                    "Wait for the line **Plugin installed**, then press Enter to close the window."
+                  ]
+                },
+                {
+                  copy: { label: "If Windows refuses to run the script, run this in that folder", value: "powershell -ExecutionPolicy Bypass -File .\\install-plugin.ps1" }
+                },
+                {
+                  callout: {
+                    tone: "tip", title: "No administrator rights needed",
+                    text: "The script copies the plugin into your own user folder: %LOCALAPPDATA%\\.magic.systems.of.systems.architect\\2026x. Nothing is written to Program Files."
+                  }
+                },
+                {
+                  callout: {
+                    tone: "warn", title: "Restart MagicDraw",
+                    text: "Start Cameo (MagicDraw) after the script has finished. The plugin is only loaded at startup."
+                  }
+                }
+              ]
+            }
+          ]
         },
         {
           steps: [
-            "When the tool starts, choose the **Systems Engineer** perspective. You can also do it later with {{Options > Perspectives}}.",
             "Switch the language to English: {{Options > Environment}}, then {{General > Language}}, and choose **English**.",
             "In the {{Specification}} window of an element, set {{Properties}} to **Expert** to see every property."
           ]
@@ -173,7 +219,6 @@ window.COURSE = {
         {
           recall: {
             items: [
-              { id: "perspective", title: "Choose the Systems Engineer perspective" },
               { id: "language", title: "Switch Cameo to English" },
               { id: "expert-mode", title: "Show every property with Expert mode" }
             ]
