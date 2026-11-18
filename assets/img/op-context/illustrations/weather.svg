@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="1000" viewBox="10 4 214 220">
+  <!-- Weather : sun, clouds, rain, lightning and wind -->
+  <g stroke="#ffc83d" stroke-width="7" stroke-linecap="round">
+    <path d="M70 12v14M70 96v6M22 56h14M104 56h6M36 22l10 10M104 22l-10 10M36 90l10-10"/>
+  </g>
+  <circle cx="70" cy="56" r="30" fill="#ffc83d"/>
+  <circle cx="62" cy="48" r="10" fill="#ffe08a" opacity=".7"/>
+  <!-- back cloud -->
+  <g fill="#9aa8b6">
+    <circle cx="150" cy="84" r="26"/><circle cx="182" cy="96" r="24"/><circle cx="124" cy="100" r="20"/>
+    <rect x="124" y="96" width="82" height="24" rx="2"/>
+  </g>
+  <!-- front cloud -->
+  <g fill="#e9eef3">
+    <circle cx="70" cy="122" r="28"/><circle cx="110" cy="108" r="36"/><circle cx="152" cy="128" r="26"/>
+    <rect x="70" y="124" width="82" height="30" rx="2"/>
+  </g>
+  <path d="M44 150h132" stroke="#c3ccd6" stroke-width="6" opacity=".7"/>
+  <!-- lightning -->
+  <path d="M118 150l-22 34h16l-10 30 30-42h-17l12-22z" fill="#ffc83d"/>
+  <!-- rain -->
+  <g stroke="#3b8fd0" stroke-width="5" stroke-linecap="round">
+    <path d="M62 166l-6 16M82 170l-6 16M146 164l-6 16M166 160l-6 16M64 198l-6 16M150 196l-6 16"/>
+  </g>
+  <!-- wind -->
+  <g fill="none" stroke="#7aa2c4" stroke-width="5" stroke-linecap="round">
+    <path d="M178 176h34a10 10 0 1 0-10-10M170 196h42a10 10 0 1 1-10 10"/>
+  </g>
+</svg>

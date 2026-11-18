@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 240 240">
+  <!-- Sheep Flock : three sheep faces -->
+  <defs>
+    <g id="s">
+      <g fill="#f4efe2">
+        <circle cx="-32" cy="-22" r="26"/><circle cx="0" cy="-34" r="28"/><circle cx="32" cy="-22" r="26"/>
+        <circle cx="-36" cy="8" r="24"/><circle cx="36" cy="8" r="24"/>
+      </g>
+      <g fill="#2f3336">
+        <ellipse cx="-32" cy="6" rx="18" ry="8" transform="rotate(25 -32 6)"/>
+        <ellipse cx="32" cy="6" rx="18" ry="8" transform="rotate(-25 32 6)"/>
+        <ellipse cx="0" cy="14" rx="24" ry="34"/>
+      </g>
+      <circle cx="0" cy="-14" r="20" fill="#f4efe2"/>
+      <circle cx="-9" cy="8" r="4" fill="#f4efe2"/><circle cx="9" cy="8" r="4" fill="#f4efe2"/>
+      <ellipse cx="0" cy="30" rx="6" ry="4" fill="#d9a3a3"/>
+    </g>
+  </defs>
+  <rect x="8" y="8" width="224" height="224" rx="48" fill="#5f8f4a"/>
+  <use xlink:href="#s" transform="translate(64 104) scale(.62)"/>
+  <use xlink:href="#s" transform="translate(176 104) scale(.62)"/>
+  <use xlink:href="#s" transform="translate(120 138) scale(.95)"/>
+</svg>

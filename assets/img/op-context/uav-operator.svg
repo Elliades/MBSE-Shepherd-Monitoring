@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240">
+  <!-- UAV operator : person with headset -->
+  <rect x="8" y="8" width="224" height="224" rx="48" fill="#3f8f5b"/>
+  <path d="M52 200a68 62 0 0 1 136 0Z" fill="#fff"/>
+  <path d="M104 150h32l-16 26Z" fill="#3f8f5b"/>
+  <circle cx="120" cy="90" r="36" fill="#fff"/>
+  <path d="M80 92a40 40 0 0 1 80 0" fill="none" stroke="#1f4d31" stroke-width="9" stroke-linecap="round"/>
+  <rect x="72" y="84" width="14" height="30" rx="6" fill="#1f4d31"/>
+  <rect x="154" y="84" width="14" height="30" rx="6" fill="#1f4d31"/>
+  <path d="M161 112q-2 16-24 16" fill="none" stroke="#1f4d31" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="135" cy="128" r="6" fill="#1f4d31"/>
+</svg>

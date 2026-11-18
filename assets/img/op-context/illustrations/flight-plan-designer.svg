@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="1000" viewBox="0 0 240 240">
+  <!-- Flight plan Designer : a tablet app where the route of the drone is drawn on a map of the pasture -->
+  <ellipse cx="120" cy="214" rx="86" ry="9" fill="#000" opacity=".14"/>
+  <!-- tablet -->
+  <rect x="24" y="28" width="192" height="164" rx="16" fill="#2b2f33"/>
+  <circle cx="120" cy="36" r="2" fill="#5a6672"/>
+  <!-- map -->
+  <rect x="34" y="42" width="172" height="138" rx="6" fill="#d8e8c4"/>
+  <path d="M66 160C90 146 112 176 152 164S196 152 206 168V180H66Z" fill="#7fc4e0" opacity=".85"/>
+  <path d="M66 70H206M66 112H206M110 42V160M156 42V160" stroke="#c4d8ad" stroke-width="2"/>
+  <!-- pasture zone -->
+  <path d="M96 70L174 64L190 118L134 152L88 130Z" fill="#9fcb7a" stroke="#5f9444" stroke-width="2.5" stroke-dasharray="5 3" stroke-linejoin="round"/>
+  <!-- route -->
+  <path d="M102 134L114 92L150 80L168 110L140 128Z" fill="none" stroke="#e08a2c" stroke-width="3.5" stroke-dasharray="7 4" stroke-linecap="round" stroke-linejoin="round"/>
+  <g fill="#fff" stroke="#e08a2c" stroke-width="3">
+    <circle cx="114" cy="92" r="5"/><circle cx="150" cy="80" r="5"/><circle cx="168" cy="110" r="5"/><circle cx="140" cy="128" r="5"/>
+  </g>
+  <circle cx="102" cy="134" r="7" fill="#3fbf6a" stroke="#fff" stroke-width="3"/>
+  <!-- small drone on the route -->
+  <g transform="translate(160 94)">
+    <path d="M-8-8L8 8M8-8L-8 8" stroke="#2b2f33" stroke-width="3" stroke-linecap="round"/>
+    <g fill="#fff" stroke="#2b2f33" stroke-width="1.5"><circle cx="-8" cy="-8" r="3.5"/><circle cx="8" cy="-8" r="3.5"/><circle cx="-8" cy="8" r="3.5"/><circle cx="8" cy="8" r="3.5"/></g>
+    <circle r="3.5" fill="#e08a2c"/>
+  </g>
+  <!-- tool strip -->
+  <rect x="34" y="42" width="26" height="138" rx="6" fill="#eef1f4"/>
+  <circle cx="47" cy="58" r="5" fill="#e5483f"/><circle cx="47" cy="58" r="1.8" fill="#fff"/>
+  <path d="M41 82l6-8 6 8" fill="none" stroke="#e08a2c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="41" y="96" width="12" height="12" rx="2" fill="none" stroke="#5f9444" stroke-width="3"/>
+  <path d="M41 128h12M41 134h12M41 140h12" stroke="#7a8794" stroke-width="2.5" stroke-linecap="round"/>
+  <circle cx="47" cy="164" r="7" fill="#3b8fd0"/>
+  <path d="M43.5 164l2.5 2.5 4.5-5" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
