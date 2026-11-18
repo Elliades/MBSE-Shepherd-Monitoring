@@ -93,7 +93,7 @@ async function takeOffAfterBriefing(blocks) {
 if (!here) {
   fs.copyFileSync(base, file);
   /* The base holds a link to the profile, which must sit next to the model or Cameo stops on a dialog. */
-  fs.copyFileSync(path.join(path.dirname(base), 'ISAE-Profile.mdzip'), path.join(dir, 'ISAE-Profile.mdzip'));
+  fs.copyFileSync(path.join(path.dirname(base), 'MBSE-Shepherd-Profile.mdzip'), path.join(dir, 'MBSE-Shepherd-Profile.mdzip'));
   await call('project', 'open', [file]);
   for (let waited = 0; ; waited += 2000) {
     const open = await call('project', 'getCurrent').catch(() => ({}));

@@ -51,13 +51,15 @@ window.COURSE = {
     },
 
     /* ───────────────────────── 1 · Set up Cameo ───────────────────────── */
+    /* Link this guide to Cameo: the same scene in the four parts (js/pairing-scene.js). */
+    window.PAIRING_SCENE(),
     {
       id: "load-model", ch: "setup", kind: "do",
       title: "Open the model of Part 4",
       lead: "A new model: the system of interest is the solution, not the drone.",
       blocks: [
         { download: { label: "Starting model", file: "UAV_Part4_Swarm.mdzip", src: "assets/models/UAV_Part4_Swarm.mdzip", size: "1.6 MB" } },
-        { download: { label: "Its profile", file: "ISAE-Profile.mdzip", src: "assets/models/ISAE-Profile.mdzip", size: "160 KB" } },
+        { download: { label: "Its profile", file: "MBSE-Shepherd-Profile.mdzip", src: "assets/models/MBSE-Shepherd-Profile.mdzip", size: "160 KB" } },
         {
           steps: [
             "Start Cameo with the floating license, as in Part 3.",

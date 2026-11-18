@@ -134,14 +134,14 @@ window.COURSE = {
     {
       id: "plugin", ch: "setup", kind: "do",
       title: "Install the latest MBSE Shepherd plugin",
-      lead: "This part uses the logical commands of the plugin. Install version 1.2.0 again, even if you already have one.",
+      lead: "This part uses the logical commands of the plugin. Install version 1.7.0 again, even if you already have one.",
       blocks: [
         {
           tabs: [
             {
               label: "Standard", sub: "Cameo's plugin manager",
               blocks: [
-                { download: { label: "Plugin to install", file: "com.elliades.isae.mbseShepherd_1.2.0.zip", src: "../assets/plugins/com.elliades.isae.mbseShepherd_1.2.0.zip", size: "21 MB" } },
+                { download: { label: "Plugin to install", file: "com.elliades.mbseShepherd_1.7.0.zip", src: "../assets/plugins/com.elliades.mbseShepherd_1.7.0.zip", size: "20 MB" } },
                 {
                   steps: [
                     "In Cameo, choose {{Help > Resource & Plugin Manager}}, then click {{Import}}.",
@@ -159,7 +159,7 @@ window.COURSE = {
             {
               label: "No admin rights", sub: "a script, no installer",
               blocks: [
-                { download: { label: "Plugin archive", file: "com.elliades.isae.mbseShepherd_1.2.0.zip", src: "../assets/plugins/com.elliades.isae.mbseShepherd_1.2.0.zip", size: "21 MB" } },
+                { download: { label: "Plugin archive", file: "com.elliades.mbseShepherd_1.7.0.zip", src: "../assets/plugins/com.elliades.mbseShepherd_1.7.0.zip", size: "20 MB" } },
                 { download: { label: "Install script", file: "install-plugin.ps1", src: "../assets/plugins/install-plugin.ps1", size: "2 KB" } },
                 {
                   steps: [
@@ -189,7 +189,7 @@ window.COURSE = {
             {
               label: "No script", sub: "3 steps, by hand",
               blocks: [
-                { download: { label: "Plugin archive", file: "com.elliades.isae.mbseShepherd_1.2.0.zip", src: "../assets/plugins/com.elliades.isae.mbseShepherd_1.2.0.zip", size: "21 MB" } },
+                { download: { label: "Plugin archive", file: "com.elliades.mbseShepherd_1.7.0.zip", src: "../assets/plugins/com.elliades.mbseShepherd_1.7.0.zip", size: "20 MB" } },
                 {
                   copy: { label: "Your Cameo folder (no 2026x folder? create it)", value: "%LOCALAPPDATA%\\.magic.systems.of.systems.architect\\2026x" }
                 },
@@ -207,13 +207,15 @@ window.COURSE = {
         }
       ]
     },
+    /* Link this guide to Cameo: the same scene in the four parts (js/pairing-scene.js). */
+    window.PAIRING_SCENE(),
     {
       id: "load-model", ch: "setup", kind: "do",
       title: "Open the starting model",
       lead: "The functional mission is done, and the power-on and the base station are ready. This first model is for Mission Configuration; after your choice, you will open the model of your architecture.",
       blocks: [
         { download: { label: "Starting model", file: "UAV_Part3_Init_MissionConfiguration.mdzip", src: "assets/models/UAV_Part3_Init_MissionConfiguration.mdzip", size: "1.2 MB" } },
-        { download: { label: "Its profile", file: "ISAE-Profile.mdzip", src: "assets/models/ISAE-Profile.mdzip", size: "160 KB" } },
+        { download: { label: "Its profile", file: "MBSE-Shepherd-Profile.mdzip", src: "assets/models/MBSE-Shepherd-Profile.mdzip", size: "160 KB" } },
         {
           steps: [
             "Download both files **into the same folder**, then open the model ({{File > Open Project}}). Without the profile next to it, Cameo stops on a dialog. Do not unzip the .mdzip.",
@@ -376,7 +378,7 @@ window.COURSE = {
         {
           callout: {
             tone: "note", title: "Two layers, two colours",
-            text: "**A**, in blue, is the functional level: the function of the mission. **B**, in green, is the logical level: a function of the subsystem. Same name, **not the same function**: the logical `Load Flight Plan` belongs to Mission Configuration, and refines the functional one («refine»)."
+            text: "**A**, in blue, is the functional level: the function of the mission. **B**, in green, is the logical level: a function of the subsystem. Same name, **not the same function**: the logical `Parameter Mission` belongs to Mission Configuration, and refines the functional one («refine»)."
           }
         }
       ]
@@ -392,8 +394,8 @@ window.COURSE = {
             rows: [
               ["Start SOI", "**Outside**: power-on", "Nobody"],
               ["FlightPlan Correct, FlightPlan Incorrect", "**Outside**: the operator, through the base station", "Nobody"],
-              ["Ready for mission", "**Itself**: Load Flight Plan", "**The operator**: send it out too"],
-              ["FlightPlan Check Failed", "**Itself**: Load Flight Plan", "**The operator**: send it out too"],
+              ["Ready for mission", "**Itself**: Parameter Mission", "**The operator**: send it out too"],
+              ["FlightPlan Check Failed", "**Itself**: Parameter Mission", "**The operator**: send it out too"],
               ["Start Sheep Guard Mission", "**Outside**: the operator, through the base station", "**The decider**: pass it on"]
             ]
           }
@@ -536,7 +538,7 @@ window.COURSE = {
         { widget: "archSim", opts: { arch: "3", stage: "prep", validate: true, cameo: "tp" } },
         {
           list: [
-            "`FlightPlan Incorrect`: Load Flight Plan refuses it, the subsystem goes **back to Unconfigured** and the operator is told.",
+            "`FlightPlan Incorrect`: Check Flight Plan refuses it, the subsystem goes **back to Unconfigured** and the operator is told.",
             "`FlightPlan Correct`: the subsystem reaches **Ready for Mission** and the operator is told."
           ]
         }
@@ -745,7 +747,7 @@ window.COURSE = {
             variants: {
               "1": { label: "You are building **architecture 1**, the feature orchestrator.", tab: "Arch. 1", blocks: [
                 { download: { label: "Your starting model", file: "UAV_Part3_Init_Arch1_FeatureOrchestrator.mdzip", src: "assets/models/UAV_Part3_Init_Arch1_FeatureOrchestrator.mdzip", size: "1.3 MB" } },
-                { p: "Download it next to `ISAE-Profile.mdzip`, then open it." },
+                { p: "Download it next to `MBSE-Shepherd-Profile.mdzip`, then open it." },
                 { cards: [
                   { n: "✓", icon: "check", title: "Ready in the model", text: "**Mission Configuration**, connected. **Sheep Guard**, **Zone Surveillance**, **Predator Defense**: states, functions and ports. The **Mission Orchestrator**: its ports and functions, with an empty state machine." },
                   { n: "→", icon: "bulb", tone: "tip", title: "Yours", text: "The **states and transitions** of the orchestrator, and the **connectors**." }
@@ -753,7 +755,7 @@ window.COURSE = {
               ] },
               "2": { label: "You are building **architecture 2**, the patch.", tab: "Arch. 2", blocks: [
                 { download: { label: "Your starting model", file: "UAV_Part3_Init_Arch2_Patch.mdzip", src: "assets/models/UAV_Part3_Init_Arch2_Patch.mdzip", size: "1.3 MB" } },
-                { p: "Download it next to `ISAE-Profile.mdzip`, then open it." },
+                { p: "Download it next to `MBSE-Shepherd-Profile.mdzip`, then open it." },
                 { cards: [
                   { n: "✓", icon: "check", title: "Ready in the model", text: "**Mission Configuration**, connected. **Zone Surveillance**, **SheepMonitoring**, **Predator Management**: states, functions and ports. They do not know about each other's conflicts yet." },
                   { n: "→", icon: "bulb", tone: "tip", title: "Yours", text: "The **connectors**, then **the patch**: you design it." }
@@ -761,7 +763,7 @@ window.COURSE = {
               ] },
               "3": { label: "You are building **architecture 3**, the central orchestrator.", tab: "Arch. 3", blocks: [
                 { download: { label: "Your starting model", file: "UAV_Part3_Init_Arch3_CentralOrchestrator.mdzip", src: "assets/models/UAV_Part3_Init_Arch3_CentralOrchestrator.mdzip", size: "1.3 MB" } },
-                { p: "Download it next to `ISAE-Profile.mdzip`, then open it." },
+                { p: "Download it next to `MBSE-Shepherd-Profile.mdzip`, then open it." },
                 { cards: [
                   { n: "✓", icon: "check", title: "Ready in the model", text: "**Mission Configuration**, connected. **Zone Patrolling**, **SheepMonitoring**, **Predator Management**, **Tracking**: states, functions and ports. The **Mission Orchestrator**: its ports and functions, with an empty state machine." },
                   { n: "→", icon: "bulb", tone: "tip", title: "Yours", text: "The **states and transitions** of the orchestrator, and the **connectors**." }
@@ -1183,8 +1185,9 @@ window.COURSE = {
   authorNotes: [
     { scene: "three-archs", text: "The simulation runs part3/content/archs.js (written by scripts/make-part3-archs.py) with js/logical-engine.js. Captions, message labels, the highlighted patch exchange and the refused plan left out: config archs.story, archs.badges, archs[\"2\"].highlight, archs.leaveOut." },
     { scene: "build-plan", text: "Stages: config archs.stages. Each simulates only the parts built so far, and the states of the decider made so far. Validate in Cameo sends the signals to the simulation over the relay (simtest/start, send, states, stop: allow-list of RpcDispatcher) and reads the states back; parts are addressed by the name of their type. If the plugin is too old, the button offers the scenario file." },
+    { scene: "mc-ab", text: "2026-11-15, Quentin: Configured runs Parameter Mission (Acquire, Load, Check Flight Plan, then the verdict sent to itself), not Load Flight Plan, as in Parts 1 and 2. The texts, the animations, archs.js and the four starting models (rebuilt the same day) say so. Still to redo from those models: the screenshots fonctionnel-stm-mission.png (scene mission), fonctionnel-undeployed.png and mc-stm-correction.png (scene mc-block); their alt texts still describe the old pictures." },
     { scene: "an-perf", text: "The latencies (8 ms per interface, 4 ms per subsystem) are illustrative, not measured." },
-    { scene: "load-model", text: "Four starting models in part3/assets/models/, built from the drone-archs specs by scripts/make-part3-inits.py and scripts/build-part3-models.mjs. All have the same package, so the links and Validate in Cameo hold in each." },
+    { scene: "load-model", text: "Four starting models in part3/assets/models/, built from the drone-archs specs by scripts/make-part3-inits.py and scripts/build-part3-models.mjs. All have the same package, so the links and Validate in Cameo hold in each. Since 2026-11-15 the base is \"UAV_Part3_Base - Parameter Mission.mdzip\" (the Mission Configuration model with Parameter Mission, MBSE-Shepherd-Profile next to it), not the old \"part 3 - init\", which still needs ISAE-Profile." },
     { scene: "trade-off", text: "The scores of the star diagram (config archs.*.score, axes in archs.axes) are a reading of the three fiches, not measured. Adjust them." },
     { scene: "start-build", text: "The drawings and the gestures of the states: config archs[k].target. What each stage adds: config archs.stages. The connectors under the IBD come from archs.js. State and function names are kept as in the model, typos included (Perimiter, surounding)." }
   ]
