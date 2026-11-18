@@ -38,6 +38,7 @@ Fonts come from Google Fonts. Without Internet the guide falls back to system fo
 | File | What it holds |
 | --- | --- |
 | `index.html`, `home/` | The home page of the site (see below). |
+| `support/` | The download page (`/support/`): student projects of the four parts, the plugin and the profile. |
 | `part1/content/scenes.js` | Every chapter and scene, the FAQ, and the notes for the author. **This is the file to edit.** Paths to the shared assets start with `../assets/`. |
 | `part1/content/model-links.js` | Every place of the Cameo model the guide points to, defined once. |
 | `part1/content/config.js` | Course title, authors, author mode, inline toolbar icons. |
@@ -143,7 +144,7 @@ the **same** relay:
   your computer. With `"auto"`, a code that the online relay does not know is then tried on
   `ws://127.0.0.1:8787` (Cameo in *Local* mode): the student only types the code.
   `?relay=wss://host/path` overrides it for one visit and turns that fallback off.
-- **Cameo:** OMF > Relay pairing code has three modes. **Auto** (default) uses the online relay
+- **Cameo:** Webapp Relay > Relay pairing code has three modes. **Auto** (default) uses the online relay
   `wss://shepherd.chaos-art.fr/relay` and, if it cannot be reached 3 times in a row, the relay inside Cameo
   (`ws://127.0.0.1:8787`). **Online** and **This computer** force one of them. The address is also in
   Options > Environment > *Relay bridge*. If the secure connection is refused by the Java of Cameo
@@ -242,6 +243,27 @@ answers `not-found` if nothing is there. Use it when copies of the element exist
 Things to add in the guide for this to work: give the entry a `path` that matches the steps, spell `name` as
 the steps tell the student to type it. For the functions the student names in Question 2, the guide builds the
 entry itself (`fromAnswer` with `under: "<link key>"`, in `b-exercise`).
+
+## Show in a diagram
+
+When the text names an element after a diagram, its chip shows it **on that diagram**, not only in the Model
+Browser. Connected to Cameo, a click on the chip selects the element in the Model Browser (by id, or by name as
+above), then sends `diagram/open` and `diagram/highlight` with `[{elementId: <diagram>}, {elementId: <element>}]`:
+Cameo opens the diagram, selects the element's shapes and frames them in amber for a few seconds (view only,
+nothing in the model). Not connected, the sheet offers **Show in <diagram>** next to **In the Model Browser**.
+
+Which diagram, first that applies:
+
+- the chip is written `[[key@diagram-key]]`;
+- the entry of `content/model-links.js` has `diagram: "<diagram-key>"`;
+- the element is drawn as a shape of its own (`block part usecase actor state choice`) and a diagram was
+  named before it in the same scene (a chip or a `{ path }` card of a diagram type), or the scene has
+  `diagram: "<diagram-key>"`.
+
+A diagram without an id is found with `model/getByQualifiedName` on its path. When the element is not drawn on
+that diagram (`symbols` empty), it stays selected in the Model Browser and the guide says so. A part (`type:
+"part"`) has to be `strict`: `selectByName` does not know parts. A block drawn on an IBD is a part typed by it, so
+the block's own chip finds no shape there until the plugin also matches the parts typed by a block.
 
 ## Edit a scene
 
@@ -407,7 +429,7 @@ no crash, so no System Monitoring Safety (`remove_crash`).
 python -I scripts/make-part3-archs.py <path to OMF_Private/docs/pasture-sentinel/drone-archs>
 python -I scripts/make-part3-inits.py <same path>
 node scripts/build-part3-models.mjs <base .mdzip>   # MagicDraw running with the OMF plugin
-# the models need part3/assets/models/ISAE-Profile.mdzip in their folder, or Cameo stops on a dialog when opening them
+# the models need part3/assets/models/MBSE-Shepherd-Profile.mdzip in their folder, or Cameo stops on a dialog when opening them
 ```
 
 ## Part 4: the swarm

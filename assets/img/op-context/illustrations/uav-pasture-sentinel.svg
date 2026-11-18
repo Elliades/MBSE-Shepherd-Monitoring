@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="1000" viewBox="0 0 240 240">
+  <!-- SOI Pasture Sentinel : quadcopter scanning the pasture -->
+  <ellipse cx="120" cy="218" rx="86" ry="14" fill="#6aa95b" opacity=".45"/>
+  <path d="M120 150L52 214a86 14 0 0 0 136 0Z" fill="#ffe27a" opacity=".35"/>
+  <!-- rear rotors -->
+  <g opacity=".85">
+    <path d="M82 84l-6 -6M158 84l6 -6" stroke="#8a95a1" stroke-width="5" stroke-linecap="round"/>
+    <ellipse cx="72" cy="72" rx="26" ry="4" fill="#5a6672" opacity=".55"/>
+    <ellipse cx="168" cy="72" rx="26" ry="4" fill="#5a6672" opacity=".55"/>
+  </g>
+  <!-- arms -->
+  <path d="M96 108L44 94M144 108L196 94" stroke="#5a6672" stroke-width="9" stroke-linecap="round"/>
+  <!-- front motors and rotors -->
+  <rect x="34" y="84" width="20" height="16" rx="5" fill="#3a434c"/>
+  <rect x="186" y="84" width="20" height="16" rx="5" fill="#3a434c"/>
+  <ellipse cx="44" cy="80" rx="38" ry="5" fill="#5a6672" opacity=".5"/>
+  <ellipse cx="196" cy="80" rx="38" ry="5" fill="#5a6672" opacity=".5"/>
+  <!-- landing legs -->
+  <path d="M96 128L78 158M144 128L162 158" stroke="#3a434c" stroke-width="5" stroke-linecap="round"/>
+  <path d="M64 160h30M146 160h30" stroke="#3a434c" stroke-width="6" stroke-linecap="round"/>
+  <!-- body -->
+  <rect x="80" y="96" width="80" height="40" rx="18" fill="#f4f1ea"/>
+  <rect x="80" y="118" width="80" height="18" rx="9" fill="#d9d3c4"/>
+  <rect x="96" y="104" width="48" height="9" rx="4.5" fill="#e08a2c"/>
+  <circle cx="148" cy="124" r="3" fill="#3fbf6a"/><circle cx="92" cy="124" r="3" fill="#e5483f"/>
+  <!-- camera gimbal -->
+  <path d="M120 136v8" stroke="#3a434c" stroke-width="5"/>
+  <circle cx="120" cy="150" r="13" fill="#2b2f33"/>
+  <circle cx="120" cy="152" r="6" fill="#5b82c4"/>
+  <circle cx="118" cy="150" r="2" fill="#fff" opacity=".8"/>
+</svg>

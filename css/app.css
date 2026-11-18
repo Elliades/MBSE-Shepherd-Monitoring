@@ -732,6 +732,20 @@ body:not(.author) .ph, body:not(.author) .author-only { display: none; }
 .xlink { color: var(--sky); font-weight: 600; text-underline-offset: 2px; }
 .xlink svg { width: 0.85em; height: 0.85em; margin-left: 0.2em; vertical-align: -0.05em; }
 .link-ready { font-family: var(--font-mono); font-weight: 700; color: var(--grass); }
+
+/* Question 7 of Part 2: the scenario played in Cameo (js/widgets-stm-check.js) */
+.stm-check { display: grid; gap: 0.5rem; }
+.stm-check .btn svg { width: 1.15rem; height: 1.15rem; display: inline-block; }
+.stm-check-out, .stm-check-cov { margin: 0; }
+.stm-check-out:empty, .stm-check-cov:empty, .stm-check-res:empty { display: none; }
+.stm-check-res { margin: 0; padding: 0; list-style: none; display: grid; gap: 0.3rem; font-size: 0.9rem; }
+.stm-check-res li { display: grid; gap: 0.1rem; padding: 0.35rem 0.6rem; border-radius: 8px; background: var(--surface-2); }
+.stm-check-res li.ok { background: var(--grass-soft); color: var(--grass); }
+.stm-check-res li.no { background: var(--danger-soft); color: var(--danger); }
+.stm-check-sig { font-weight: 700; }
+.stm-check-note { color: var(--ink-2, inherit); opacity: 0.85; }
+.stm-check-have { font-family: var(--font-mono); font-size: 0.82rem; }
+.stm-red { color: var(--danger); }
 /* A pink frame around the drone button of the top bar, bouncing to invite a click. Kept even when the
    phone asks for reduced motion: this is the one movement the step asks for. */
 #sim-btn.hint { color: #e4007c; background: rgba(255, 95, 162, 0.18); border: 2px solid #ff5fa2; border-radius: 8px; outline: 3px solid #ff5fa2; outline-offset: 3px; animation: sim-hint-bounce 0.9s ease-in-out infinite; }
@@ -1460,6 +1474,142 @@ body.teacher {
 .pair-how { list-style: decimal; padding-left: 1.4rem; }
 .pair-how li { padding-left: 0.2rem; }
 .pair-how li::before { content: none; }
+
+/* ───────── pairing scene (js/pairing-scene.js): the animation pairFlow and the live check pairCheck ───────── */
+.pf { --pf-bezel: color-mix(in srgb, var(--ink) 62%, var(--surface)); margin: 0; display: grid; gap: 0.6rem; min-width: 0; max-width: 100%; }
+/* max-content would widen the whole tab panel on a phone */
+.pf-watch.watch-tag { width: auto; }
+.pf-row { position: relative; display: flex; align-items: stretch; gap: 0; min-width: 0; }
+.pf-win { flex: 1 1 0; min-width: 0; border: 1.5px solid var(--line); border-radius: 10px; background: var(--surface); box-shadow: var(--shadow); overflow: hidden; font-size: 0.8rem; }
+.pf-bar { padding: 0.35rem 0.6rem; background: var(--surface-2); border-bottom: 1.5px solid var(--line); font-weight: 700; font-size: 0.74rem; display: flex; align-items: center; gap: 0.3rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pf-body { padding: 0.5rem 0.6rem; display: grid; gap: 0.35rem; align-content: start; }
+.pf-state { display: flex; align-items: center; gap: 0.4rem; }
+.pf-cbtn { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.05rem 0.45rem; border: 1.5px solid var(--line); border-radius: 999px; background: var(--surface); font-weight: 700; }
+.pf-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--ink-3); flex: none; display: inline-block; transition: background 0.35s ease, box-shadow 0.35s ease; }
+.pf-dot.ok { background: var(--grass); box-shadow: 0 0 0 3px var(--grass-soft); }
+.pf-code { display: flex; align-items: center; gap: 0.5rem; font: 700 1.05rem var(--font-mono); letter-spacing: 0.02em; white-space: nowrap; }
+.pf-copy { position: relative; font-size: 0.95rem; padding: 0 0.25rem; border-radius: 5px; color: var(--ink-2); }
+.pf-copy em { position: absolute; left: 110%; top: 50%; transform: translateY(-50%); font: 700 0.68rem var(--font-mono); font-style: normal; color: var(--grass); white-space: nowrap; }
+.pf-line { font-size: 0.74rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pf-line code { font-size: 0.7rem; }
+.pf-muted { color: var(--ink-2); }
+.pf-good { color: var(--grass); }
+.pf-btn { justify-self: start; padding: 0.15rem 0.6rem; border-radius: 6px; border: 1.5px solid var(--line); font-weight: 700; font-size: 0.74rem; }
+.pf-input { padding: 0.2rem 0.5rem; border: 1.5px solid var(--line); border-radius: 6px; font: 700 0.95rem var(--font-mono); letter-spacing: 0.12em; display: grid; }
+.pf-input > * { grid-area: 1 / 1; }
+.pf-ph { color: var(--ink-3); font-weight: 400; }
+.pf-cells { display: flex; gap: 3px; }
+.pf-cells span { width: 1.25rem; height: 1.6rem; display: grid; place-items: center; border: 1.5px solid var(--line); border-radius: 5px; font: 700 0.85rem var(--font-mono); }
+.pf-qr { width: 2.6rem; height: 2.6rem; border-radius: 4px; border: 3px solid #fff; outline: 1.5px solid var(--line);
+  background: conic-gradient(#15221a 25%, #fff 0 50%, #15221a 0 75%, #fff 0) 0 0 / 0.65rem 0.65rem; }
+.pf-keep { justify-self: start; padding: 0.1rem 0.5rem; border-radius: 999px; background: var(--amber-soft); color: var(--amber); font-weight: 700; font-size: 0.7rem; }
+.pf-scan { display: flex; align-items: center; gap: 0.4rem; color: var(--sky); font-weight: 700; }
+.pf-scan i { width: 1.2rem; height: 1.2rem; border: 2px solid var(--sky); border-radius: 4px; position: relative; overflow: hidden; }
+.pf-scan i::after { content: ""; position: absolute; left: 0; right: 0; height: 2px; background: var(--sky); animation: pf-scan 1s ease-in-out infinite alternate; }
+@keyframes pf-scan { from { top: 0; } to { top: calc(100% - 2px); } }
+.pf-phone { flex: 0.8 1 0; border-radius: 16px; }
+/* the link between two windows: grey and dashed, then flowing once it is up */
+.pf-link { flex: 0 0 3.6rem; position: relative; display: grid; place-items: center; }
+.pf-link::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; border-top: 2.5px dashed var(--line); }
+.pf-link span { position: relative; padding: 0.05rem 0.4rem; border-radius: 999px; background: var(--surface-2); border: 1.5px solid var(--line); font: 700 0.62rem var(--font-mono); text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-3); white-space: nowrap; }
+.pf-link.live::before { border-top: 2.5px solid transparent; background: repeating-linear-gradient(90deg, var(--grass) 0 8px, transparent 8px 14px) 0 0 / 28px 2.5px repeat-x; height: 2.5px; top: calc(50% - 1px); animation: pf-flow 0.8s linear infinite; }
+.pf-link.live span { color: var(--grass); border-color: var(--grass); background: var(--grass-soft); }
+@keyframes pf-flow { to { background-position: 28px 0; } }
+/* what shows only at some stages */
+.pf [data-from], .pf [data-until], .pf [data-only] { transition: opacity 0.35s ease, transform 0.35s ease; }
+.pf [data-from]:not(.on), .pf [data-until]:not(.on), .pf [data-only]:not(.on) { opacity: 0; }
+.pf .pf-win[data-from]:not(.on) { opacity: 0.25; transform: scale(0.97); }
+.pf-swap { display: inline-grid; }
+.pf-swap > * { grid-area: 1 / 1; }
+.pf-swap > :not(.on) { visibility: hidden; }
+.pf .hl:not(.pf-qr) { border-color: var(--route); background: var(--route-soft); color: var(--route); box-shadow: 0 0 0 3px var(--route-soft); }
+.pf .pf-qr.hl { outline: 2.5px solid var(--route); box-shadow: 0 0 0 6px var(--route-soft); }
+/* the code that goes from Cameo to the guide */
+.pf-token { position: absolute; top: 2.9rem; left: 12%; padding: 0.1rem 0.5rem; border-radius: 6px; background: var(--route); color: var(--on-route); font: 700 0.8rem var(--font-mono); white-space: nowrap; pointer-events: none; }
+.pf-token.on { animation: pf-travel 2.4s ease-in-out forwards; }
+@keyframes pf-travel { 0% { left: 12%; opacity: 0; } 15% { opacity: 1; } 85% { opacity: 1; } 100% { left: 66%; opacity: 0; } }
+.pf-chips .chip { min-width: 2.2rem; justify-content: center; }
+/* the devices: a monitor (Cameo and the guide on one computer), a laptop with Cameo and a phone */
+.pf-row:has(.pf-dev) { align-items: center; justify-content: center; }
+.pf-dev { position: relative; display: grid; justify-items: center; min-width: 0; flex: 1 1 0; }
+.pf-handset { flex: 0 0 9.5rem; }
+.pf-screen { position: relative; width: 100%; display: flex; gap: 6px; padding: 6px; min-width: 0; box-sizing: border-box;
+  background: color-mix(in srgb, var(--sky) 12%, var(--surface-2)); border: 7px solid var(--pf-bezel); border-radius: 10px; outline: 1px solid var(--line); }
+.pf-laptop .pf-screen { width: 90%; border-width: 6px; border-radius: 8px 8px 0 0; }
+.pf-base { width: 100%; height: 10px; background: var(--pf-bezel); border-radius: 2px 2px 9px 9px; position: relative; }
+.pf-base::after { content: ""; position: absolute; left: 42%; right: 42%; top: 0; height: 3px; border-radius: 0 0 4px 4px; background: var(--surface-2); }
+.pf-stand { width: 30%; height: 18px; position: relative; }
+.pf-stand::before { content: ""; position: absolute; left: 43%; right: 43%; top: 0; height: 13px; background: var(--pf-bezel); }
+.pf-stand::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 5px; border-radius: 3px; background: var(--pf-bezel); }
+.pf-handset .pf-screen { flex-direction: column; min-height: 16rem; padding: 16px 5px 10px; border-width: 6px; border-radius: 22px; }
+.pf-handset .pf-screen::before { content: ""; position: absolute; top: 5px; left: 38%; right: 38%; height: 5px; border-radius: 3px; background: var(--pf-bezel); }
+.pf-dev-lbl { margin-top: 0.35rem; font: 700 0.64rem var(--font-mono); text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-3); text-align: center; }
+.pf-app { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; font-size: 0.72rem; box-shadow: var(--shadow); }
+.pf-tb { display: flex; align-items: center; gap: 0.35rem; padding: 0.2rem 0.4rem; font-weight: 700; font-size: 0.62rem; white-space: nowrap; overflow: hidden; background: var(--surface-2); border-bottom: 1px solid var(--line); }
+/* the guide windows take the tint of the site; Cameo is a white desktop app in both themes */
+.pf-app-web { --surface: color-mix(in srgb, var(--grass) 9%, var(--bg, #fbfdf8)); background: var(--surface); }
+/* Cameo is a white desktop app in both themes, so it never looks like the guide */
+.pf-app-cameo { --surface: #fff; --surface-2: #eef1f6; --ink: #1d2430; --ink-2: #4a5263; --ink-3: #7d8494; --line: #c8cdd8; color: var(--ink); background: #fff; }
+.pf-app-cameo > .pf-tb { background: #34436b; color: #fff; border-color: #34436b; }
+.pf-logo { width: 0.9rem; height: 0.9rem; border-radius: 3px; display: grid; place-items: center; background: #f5a524; color: #34436b; font: 800 0.55rem var(--font-body); font-style: normal; flex: none; }
+.pf-lights { display: flex; gap: 3px; flex: none; }
+.pf-lights i { width: 6px; height: 6px; border-radius: 50%; background: var(--ink-3); opacity: 0.5; }
+.pf-url { flex: 1; min-width: 0; padding: 0.05rem 0.45rem; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); font: 600 0.58rem var(--font-mono); color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; }
+.pf-app-body { position: relative; flex: 1; padding: 0.35rem; display: grid; gap: 0.35rem; align-content: start; }
+.pf-cameo-body { grid-template-columns: 1.6rem minmax(0, 1fr); align-items: start; }
+.pf-tree { display: grid; gap: 5px; padding-top: 0.2rem; }
+.pf-tree span { height: 4px; border-radius: 2px; background: var(--line); }
+.pf-tree span:nth-child(2n) { margin-left: 5px; }
+.pf-ghead { display: flex; align-items: center; justify-content: space-between; gap: 0.3rem; padding: 0.2rem 0.4rem; border-bottom: 1px solid var(--line); font-size: 0.62rem; white-space: nowrap; }
+.pf-ghead b { overflow: hidden; text-overflow: ellipsis; }
+.pf-screen .pf-win { font-size: 0.7rem; box-shadow: 0 2px 8px rgb(0 0 0 / 0.12); border-radius: 7px; }
+.pf-screen .pf-bar { font-size: 0.64rem; padding: 0.2rem 0.45rem; }
+.pf-screen .pf-body { padding: 0.35rem 0.45rem; gap: 0.3rem; }
+.pf-screen .pf-code { font-size: 0.9rem; }
+.pf-screen .pf-line { font-size: 0.64rem; }
+.pf-screen .pf-btn { font-size: 0.64rem; }
+.pf-screen .pf-input { font-size: 0.85rem; }
+.pf-screen .pf-cells span { width: 1rem; height: 1.3rem; font-size: 0.72rem; }
+.pf .pf-app[data-from]:not(.on) { opacity: 0.2; transform: scale(0.97); }
+.pf .pf-cells.hl { border: 0; background: none; box-shadow: none; }
+.pf .pf-cells.hl span { border-color: var(--route); color: var(--route); background: var(--route-soft); }
+/* the phone: idle, then the camera on the QR code (or the online code typed), then following */
+.pf-app-phone { border-radius: 12px; }
+.pf-pscreen { display: grid; width: 100%; }
+.pf-pscreen > span { display: grid; gap: 0.4rem; justify-items: center; text-align: center; align-content: start; padding-top: 0.3rem; }
+.pf-cam { display: block; position: relative; padding: 0.45rem; border: 2px solid var(--sky); border-radius: 8px; overflow: hidden; }
+.pf-cam .pf-qr { display: block; width: 3.2rem; height: 3.2rem; }
+.pf-cam i { position: absolute; left: 0; right: 0; height: 2px; background: var(--sky); box-shadow: 0 0 6px var(--sky); animation: pf-scan 1.1s ease-in-out infinite alternate; }
+.pf-or { font-size: 0.62rem; color: var(--ink-3); }
+.pf-pdone { padding-top: 2.5rem !important; }
+.pf-pdone b { font-size: 0.85rem; }
+/* the code that goes from Cameo to the guide, inside the monitor */
+.pf-monitor .pf-token { top: 5.4rem; }
+@media (max-width: 640px) {
+  .pf-row { flex-direction: column; }
+  .pf-row > .pf-win { flex: none; }
+  .pf-row > .pf-dev { flex: none; width: 100%; }
+  .pf-row > .pf-handset { width: 11rem; }
+  .pf-monitor .pf-screen, .pf-laptop .pf-screen { flex-direction: column; }
+  .pf-monitor .pf-screen > .pf-app, .pf-laptop .pf-screen > .pf-app { flex: none; }
+  .pf-line { white-space: normal; }
+  .pf-link { flex-basis: 2.2rem; }
+  .pf-link::before { left: 50%; right: auto; top: 0; bottom: 0; border-top: 0; border-left: 2.5px dashed var(--line); }
+  .pf-link.live::before { width: 2.5px; height: auto; top: 0; border-left: 0; background: repeating-linear-gradient(180deg, var(--grass) 0 8px, transparent 8px 14px) 0 0 / 2.5px 28px repeat-y; animation-name: pf-flow-v; }
+  .pf-token { display: none; }
+}
+@keyframes pf-flow-v { to { background-position: 0 28px; } }
+@media (prefers-reduced-motion: reduce) {
+  .pf-link.live::before, .pf-scan i::after, .pf-token.on, .pf-cam i { animation: none; }
+}
+.pc { display: grid; gap: 0.5rem; justify-items: start; margin-top: 0.4rem; padding: 0.55rem 0.75rem; border-radius: 10px; background: var(--surface-2); border: 1.5px solid var(--line); }
+.pc.pc-done { background: var(--grass-soft); border-color: var(--grass); }
+.pc ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.3rem; }
+.pc li { display: flex; gap: 0.5rem; align-items: baseline; font-size: 0.9rem; }
+.pc li i { width: 10px; height: 10px; border-radius: 50%; flex: none; background: var(--ink-3); transform: translateY(1px); }
+.pc .pc-ok i { background: var(--grass); }
+.pc .pc-wait i { background: var(--amber); }
+.pc .pc-bad i { background: var(--danger); }
 .pair-tip [data-widget="linkStatus"] { margin-top: 0.7rem; }
 
 /* Embedded in an article (?embed=...): the guide shows no way to leave the page it is quoted in.
@@ -1471,3 +1621,19 @@ body.teacher {
 .embed-widget body, .embed-scene body { background: transparent; }
 .embed-widget #stage { padding: .6rem var(--gutter) 1rem; }
 .embed-widget .scene { max-width: none; }
+
+/* Demo or Cameo mode (js/cameo-sim.js), on top of a trigger panel. Demo must be impossible to miss. */
+.cameo-mode { display: grid; gap: 0.4rem; justify-items: start; padding: 0.7rem 0.85rem; border-radius: 10px; border: 2px solid; font-size: 0.9rem; }
+.cameo-mode p { margin: 0; }
+.cameo-mode .cm-head { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.cameo-mode .cm-tag { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; padding: 0.15rem 0.5rem; border-radius: 999px; color: #fff; }
+.cameo-mode[data-mode="demo"] { border-color: #e08a00; background: repeating-linear-gradient(135deg, rgba(240, 160, 20, 0.16) 0 12px, rgba(240, 160, 20, 0.07) 12px 24px); }
+.cameo-mode[data-mode="demo"] .cm-tag { background: #c25e00; }
+.cameo-mode[data-mode="cameo"] { border-color: var(--grass); background: color-mix(in srgb, var(--grass) 9%, transparent); }
+.cameo-mode[data-mode="cameo"] .cm-tag { background: var(--grass); color: var(--surface); }
+.cameo-mode .cm-note:empty { display: none; }
+.cameo-mode .cm-note { font-weight: 600; }
+.cameo-mode .cm-note[data-kind="no"] { color: var(--danger); }
+.cameo-mode .cm-note[data-kind="busy"] { opacity: 0.75; }
+.sm-trigger.waiting { opacity: 0.6; cursor: progress; }
+#sim-drive:not(:empty) { margin-bottom: 0.8rem; }

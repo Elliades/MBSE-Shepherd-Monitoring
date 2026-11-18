@@ -1,0 +1,365 @@
+<!doctype html>
+<!-- Article 3 of the series: an LLM follows the MBSE method (docs/articles/03-note-article-3-ia-et-mbse.md). Short
+     draft, built on the method of .claude/skills/mbse-architecture. Styled by ../article.css, ../tp/tp.css (the series,
+     the teaser, the tiles) and ia.css. Its figures are in ia.js; the measured ones replay the specs of the three
+     correction architectures of Part 3 (part3/content/archs.js) with js/logical-engine.js. The table of contents, the
+     theme and the language are those of ../article.js. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title data-title-en="AI Follows the MBSE Method · MBSE Shepherd" data-title-fr="L’IA suit la démarche MBSE · MBSE Shepherd">AI Follows the MBSE Method · MBSE Shepherd</title>
+<meta name="description" content="A written method, a Kotlin generator, simulation as the judge. The LLM does not draw an architecture: it decides with the engineer, generates, gets validated, replays the mission and iterates, from the shepherd drone to the swarm.">
+<meta property="og:title" content="AI Follows the MBSE Method: from the Shepherd Drone to the Swarm">
+<meta property="og:description" content="MBSE Shepherd (3/3): the same method, the same tools and the same judge as the students, handed to an LLM.">
+<meta property="og:image" content="../../assets/img/promo-parts34-poster.jpg">
+<meta name="theme-color" content="#e8eee1" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0e1814" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2315221a'/%3E%3Crect x='11' y='11' width='10' height='10' rx='2' fill='%23fbfdf8'/%3E%3Cg fill='none' stroke='%23fbfdf8' stroke-width='2.4'%3E%3Ccircle cx='9' cy='9' r='4'/%3E%3Ccircle cx='23' cy='9' r='4'/%3E%3Ccircle cx='9' cy='23' r='4'/%3E%3Ccircle cx='23' cy='23' r='4'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:ital,wght@0,400;0,600;0,700;1,400&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:wght@400;700&display=swap">
+<link rel="stylesheet" href="../article.css">
+<link rel="stylesheet" href="../tp/tp.css">
+<link rel="stylesheet" href="ia.css">
+<script>
+(function () {
+  var KEY = 'mbse-shepherd-article-lang', p = null;
+  try { p = new URLSearchParams(location.search).get('lang'); } catch (e) {}
+  var lang = p === 'fr' || p === 'en' ? p : null;
+  if (!lang) { try { lang = localStorage.getItem(KEY); } catch (e) {} }
+  if (lang !== 'fr') lang = 'en';
+  document.documentElement.lang = lang;
+}());
+</script>
+</head>
+<body>
+
+<div class="passer" aria-hidden="true"><img src="../../home/lamb.svg" alt="" draggable="false"></div>
+
+<header class="masthead">
+  <a class="brand" href="../../">MBSE Shepherd</a>
+  <div class="masthead-tools">
+    <div class="lang-switch" role="group" aria-label="Language / Langue">
+      <button type="button" class="lang-btn" data-lang-choice="en" aria-pressed="true">EN</button>
+      <button type="button" class="lang-btn" data-lang-choice="fr" aria-pressed="false">FR</button>
+    </div>
+    <button class="theme" id="theme-btn" type="button" aria-label="Theme">◐</button>
+  </div>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="Table of contents / Sommaire">
+  <div data-lang="en">
+    <p class="toc-title">Contents</p>
+    <ol>
+      <li><a href="#fil">The thread</a></li>
+      <li><a href="#mission">The mission</a></li>
+      <li><a href="#drivers">The drivers</a></li>
+      <li><a href="#generation">Generation</a></li>
+      <li><a href="#verification">Verification</a></li>
+      <li><a href="#metriques">Metrics</a></li>
+      <li><a href="#essaim">The swarm</a></li>
+      <li><a href="#bilan">Takeaways</a></li>
+      <li><a href="#capot">Under the hood</a></li>
+    </ol>
+  </div>
+  <div data-lang="fr">
+    <p class="toc-title">Sommaire</p>
+    <ol>
+      <li><a href="#fil">Le fil</a></li>
+      <li><a href="#mission">La mission</a></li>
+      <li><a href="#drivers">Les drivers</a></li>
+      <li><a href="#generation">La génération</a></li>
+      <li><a href="#verification">Les vérifications</a></li>
+      <li><a href="#metriques">Les métriques</a></li>
+      <li><a href="#essaim">L’essaim</a></li>
+      <li><a href="#bilan">Bilan</a></li>
+      <li><a href="#capot">Sous le capot</a></li>
+    </ol>
+  </div>
+</nav>
+
+<article class="post">
+  <header class="post-head">
+    <p class="kicker">MBSE Shepherd · 3/3 · <span data-lang="en">AI</span><span data-lang="fr">IA</span> <span class="draft" data-lang="en">draft</span><span class="draft" data-lang="fr">brouillon</span></p>
+    <h1 data-lang="en">AI Follows the MBSE Method: from the Shepherd Drone to the Swarm</h1>
+    <h1 data-lang="fr">L’IA suit la démarche MBSE : du drone berger à l’essaim</h1>
+    <p class="lede" data-lang="en">A written method, a Kotlin generator, and simulation as the judge. The LLM does not “draw” an architecture: it decides with the engineer, generates, gets checked, replays the mission, and iterates.</p>
+    <p class="lede" data-lang="fr">Une méthode écrite, un générateur Kotlin, et la simulation pour juge. Le LLM ne « dessine » pas une architecture : il décide avec l’ingénieur, génère, se fait contrôler, rejoue la mission et itère.</p>
+    <p class="byline" data-lang="en">Quentin Cespédès · November 2026</p>
+    <p class="byline" data-lang="fr">Quentin Cespédès · novembre 2026</p>
+  </header>
+
+  <!-- ───────── le fil ───────── -->
+  <section id="fil">
+    <div data-lang="en">
+      <p>The <a href="../tp/">first two</a> <a href="../logique/">articles</a> built three things for our students: a <b>method</b>, <b>automation</b> in Cameo, and a <b>judge</b>, the mission scenarios replayed in simulation. An LLM does exactly three things well: follow a written method, call tools, iterate on a test result. So we gave it the course.</p>
+      <p>The method runs through three layers, <b>lifecycle</b> (the operational layer), <b>functional</b> and <b>logical</b>, and the requirements run through all of them. Each element of a layer is linked to the one it comes from, so the validator can follow any requirement end to end:</p>
+    </div>
+    <div data-lang="fr">
+      <p>Les <a href="../tp/">deux premiers</a> <a href="../logique/">articles</a> ont construit trois choses pour nos étudiants : une <b>démarche</b>, de l’<b>automatisation</b> dans Cameo, et un <b>juge</b>, les scénarios de la mission rejoués en simulation. Un LLM sait faire exactement trois choses : suivre une méthode écrite, appeler des outils, itérer sur un résultat de test. On lui a donc donné le cours.</p>
+      <p>La méthode traverse trois couches, <b>cycle de vie</b> (la couche opérationnelle), <b>fonctionnelle</b> et <b>logique</b>, et les exigences les traversent toutes. Chaque élément d’une couche est relié à celui dont il vient : le validateur peut suivre n’importe quelle exigence de bout en bout.</p>
+    </div>
+
+    <figure class="fig wide ia" data-fig="ia-thread"></figure>
+    <p class="fig-cap">
+      <span data-lang="en">Figure 1. One requirement of the shepherd drone, followed through the three layers. Every link is a standard SysML v1 relation set by a generator, never by hand. The status of the requirement is computed from these links and from the scenario runs.</span>
+      <span data-lang="fr">Figure 1. Une exigence du drone berger, suivie à travers les trois couches. Chaque lien est une relation SysML v1 standard posée par un générateur, jamais à la main. Le statut de l’exigence se calcule à partir de ces liens et des scénarios joués.</span>
+    </p>
+
+    <div class="series" data-lang="en">
+      <b>A three-act series</b>
+      <ol>
+        <li><a href="../tp/"><span>Learn by doing</span></a> hands-on learning, connected live to the tool</li>
+        <li><a href="../logique/"><span>Design without the plumbing</span></a> the logical layer: method, automation, simulation</li>
+        <li class="now"><span>Delegate to AI</span> the same method, the same tools, the same judge (this article)</li>
+      </ol>
+    </div>
+    <div class="series" data-lang="fr">
+      <b>Une série en trois actes</b>
+      <ol>
+        <li><a href="../tp/"><span>Apprendre par la pratique</span></a> un TP vivant, connecté à l’outil</li>
+        <li><a href="../logique/"><span>Concevoir sans la plomberie</span></a> la couche logique : démarche, automatisation, simulation</li>
+        <li class="now"><span>Déléguer à l’IA</span> la même méthode, les mêmes outils, le même juge (cet article)</li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ───────── 1 ───────── -->
+  <section id="mission" class="orn">
+    <img class="sit flip" src="../../home/lamb.svg" alt="" aria-hidden="true" draggable="false">
+    <h2 data-lang="en"><span class="n">1</span> Define the mission: requirements, scenarios, state machine</h2>
+    <h2 data-lang="fr"><span class="n">1</span> Définir la mission : exigences, scénarios, machine d’états</h2>
+    <div data-lang="en">
+      <p>No vibe-modeling. If the AI wrote its own scenarios <i>and</i> its architecture, it would grade its own homework. <b>The engineer sets the intent</b>: context, mission phases, requirements and acceptance scenarios (nominal, alternative, dysfunctional). The LLM proposes the decision tables; nothing is written in Cameo until a human has validated them.</p>
+      <p>The mission then becomes <b>one state machine</b>, driven by the very signals of the lifecycle scenarios. Each mode runs a <b>service function</b>. The scenarios are played on it, and together they must take <b>every branch</b>: a branch nobody reaches is either a missing scenario or a dead branch. Play them:</p>
+    </div>
+    <div data-lang="fr">
+      <p>Pas de <i>vibe-modeling</i>. Si l’IA écrivait ses scénarios <i>et</i> son architecture, elle corrigerait sa propre copie. <b>L’ingénieur pose l’intention</b> : contexte, phases de la mission, exigences et scénarios d’acceptation (nominal, alternatif, dysfonctionnel). Le LLM propose les tables de décision ; rien n’est écrit dans Cameo tant qu’un humain ne les a pas validées.</p>
+      <p>La mission devient alors <b>une machine d’états</b>, menée par les signaux mêmes des scénarios du cycle de vie. Chaque mode exécute une <b>fonction de service</b>. Les scénarios se jouent dessus, et ensemble ils doivent prendre <b>toutes les branches</b> : une branche que personne n’atteint, c’est un scénario qui manque ou une branche morte. Jouez-les :</p>
+    </div>
+
+    <figure class="fig wide ia" data-fig="ia-mission"></figure>
+    <p class="fig-cap">
+      <span data-lang="en">Figure 2. The shepherd drone’s mission, simplified: its modes, its three parallel regions, its services and four scenarios. Coverage adds up scenario by scenario; the last one is the one the coverage asked for.</span>
+      <span data-lang="fr">Figure 2. La mission du drone berger, simplifiée : ses modes, ses trois régions parallèles, ses services et quatre scénarios. La couverture s’additionne de scénario en scénario ; le dernier est celui que la couverture a réclamé.</span>
+    </p>
+  </section>
+
+  <!-- ───────── 2 ───────── -->
+  <section id="drivers">
+    <h2 data-lang="en"><span class="n">2</span> State the architecture drivers</h2>
+    <h2 data-lang="fr"><span class="n">2</span> Poser les drivers d’architecture</h2>
+    <div data-lang="en">
+      <p>Before any component, we write down what must drive the architecture. Not boxes: <b>forces</b>, each with a lever and a way to measure it.</p>
+    </div>
+    <div data-lang="fr">
+      <p>Avant le moindre composant, on écrit ce qui doit guider l’architecture. Pas des boîtes : des <b>forces</b>, chacune avec un levier et une façon de la mesurer.</p>
+    </div>
+    <table data-lang="en">
+      <thead><tr><th>Driver</th><th>The question</th><th>The lever</th><th>Measured by</th></tr></thead>
+      <tbody>
+        <tr><td><b>Orchestration</b></td><td>Where are the mission rules decided?</td><td>central hub, feature orchestrator, or no chief (patch)</td><td>rules in one place, length of the reaction chains</td></tr>
+        <tr><td><b>Redundancy</b></td><td>What if a box, or a drone, fails?</td><td>no single point of failure; a swarm where one drone always stays on the flock</td><td>load on the busiest component, drones on the flock</td></tr>
+        <tr><td><b>Link loss</b></td><td>And without the ground station?</td><td>a master on the ground, in a drone, or none</td><td>dysfunctional scenarios</td></tr>
+        <tr><td><b>Evolvability</b></td><td>What does the next feature cost?</td><td>features that carry their own logic</td><td>elements touched by a change</td></tr>
+        <tr><td><b>Frugality</b></td><td>How many messages per reaction?</td><td>who talks to whom</td><td>messages per scenario</td></tr>
+      </tbody>
+    </table>
+    <table data-lang="fr">
+      <thead><tr><th>Driver</th><th>La question</th><th>Le levier</th><th>Mesuré par</th></tr></thead>
+      <tbody>
+        <tr><td><b>Orchestration</b></td><td>Où se décident les règles de la mission ?</td><td>hub central, orchestrateur de fonctionnalités, ou pas de chef (patch)</td><td>règles au même endroit, longueur des chaînes de réaction</td></tr>
+        <tr><td><b>Redondance</b></td><td>Et si une boîte, ou un drone, tombe ?</td><td>pas de point unique de défaillance ; un essaim où un drone reste toujours sur le troupeau</td><td>charge du composant le plus sollicité, drones sur le troupeau</td></tr>
+        <tr><td><b>Perte de liaison</b></td><td>Et sans la station sol ?</td><td>un maître au sol, dans un drone, ou aucun</td><td>scénarios dysfonctionnels</td></tr>
+        <tr><td><b>Évolutivité</b></td><td>Combien coûte la prochaine fonctionnalité ?</td><td>des fonctionnalités qui portent leur logique</td><td>éléments touchés par un changement</td></tr>
+        <tr><td><b>Sobriété</b></td><td>Combien de messages par réaction ?</td><td>qui parle à qui</td><td>messages par scénario</td></tr>
+      </tbody>
+    </table>
+    <div data-lang="en">
+      <p>The weights are the engineer’s call. The LLM turns them into a ranking of the candidates, and records the choice <b>with its evidence</b> in the generator. Change the weights:</p>
+    </div>
+    <div data-lang="fr">
+      <p>Les poids, c’est l’ingénieur qui les fixe. Le LLM en tire un classement des candidates, et consigne le choix <b>avec ses preuves</b> dans le générateur. Changez les poids :</p>
+    </div>
+
+    <figure class="fig wide ia" data-fig="ia-drivers"></figure>
+    <p class="fig-cap">
+      <span data-lang="en">Figure 3. The three candidate architectures of Part 3, scored on the six axes of the lab’s trade-off. The weights change the winner; the trade-off block is what the generator keeps of it.</span>
+      <span data-lang="fr">Figure 3. Les trois architectures candidates de la partie 3, notées sur les six axes du trade-off du TP. Les poids changent le gagnant ; le bloc <code>tradeoff</code> est ce que le générateur en garde.</span>
+    </p>
+  </section>
+
+  <!-- ───────── 3 ───────── -->
+  <section id="generation" class="orn">
+    <img class="sit small flip" src="../../home/lamb.svg" alt="" aria-hidden="true" draggable="false">
+    <h2 data-lang="en"><span class="n">3</span> Generate the architecture: a Kotlin script, the tools of the method</h2>
+    <h2 data-lang="fr"><span class="n">3</span> Générer l’architecture : un script Kotlin, les outils de la méthode</h2>
+    <div data-lang="en">
+      <p>Let an LLM build a logical architecture element by element through MCP calls, and it burns its context window on plumbing, loses its identifiers, and fails. So it does not. <b>It writes one Kotlin file</b>, in the vocabulary of the method: components, allocations, the signal table, the context. Each decision of a validated table becomes one line.</p>
+      <p>The engine does the rest with the very right-clicks of the <a href="../logique/">second article</a>, called from code: <i>Logical Transition</i>, <i>Delegate to external systems</i>, <i>Create All Missing Signal Ports</i>, <i>Merge Ports</i>, <i>Auto Connect</i>. Then <code>plan</code> shows what will change, <code>apply</code> writes it, and a second <code>plan</code> must find nothing left to do.</p>
+    </div>
+    <div data-lang="fr">
+      <p>Laissez un LLM construire une architecture logique élément par élément à coups d’appels MCP : il brûle sa fenêtre de contexte en plomberie, perd ses identifiants, et échoue. Il ne le fait donc pas. <b>Il écrit un fichier Kotlin</b>, dans le vocabulaire de la méthode : composants, allocations, table des signaux, contexte. Chaque décision d’une table validée devient une ligne.</p>
+      <p>Le moteur fait le reste avec les clics droits mêmes du <a href="../logique/">deuxième article</a>, appelés depuis le code : <i>Logical Transition</i>, <i>Delegate to external systems</i>, <i>Create All Missing Signal Ports</i>, <i>Merge Ports</i>, <i>Auto Connect</i>. Puis <code>plan</code> montre ce qui va changer, <code>apply</code> l’écrit, et un second <code>plan</code> ne doit plus rien trouver à faire.</p>
+    </div>
+
+    <figure class="fig wide ia" data-fig="ia-gen"></figure>
+    <p class="fig-cap">
+      <span data-lang="en">Figure 4. The decentralised patch architecture of the lab, generated. The generator is a simplified excerpt; the counts and the diagram come from the specification of the Part 3 correction model.</span>
+      <span data-lang="fr">Figure 4. L’architecture « patch décentralisé » du TP, générée. Le générateur est un extrait simplifié ; les comptes et le diagramme viennent de la spécification du modèle de correction de la partie 3.</span>
+    </p>
+  </section>
+
+  <!-- ───────── 4 ───────── -->
+  <section id="verification">
+    <h2 data-lang="en"><span class="n">4</span> Verify, then iterate</h2>
+    <h2 data-lang="fr"><span class="n">4</span> Vérifier, puis itérer</h2>
+    <div data-lang="en">
+      <p>One validator, one verdict: <b>PASS</b>, <b>FAIL</b> or <b>INCOMPLETE</b>. It stacks the checks from the cheapest to the most expensive: the Kotlin compiler, the method rules on the description before anything is written, idempotence, <b>the SysML validation of Cameo</b> on the model read back, <b>the method rules</b> (traceability and completeness: every mode has an owner, every function is allocated, every requirement is verified), then <b>the simulation</b> of the scenarios, their coverage and their measures.</p>
+      <p>When a scenario fails, the LLM must decide who is wrong. The expectations come from the lifecycle scenarios, never from the generated model: copying the observed states into the scenario to turn it green is forbidden. Here is a real failure, replayed live:</p>
+    </div>
+    <div data-lang="fr">
+      <p>Un validateur, un verdict : <b>PASS</b>, <b>FAIL</b> ou <b>INCOMPLETE</b>. Il empile les contrôles du moins cher au plus cher : le compilateur Kotlin, les règles de méthode sur la description avant toute écriture, l’idempotence, <b>la validation SysML de Cameo</b> sur le modèle relu, <b>les règles de méthode</b> (traçabilité et complétude : chaque mode a un propriétaire, chaque fonction est allouée, chaque exigence est vérifiée), puis <b>la simulation</b> des scénarios, leur couverture et leurs mesures.</p>
+      <p>Quand un scénario échoue, le LLM doit décider qui a tort. Les attendus viennent des scénarios du cycle de vie, jamais du modèle généré : recopier les états observés dans le scénario pour le faire passer au vert est interdit. Voici un vrai échec, rejoué en direct :</p>
+    </div>
+
+    <figure class="fig wide ia" data-fig="ia-verify"></figure>
+    <p class="fig-cap">
+      <span data-lang="en">Figure 5. The validator on the generated patch architecture. The first five rows illustrate its checks; the simulation and coverage rows are replayed in the page with the site’s simulator, on the specification of the Part 3 correction model, without and then with the patch.</span>
+      <span data-lang="fr">Figure 5. Le validateur sur l’architecture « patch » générée. Les cinq premières lignes illustrent ses contrôles ; la simulation et la couverture sont rejouées dans la page par le simulateur du site, sur la spécification du modèle de correction de la partie 3, sans puis avec le patch.</span>
+    </p>
+  </section>
+
+  <!-- ───────── 5 ───────── -->
+  <section id="metriques" class="orn">
+    <img class="sit bear" src="../../assets/sim/bear.svg" alt="" aria-hidden="true" draggable="false">
+    <h2 data-lang="en"><span class="n">5</span> Scenarios as measuring instruments</h2>
+    <h2 data-lang="fr"><span class="n">5</span> Les scénarios comme instruments de mesure</h2>
+    <div data-lang="en">
+      <p>A scenario that passes is a verdict. A scenario that runs is also a <b>measure</b>. The same replay gives the numbers the trade-off promised: messages, length of the reaction chains, load on the busiest component, states actually reached. The estimates of Figure 3 must agree with them; a large gap reopens the trade-off.</p>
+    </div>
+    <div data-lang="fr">
+      <p>Un scénario qui passe, c’est un verdict. Un scénario qui tourne, c’est aussi une <b>mesure</b>. Le même rejeu donne les chiffres que le trade-off promettait : messages, longueur des chaînes de réaction, charge du composant le plus sollicité, états réellement atteints. Les estimations de la figure 3 doivent s’y retrouver ; un gros écart rouvre le trade-off.</p>
+    </div>
+
+    <figure class="fig wide ia" data-fig="ia-metrics"></figure>
+    <p class="fig-cap">
+      <span data-lang="en">Figure 6. The full lab scenario (10 events) replayed on the three candidates, measured in the page. This simulator is not timed: duration measures wait for timed simulation.</span>
+      <span data-lang="fr">Figure 6. Le scénario complet du TP (10 événements) rejoué sur les trois candidates, mesuré dans la page. Ce simulateur n’est pas temporisé : les mesures de durée attendent la simulation temporisée.</span>
+    </p>
+  </section>
+
+  <!-- ───────── 6 ───────── -->
+  <section id="essaim">
+    <h2 data-lang="en"><span class="n">6</span> And now, the swarm</h2>
+    <h2 data-lang="fr"><span class="n">6</span> Et maintenant, l’essaim</h2>
+    <div data-lang="en">
+      <p>A bear on one side, a stray sheep on the other: one drone is no longer enough. The golden rule becomes a driver: <b>the flock is never left without a drone</b>. The mission does not change; the allocation does (roles, a master on the ground or in the air), and so do the signal table and the scenarios’ expectations. The same method, the same generator, the same judge.</p>
+    </div>
+    <div data-lang="fr">
+      <p>Un ours d’un côté, une brebis égarée de l’autre : un seul drone ne suffit plus. La règle d’or devient un driver : <b>le troupeau n’est jamais laissé sans drone</b>. La mission ne change pas ; l’allocation, si (des rôles, un maître au sol ou en vol), et avec elle la table des signaux et les attendus des scénarios. La même méthode, le même générateur, le même juge.</p>
+    </div>
+
+    <figure class="fig wide ia" data-fig="ia-swarm"></figure>
+    <p class="fig-cap">
+      <span data-lang="en">Figure 7. Candidate A of Part 4 on its scenario: the measure is the number of drones on the flock, event after event. Candidates B and C are next in line for the LLM.</span>
+      <span data-lang="fr">Figure 7. La candidate A de la partie 4 sur son scénario : la mesure, c’est le nombre de drones sur le troupeau, événement après événement. Les candidates B et C sont les prochaines pour le LLM.</span>
+    </p>
+    <p class="aside" data-lang="en"><b>Where we are.</b> The three layers have been generated and applied in Cameo on a full test project, an automated metro: its 14 scenarios pass, functional and logical, and the validator still reports one real design defect there, which is exactly its job. The shepherd drone is the next run; the generation of the swarm candidates by the LLM is in progress.</p>
+    <p class="aside" data-lang="fr"><b>Où on en est.</b> Les trois couches ont été générées et appliquées dans Cameo sur un projet d’essai complet, un métro automatique : ses 14 scénarios passent, en fonctionnel comme en logique, et le validateur y signale encore un vrai défaut de conception, ce qui est précisément son rôle. Le drone berger est le prochain passage ; la génération des candidates d’essaim par le LLM est en cours.</p>
+  </section>
+
+  <!-- ───────── bilan ───────── -->
+  <section id="bilan">
+    <h2 data-lang="en"><span class="n">7</span> Takeaways</h2>
+    <h2 data-lang="fr"><span class="n">7</span> Bilan</h2>
+    <div data-lang="en">
+      <div class="cards">
+        <div class="card"><b>The same method</b><span>the students’ rules, written for the LLM, with a human gate at every decision table.</span></div>
+        <div class="card"><b>The same tools</b><span>the plugin’s right-clicks, called from one Kotlin file instead of hundreds of calls.</span></div>
+        <div class="card"><b>The same judge</b><span>the mission scenarios: a verdict, a coverage and measures, at every iteration.</span></div>
+      </div>
+      <p>Every brick made for the student turned out to be the brick that makes the AI reliable. The engineer keeps what is engineering: the intent, the drivers, the acceptance scenarios, the choice. The AI takes the labour, and gets checked like everyone else. The lab, its models and the simulation are online: <a href="../../">shepherd.chaos-art.fr</a>.</p>
+    </div>
+    <div data-lang="fr">
+      <div class="cards">
+        <div class="card"><b>La même méthode</b><span>les règles des étudiants, écrites pour le LLM, avec une porte humaine à chaque table de décision.</span></div>
+        <div class="card"><b>Les mêmes outils</b><span>les clics droits du plugin, appelés depuis un fichier Kotlin plutôt que par des centaines d’appels.</span></div>
+        <div class="card"><b>Le même juge</b><span>les scénarios de la mission : un verdict, une couverture et des mesures, à chaque itération.</span></div>
+      </div>
+      <p>Chaque brique faite pour l’étudiant s’est révélée être celle qui rend l’IA fiable. L’ingénieur garde ce qui relève de l’ingénierie : l’intention, les drivers, les scénarios d’acceptation, le choix. L’IA prend le labeur, et se fait contrôler comme tout le monde. Le TP, ses modèles et la simulation sont en ligne : <a href="../../">shepherd.chaos-art.fr</a>.</p>
+    </div>
+  </section>
+
+  <!-- ───────── sous le capot ───────── -->
+  <section id="capot">
+    <h2 data-lang="en">Under the hood</h2>
+    <h2 data-lang="fr">Sous le capot</h2>
+    <div data-lang="en">
+      <details><summary>The method, as the LLM reads it</summary>
+        <p>A skill, <code>mbse-architecture</code>: one sheet per layer (requirements, lifecycle, functional, logical), plus traceability, Kotlin and testing. Each sheet gives the concepts, the steps with their reasoning, the decision tables and the rules as ids (<code>LC-01…</code>, <code>FN-01…16</code>, <code>LG-01…25</code>, <code>TR-01…19</code>). The rules are code, one class per rule, and the same code judges the LLM’s description, the model it wrote, and a student’s model.</p>
+      </details>
+      <details><summary>The engine: describe, plan, apply, read back</summary>
+        <p>The generator describes; the engine reconciles instead of rebuilding. It owns a scope, computes a plan (<code>CREATE</code>, <code>UPDATE</code>, <code>REBUILD</code>, <code>EXTRA</code>), writes in one undoable session, derives what has a single answer (ports, conjugation, <code>_ext</code> signals, connectors, <code>«refine»</code> / <code>«allocate»</code>, layout), then reads the model back and runs the rules again. A project’s generators live in their own project, loaded as a jar, never in the plugin.</p>
+      </details>
+      <details><summary>The validator and its profiles</summary>
+        <p>Profiles <code>layer:</code>, <code>gate:</code>, <code>trace</code>, <code>delivery</code>. A rule whose input is missing is skipped, never passed: hence <b>INCOMPLETE</b>. Accepted exceptions are <code>waive(rule, element, because, by)</code> lines in the generator, with a reason and an author. The same verdict is reachable from MCP, from a validation suite in Cameo, from the command line, and from a side service that reads an exported model without Cameo.</p>
+      </details>
+      <details><summary>A scenario in text</summary>
+<pre class="code"><code>scenario: The bear comes too close, then backs off
+kind: nominal
+given: arch3.bear-enters
+
+phase Predator response
+  step too-close: pasture sends Predator entering safe perimiter
+    then soi.orch is Predator counteraction
+    then soi.pm is Deterring
+    then message Light burst</code></pre>
+        <p>One scenario is about one thing; what leads there is a precondition (<code>given</code>), assemblies use <code>sequence</code>, variants use <code>from</code>. Readable by the engineer, by the LLM, and played as is against Cameo.</p>
+      </details>
+    </div>
+    <div data-lang="fr">
+      <details><summary>La méthode, telle que le LLM la lit</summary>
+        <p>Un <i>skill</i>, <code>mbse-architecture</code> : une fiche par couche (exigences, cycle de vie, fonctionnel, logique), plus la traçabilité, Kotlin et les tests. Chaque fiche donne les concepts, les étapes avec leur raisonnement, les tables de décision et les règles, numérotées (<code>LC-01…</code>, <code>FN-01…16</code>, <code>LG-01…25</code>, <code>TR-01…19</code>). Les règles sont du code, une classe par règle, et le même code juge la description du LLM, le modèle qu’il a écrit et le modèle d’un étudiant.</p>
+      </details>
+      <details><summary>Le moteur : décrire, planifier, appliquer, relire</summary>
+        <p>Le générateur décrit ; le moteur réconcilie au lieu de reconstruire. Il possède un périmètre, calcule un plan (<code>CREATE</code>, <code>UPDATE</code>, <code>REBUILD</code>, <code>EXTRA</code>), écrit en une session annulable, dérive ce qui n’a qu’une réponse (ports, conjugaison, signaux <code>_ext</code>, connecteurs, <code>«refine»</code> / <code>«allocate»</code>, mise en page), puis relit le modèle et rejoue les règles. Les générateurs d’un projet vivent dans leur propre projet, chargés en jar, jamais dans le plugin.</p>
+      </details>
+      <details><summary>Le validateur et ses profils</summary>
+        <p>Profils <code>layer:</code>, <code>gate:</code>, <code>trace</code>, <code>delivery</code>. Une règle dont l’entrée manque est sautée, jamais réussie : d’où <b>INCOMPLETE</b>. Les exceptions acceptées sont des lignes <code>waive(rule, element, because, by)</code> dans le générateur, avec une raison et un auteur. Le même verdict s’obtient depuis MCP, depuis une suite de validation dans Cameo, en ligne de commande, et depuis un service à côté qui lit un modèle exporté, sans Cameo.</p>
+      </details>
+      <details><summary>Un scénario en texte</summary>
+<pre class="code"><code>scenario: The bear comes too close, then backs off
+kind: nominal
+given: arch3.bear-enters
+
+phase Predator response
+  step too-close: pasture sends Predator entering safe perimiter
+    then soi.orch is Predator counteraction
+    then soi.pm is Deterring
+    then message Light burst</code></pre>
+        <p>Un scénario parle d’une seule chose ; ce qui y mène est une précondition (<code>given</code>), les assemblages passent par <code>sequence</code>, les variantes par <code>from</code>. Lisible par l’ingénieur, par le LLM, et joué tel quel contre Cameo.</p>
+      </details>
+    </div>
+  </section>
+  <div class="pasture" aria-hidden="true">
+    <span class="walk"><img src="../../home/lamb.svg" alt="" draggable="false"></span>
+    <img class="flip small" src="../../home/lamb.svg" alt="" draggable="false">
+    <img class="bear" src="../../assets/sim/bear.svg" alt="" draggable="false">
+    <img src="../../home/lamb.svg" alt="" draggable="false">
+  </div>
+</article>
+</div>
+
+<script src="../../part3/content/config.js"></script>
+<script src="../../part3/content/archs.js"></script>
+<script src="../../js/logical-engine.js"></script>
+<script src="../article.js"></script>
+<script src="ia.js"></script>
+<script src="../flock.js"></script>
+</body>
+</html>

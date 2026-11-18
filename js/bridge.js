@@ -1,6 +1,6 @@
 /* Link to the Cameo of the student, through the relay (protocol: relay/PROTOCOL.md of the
    MBSE Shepard monitoring project). The student types the 6-letter code shown by the plugin
-   (Cameo menu OMF > Relay pairing code). Then "Open in Cameo" selects the element in Cameo.
+   (Cameo menu Webapp Relay > Relay pairing code). Then "Open in Cameo" selects the element in Cameo.
 
    window.Bridge.state()          { status, code, error, problem, relay, relayDefault, relayCustom, relayForced,
                                     transport ('ws' | 'http'), transportPref, transportWhy (why it fell back to HTTP) }
@@ -10,6 +10,8 @@
    window.Bridge.open(id, type, spec)   show the element in Cameo (a Promise)
    window.Bridge.openByName(spec) same, for an element that has no id yet: Cameo finds it by its name.
                                   Rejects with Error('not-found') | Error('ambiguous') | another message
+   window.Bridge.highlight(elementId, diagramId, diagramSpec)   open the diagram, select the element there and frame
+                                  it in amber (diagram/open then diagram/highlight). Resolves with { symbols, missing }
    window.Bridge.onChange(fn)     called with the state on every change
    window.Bridge.setRelay(addr)   use another relay address ('' = back to the default): { ok, error }
    window.Bridge.setTransport(t)  how to reach the relay: 'auto' (WebSocket, else HTTP), 'ws' or 'http' (js/relay-http.js)
@@ -79,7 +81,9 @@
   function relayBase() { return onLocal ? LOCAL_RELAY : toBase(forcedRelay() || storedRelay() || CFG.relayUrl); }
   function isAuto() { return !forcedRelay() && !storedRelay() && String(CFG.relayUrl || '').trim() === 'auto'; }
   function normalize(text) {
-    const c = String(text || '').replace(/[\s-]/g, '').toUpperCase();
+    /* Only the letters count: a code copied from Cameo comes as "A B C D E F", sometimes with a newline or a
+       non-breaking space around it. */
+    const c = String(text || '').replace(/[^a-z]/gi, '').toUpperCase();
     return /^[A-Z]{6}$/.test(c) ? c : '';
   }
   function set(next, message, kind) {
@@ -368,8 +372,30 @@
     return DIAGRAMS.has(spec.type) ? call('diagram', 'openByName', arg).catch(select) : select();
   }
 
+  /* Shows an element on a diagram: opens the diagram first, then selects the element's shapes there and frames them
+     in amber for a few seconds (diagram/highlight: view only, nothing in the model). diagramId may be empty or no
+     longer hold: then the diagram is found by diagramSpec.qualifiedName. Resolves with { diagram, symbols, missing }:
+     no symbol means the element is not drawn on that diagram. */
+  function highlight(elementId, diagramId, diagramSpec) {
+    const byName = () => call('model', 'getByQualifiedName', [diagramSpec.qualifiedName]).then((found) => found.id);
+    const run = (id) => call('diagram', 'open', [{ elementId: id }])
+      .then(() => call('diagram', 'highlight', [{ elementId: id }, { elementId }]));
+    if (!diagramId) return byName().then(run);
+    return run(diagramId).catch((e) => (diagramSpec && !(e && NOT_REACHED.has(e.message)) ? byName().then(run) : Promise.reject(e)));
+  }
+
+  /* A phone that locks its screen loses the socket. When the guide comes back on screen, try again at
+     once instead of waiting out the backoff (up to 15 s). */
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState !== 'visible' || !code || status === 'connected' || status === 'connecting') return;
+    clearTimeout(timer);
+    attempt = 0;
+    if (!socket) open();
+  });
+
   window.Bridge = {
     state,
+    highlight,
     connect,
     setRelay,
     setTransport,

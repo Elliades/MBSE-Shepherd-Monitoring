@@ -3,7 +3,7 @@
    - mission : the functional mission state machine of the predator use case, played scenario by scenario, in two
      versions (the TP mission, and the enriched one whose Mission Monitoring times the bear in the safe area);
    - scenario: the same scenarios as a classic sequence diagram, as an extended one (expected states), and as the
-     file the scenario panel of Cameo plays;
+     file the scenario panel plays;
    - build   : the logical architecture built stage by stage, each stage replayed with js/logical-engine.js on the
      specs of part3/content/archs.js and the stages of part3/content/config.js (the ones of Part 3);
    - toc     : the sticky table of contents, which follows the reading.
@@ -454,7 +454,7 @@
     const NOTE = {
       classic: 'Ce que montre un diagramme de séquence classique : qui envoie quoi. Rien ne dit dans quel état doit être la mission après chaque message, ni ce qui doit se passer quand rien n’arrive.',
       extended: 'Le même scénario, avec l’état attendu de la mission après chaque étape (toutes les régions actives à la fois). C’est ce qui donne un verdict.',
-      file: 'Le fichier que le panneau de simulation de Cameo rejoue : la précondition, les étapes, les états attendus, un délai pour l’étape qui attend l’échec, un contrôle « atteint au moins une fois ». Le diagramme de séquence en est régénéré.'
+      file: 'Le fichier que le panneau de simulation de l’outil rejoue : la précondition, les étapes, les états attendus, un délai pour l’étape qui attend l’échec, un contrôle « atteint au moins une fois ». Le diagramme de séquence en est régénéré.'
     };
     function show() {
       art.innerHTML = '';

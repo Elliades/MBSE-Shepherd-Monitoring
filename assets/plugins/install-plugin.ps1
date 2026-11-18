@@ -1,4 +1,4 @@
-# OMF-ISAE plugin, install without administrator rights.
+# MBSE Shepherd plugin, install without administrator rights.
 # Copies the plugin archive that sits next to this script into the user's own
 # Cameo folder. Nothing is written outside %LOCALAPPDATA%.
 #
@@ -12,11 +12,11 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-# The newest plugin archive next to this script (1.2.0 today: no edit needed for the next version).
-$Archive = Get-ChildItem -LiteralPath $PSScriptRoot -Filter 'com.elliades.isae.mbseShepherd_*.zip' |
+# The newest plugin archive next to this script (1.7.0 today: no edit needed for the next version).
+$Archive = Get-ChildItem -LiteralPath $PSScriptRoot -Filter 'com.elliades.mbseShepherd_*.zip' |
   Sort-Object Name | Select-Object -Last 1
 if (-not $Archive) {
-  throw "No plugin archive (com.elliades.isae.mbseShepherd_*.zip) found next to this script in $PSScriptRoot"
+  throw "No plugin archive (com.elliades.mbseShepherd_*.zip) found next to this script in $PSScriptRoot"
 }
 
 $Target = Join-Path $env:LOCALAPPDATA ".magic.systems.of.systems.architect\$Version"
@@ -28,7 +28,7 @@ Write-Host "Target folder:  $Target"
 # The archive holds data\, plugins\ and profiles\: they go straight into the target folder.
 Expand-Archive -LiteralPath $Archive.FullName -DestinationPath $Target -Force
 
-$Installed = Join-Path $Target 'plugins\com.elliades.isae.mbseShepherd'
+$Installed = Join-Path $Target 'plugins\com.elliades.mbseShepherd'
 if (-not (Test-Path -LiteralPath $Installed)) {
   throw "Extraction finished but $Installed is missing. The archive may be damaged: download it again."
 }

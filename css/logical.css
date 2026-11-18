@@ -304,7 +304,7 @@
 .w svg text.lg-ms.ok { fill: var(--grass); }
 
 /* behaviourAB: the functional mission in the colour of the functional level, the subsystem in the logical one;
-   the same name, Load Flight Plan, is not the same function: the logical one refines the functional one. */
+   the same name, Parameter Mission, is not the same function: the logical one refines the functional one. */
 .w svg text.lg-tag-fn { fill: var(--ph-fn); }
 .w svg text.lg-tag-lg { fill: var(--ph-lg); }
 .lg-ab-fr { stroke: var(--ph-fn); }

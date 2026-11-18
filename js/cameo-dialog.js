@@ -35,11 +35,11 @@
         <button type="button" class="btn ghost small" data-cameo-leave>Disconnect</button></div>`;
     }
     return `<ol class="cd-steps">
-        <li>In Cameo, open the menu <span class="cd-menu">OMF &gt; Relay pairing code</span>.</li>
+        <li>In Cameo, open the menu <span class="cd-menu">Webapp Relay &gt; Relay pairing code</span>.</li>
         <li>Type the 6 letters here.</li>
       </ol>
       <form class="cd-form" data-cd-pair novalidate>
-        <input class="cd-input" name="code" maxlength="9" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" inputmode="text" placeholder="ABCDEF" aria-label="Pairing code" value="${esc(st.tried || '')}">
+        <input class="cd-input" name="code" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" inputmode="text" placeholder="ABCDEF" aria-label="Pairing code" value="${esc(st.tried || '')}">
         <button type="submit" class="btn">${PLUG}Connect</button>
       </form>`;
   }
@@ -141,7 +141,7 @@
     relayTouched = false;
     openOverlay({
       kind: 'dialog',
-      label: 'Cameo',
+      label: 'Connect',
       title: 'Connect to Cameo',
       body: shell(),
       onMount(el) {
@@ -160,7 +160,13 @@
           }
         });
         el.addEventListener('input', (e) => {
-          if (e.target.matches('.cd-input')) e.target.value = e.target.value.replace(/[^a-z\s-]/gi, '').toUpperCase();
+          /* Only letters, 6 at most: "A B C D E F" pasted from Cameo becomes ABCDEF. No maxlength on the field,
+             or the browser would cut the pasted text before its spaces are taken out. A full code pasted connects. */
+          if (e.target.matches('.cd-input')) {
+            const v = e.target.value.replace(/[^a-z]/gi, '').toUpperCase().slice(0, 6);
+            if (e.target.value !== v) e.target.value = v;
+            if (e.inputType === 'insertFromPaste' && v.length === 6) B.connect(v);
+          }
           if (e.target.matches('#cd-relay-input')) el.querySelector('#cd-relay-note').classList.remove('bad');
         });
         el.addEventListener('click', (e) => {

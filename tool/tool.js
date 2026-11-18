@@ -336,7 +336,7 @@
     return c.replace(/\/+$/, '').replace(/^http/, 'ws');
   }
   function wantedCode() {
-    const fromUrl = (params.get('code') || '').replace(/[\s-]/g, '').toUpperCase();
+    const fromUrl = (params.get('code') || '').replace(/[^a-z]/gi, '').toUpperCase();
     if (/^[A-Z]{6}$/.test(fromUrl)) return fromUrl;
     try { return localStorage.getItem(CODE_KEY) || ''; } catch (e) { return ''; }
   }

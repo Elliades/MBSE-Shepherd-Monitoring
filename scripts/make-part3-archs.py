@@ -21,7 +21,7 @@ ARCHS = [
 NOTES = {
     "1": [
         "The operator powers the drone on.",
-        "A wrong plan: Load Flight Plan refuses it, Mission Configuration goes back to Unconfigured and the operator is told.",
+        "A wrong plan: Check Flight Plan refuses it, Mission Configuration goes back to Unconfigured and the operator is told.",
         "The flight plan is loaded and checked.",
         "Launch: flight to the safe area, then the orchestrator activates Sheep Guard.",
         "The flock is seen and counted by Sheep Guard.",
@@ -33,7 +33,7 @@ NOTES = {
     ],
     "2": [
         "The operator powers the drone on.",
-        "A wrong plan: Load Flight Plan refuses it, Mission Configuration goes back to Unconfigured and the operator is told.",
+        "A wrong plan: Check Flight Plan refuses it, Mission Configuration goes back to Unconfigured and the operator is told.",
         "The flight plan is loaded and checked.",
         "The operator starts the mission.",
         "The flock is seen and counted.",
@@ -45,7 +45,7 @@ NOTES = {
     ],
     "3": [
         "The operator powers the drone on.",
-        "A wrong plan: Load Flight Plan refuses it, Mission Configuration goes back to Unconfigured and the operator is told.",
+        "A wrong plan: Check Flight Plan refuses it, Mission Configuration goes back to Unconfigured and the operator is told.",
         "The flight plan is loaded and checked.",
         "Launch: safe area, then patrol.",
         "The observation goes through the orchestrator, which dispatches it to the sheep monitoring.",
@@ -194,7 +194,7 @@ def flight_plan_ports(spec):
 
 
 def flight_plan_for_simulator(spec):
-    """js/logical-engine.js has no cloned do activity and no delegate: Load Flight Plan keeps its decision as sends to
+    """js/logical-engine.js has no cloned do activity and no delegate: Parameter Mission keeps its decision as sends to
     itself (when / unless), a transition on a list becomes one per signal, and a delegate becomes an effect that sends
     the signal on the port. In the guide the verdict and the start order keep their plain names."""
     for b in spec["blocks"]:
@@ -207,8 +207,8 @@ def flight_plan_for_simulator(spec):
             r["transitions"] = [dict(t, on=x) for t in ts for x in on_list(t)] + [t for t in ts if not on_list(t)]
         if b["name"] != "Mission Configuration":
             continue
-        b["functions"].append({"name": "Load Flight Plan", "steps": [
-            {"call": "Acquire Flight Plan"}, {"call": "Check Flight Plan validity"},
+        b["functions"].append({"name": "Parameter Mission", "steps": [
+            {"call": "Acquire Flight Plan"}, {"call": "Load Flight Plan"}, {"call": "Check Flight Plan validity"},
             {"send": "FlightPlan Check Failed", "self": True, "when": "FlightPlan Incorrect"},
             {"send": "Ready for mission", "self": True, "unless": "FlightPlan Incorrect"},
         ]})
