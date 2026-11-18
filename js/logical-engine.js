@@ -3,7 +3,7 @@
    same specs that build the correction models in MagicDraw) closely enough to replay their scenarios.
 
    A send step may carry self: true (no port), and when / unless: the last signal received from outside (the
-   decision of Load Flight Plan, on FlightPlan Correct or Incorrect).
+   decision of Parameter Mission, on FlightPlan Correct or Incorrect).
 
    What it understands: nested states and parallel regions, transitions on a signal (with an effect) and
    completion transitions (when the do-activity is over), do-activities that send and then end, and

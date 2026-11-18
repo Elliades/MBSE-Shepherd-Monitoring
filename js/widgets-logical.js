@@ -1035,7 +1035,7 @@
      operator; the operator then answers with the start order, which is passed on to the decider. */
   W.behaviourAB = function (root) {
     root.className = 'w lg-mc lg-ab';
-    const s = svg('0 0 440 300', 'Left, in the functional mission: the state Configured runs Load Flight Plan, which acquires and checks the plan, decides, and sends Ready for mission to itself, on no port; that signal fires its transition to Ready for Mission. Right, in the subsystem Mission Configuration: from Unconfigured, FlightPlan comes in from the base station, the state becomes Configured. Load Flight Plan still sends Ready for mission to itself, the state becomes Ready for Mission, and its effect tells the operator through the base station, on Ready for mission_ext. The operator then sends Start Sheep Guard Mission: the state becomes Deployed and its effect passes the order on to the orchestrator.');
+    const s = svg('0 0 440 300', 'Left, in the functional mission: the state Configured runs Parameter Mission, which acquires, loads and checks the plan, decides, and sends Ready for mission to itself, on no port; that signal fires its transition to Ready for Mission. Right, in the subsystem Mission Configuration: from Unconfigured, FlightPlan comes in from the base station, the state becomes Configured. Parameter Mission still sends Ready for mission to itself, the state becomes Ready for Mission, and its effect tells the operator through the base station, on Ready for mission_ext. The operator then sends Start Sheep Guard Mission: the state becomes Deployed and its effect passes the order on to the orchestrator.');
     root.appendChild(s);
     txt(s, 108, 14, 'A · FUNCTIONAL MISSION', 'lg-tag lg-tag-fn', 'middle');
     txt(s, 331, 14, 'B · LOGICAL SUBSYSTEM', 'lg-tag lg-tag-lg', 'middle');
@@ -1044,17 +1044,19 @@
     const a = el('g', { class: 'lg-ab-a' }, s);
     el('rect', { x: 6, y: 22, width: 204, height: 272, rx: 8, class: 's-frame lg-ab-fr' }, a);
     txt(a, 14, 36, 'SOI - Pasture Sentinel', 's-name');
-    const aConf = mstate(a, 20, 46, 176, 'Configured', 'Load Flight Plan', 'lg-mst-fn');
+    const aConf = mstate(a, 20, 46, 176, 'Configured', 'Parameter Mission', 'lg-mst-fn');
     const flow = el('g', {}, a);
     const node = (x, y, w, t, cls) => { el('rect', { x, y, width: w, height: 20, rx: 5, class: 'lg-act ' + (cls || '') }, flow); txt(flow, x + w / 2, y + 14, t, 'lg-act-t', 'middle'); };
-    node(22, 94, 62, 'Acquire');
-    node(96, 94, 56, 'Check');
-    el('path', { d: 'M168,94 l10,10 l-10,10 l-10,-10 Z', class: 'lg-act' }, flow);
-    arrow(flow, [[84, 104], [96, 104]]);
-    arrow(flow, [[152, 104], [158, 104]]);
+    node(20, 94, 46, 'Acquire');
+    node(74, 94, 34, 'Load');
+    node(116, 94, 40, 'Check');
+    el('path', { d: 'M172,94 l10,10 l-10,10 l-10,-10 Z', class: 'lg-act' }, flow);
+    arrow(flow, [[66, 104], [74, 104]]);
+    arrow(flow, [[108, 104], [116, 104]]);
+    arrow(flow, [[156, 104], [162, 104]]);
     el('path', { d: 'M74,134 h86 l10,10 l-10,10 h-86 Z', class: 'lg-act lg-act-send' }, flow);
     txt(flow, 118, 148, 'send Ready for mission', 'lg-act-t', 'middle');
-    arrow(flow, [[168, 114], [168, 124], [130, 124], [130, 134]]);
+    arrow(flow, [[172, 114], [172, 124], [130, 124], [130, 134]]);
     txt(flow, 176, 166, 'to itself', 'lg-trig lg-red', 'end');
     const aReady = mstate(a, 40, 222, 140, 'Ready for Mission', 'Start subsystems', 'lg-mst-fn');
     arrow(a, [[110, 170], [110, 222]]);
@@ -1067,7 +1069,7 @@
     el('rect', { x: 228, y: 22, width: 206, height: 214, rx: 6, class: 's-box lg-box lg-ab-b' }, b);
     txt(b, 236, 36, 'Mission Configuration', 's-name');
     const bUnc = mstate(b, 272, 40, 120, 'Unconfigured', null, 'lg-mst-lg');
-    const bConf = mstate(b, 272, 76, 150, 'Configured', 'Load Flight Plan', 'lg-mst-lg');
+    const bConf = mstate(b, 272, 76, 150, 'Configured', 'Parameter Mission', 'lg-mst-lg');
     const bReady = mstate(b, 272, 146, 150, 'Ready for Mission', 'Start subsystems', 'lg-mst-lg');
     const bDep = mstate(b, 272, 208, 90, 'Deployed', null, 'lg-mst-lg');
     arrow(b, [[300, 64], [300, 76]]);
@@ -1107,9 +1109,9 @@
     const nowIs = (g, on) => g.classList.toggle('now', on);
     const PER = 1.8;
     const stages = [
-      { label: 'In the mission', text: 'Load Flight Plan acquires the plan, checks it, decides, and sends **Ready for mission to itself**. That signal fires its own transition. Everything happens inside the drone.', dwell: 4 },
+      { label: 'In the mission', text: 'Parameter Mission acquires the plan, loads it, checks it, decides, and sends **Ready for mission to itself**. That signal fires its own transition. Everything happens inside the drone.', dwell: 4 },
       { label: 'Who gives the plan?', text: 'In the subsystem the plan is not there: **FlightPlan Correct comes in** from the operator, through the base station. The state goes from Unconfigured to **Configured**.', dwell: 3.6 },
-      { label: 'Who fires the transition?', text: 'Load Flight Plan still decides, and **still tells itself**: this is internal, it stays as it is. The state becomes **Ready for Mission**.', dwell: 3.6 },
+      { label: 'Who fires the transition?', text: 'Parameter Mission still decides, and **still tells itself**: this is internal, it stays as it is. The state becomes **Ready for Mission**.', dwell: 3.6 },
       { label: 'Who else wants to know?', text: 'The **operator** must know the plan is good. So the effect of that transition also sends a signal out, **Ready for mission_ext**, through the base station.', dwell: 3.6 },
       { label: 'Who starts the mission?', text: 'A new message, not the same one: the operator now answers **Start Sheep Guard Mission**. The state becomes **Deployed**, and the effect of that transition passes the order on to the decider.', dwell: 4.4 }
     ].map((x) => Object.assign(x, { text: x.text.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/`([^`]+)`/g, '<code>$1</code>') }));
@@ -1141,7 +1143,7 @@
   /* Guided example, part 1: Logical Transition of Undeployed into Mission Configuration, then the rework. */
   W.mcTransition = function (root) {
     root.className = 'w lg-mc';
-    const s = svg('0 0 440 300', 'First, a logical component named Mission Configuration is created, right. Left, the composite state Undeployed of the functional mission: Off, Unconfigured, Configured (do Load Flight Plan), Ready for Mission (do Start subsystems), and Start Sheep Guard Mission towards Deployed. It is selected and sent with MBSE Shepherd, Logical Transition, to the block Mission Configuration, right. The clone points to off-TO RENAME, which becomes Deployed; initial states are added by hand, the effects by Delegate to external systems.');
+    const s = svg('0 0 440 300', 'First, a logical component named Mission Configuration is created, right. Left, the composite state Undeployed of the functional mission: Off, Unconfigured, Configured (do Parameter Mission), Ready for Mission (do Start subsystems), and Start Sheep Guard Mission towards Deployed. It is selected and sent with MBSE Shepherd, Logical Transition, to the block Mission Configuration, right. The clone points to off-TO RENAME, which becomes Deployed; initial states are added by hand, the effects by Delegate to external systems.');
     root.appendChild(s);
     txt(s, 108, 14, 'FUNCTIONAL MISSION', 'lg-tag', 'middle');
     txt(s, 332, 14, 'LOGICAL · Mission Configuration', 'lg-tag', 'middle');
@@ -1151,7 +1153,7 @@
     txt(src, 14, 36, 'Undeployed', 's-name');
     mstate(src, 16, 46, 80, 'Off');
     mstate(src, 110, 46, 94, 'Unconfigured');
-    mstate(src, 104, 96, 100, 'Configured', 'Load Flight Plan');
+    mstate(src, 104, 96, 100, 'Configured', 'Parameter Mission');
     mstate(src, 64, 170, 132, 'Ready for Mission', 'Start subsystems');
     arrow(src, [[96, 58], [110, 58]]);
     arrow(src, [[157, 70], [157, 96]]);
@@ -1176,7 +1178,7 @@
     const copies = [
       [mstate(clone, 244, 52, 74, 'Off'), -228, -6],
       [mstate(clone, 330, 52, 92, 'Unconfigured'), -220, -6],
-      [mstate(clone, 322, 94, 100, 'Configured', 'Load Flight Plan'), -218, 2],
+      [mstate(clone, 322, 94, 100, 'Configured', 'Parameter Mission'), -218, 2],
       [mstate(clone, 280, 152, 140, 'Ready for Mission', 'Start subsystems'), -216, 18]
     ];
     const cLinks = el('g', {}, clone);
@@ -1215,8 +1217,8 @@
       { label: 'Select', text: 'In the functional mission, select the composite <b>Undeployed</b>. One state is enough: its sub-states come with it.' },
       { label: 'Logical Transition', text: 'Right-click <b>MBSE Shepherd ▸ Logical Transition</b>, and pick the block <b>Mission Configuration</b>.' },
       { label: 'Cloned', text: 'The composite, its 4 sub-states and their transitions are copied into the state machine of the block, with the functions they run. Each copy gets a <b>«refine»</b> to its original, and the original is <b>allocated</b> to the block. The transition that left towards Deployed points to <b>off-TO RENAME</b>. The mission is never changed.', dwell: 5.4 },
-      { label: 'Rework the states', text: 'By hand: <b>off-TO RENAME</b> becomes <b>Deployed</b>; add the two initial states. Nothing else moves: the transitions fired by Load Flight Plan stay as they are.', dwell: 5 },
-      { label: 'Add what others need', text: 'The self-sends of <b>Load Flight Plan</b> stay: they fire this subsystem\'s own transitions. New <b>effects</b> tell the others, on ports, each with a signal of its own: <b>Ready for mission_ext</b>, <b>FlightPlan Check Failed_ext</b>, <b>Start Sheep Guard Mission_ext</b>.', dwell: 5 }
+      { label: 'Rework the states', text: 'By hand: <b>off-TO RENAME</b> becomes <b>Deployed</b>; add the two initial states. Nothing else moves: the transitions fired by Parameter Mission stay as they are.', dwell: 5 },
+      { label: 'Add what others need', text: 'The self-sends of <b>Parameter Mission</b> stay: they fire this subsystem\'s own transitions. New <b>effects</b> tell the others, on ports, each with a signal of its own: <b>Ready for mission_ext</b>, <b>FlightPlan Check Failed_ext</b>, <b>Start Sheep Guard Mission_ext</b>.', dwell: 5 }
     ], {
       onStage(k) { fresh.classList.toggle('on', k < 4); },
       onTick(at, t) {
@@ -1526,13 +1528,13 @@
      systems gives it a twin for the outside: a signal, a send in the effect, a port with its interface. */
   W.mcDelegate = function (root) {
     root.className = 'w lg-mc';
-    const s = svg('0 0 440 250', 'Left, in the state machine: Configured runs Load Flight Plan, which sends Ready for mission to itself; that signal fires the transition to Ready for Mission, so it is internal and has no port. The transition is right-clicked, then MBSE Shepherd, Delegate to external systems. The effect now sends Ready for mission_ext. Right, the part Mission Configuration then has an output port ready_mission_ext, towards the base station and the operator.');
+    const s = svg('0 0 440 250', 'Left, in the state machine: Configured runs Parameter Mission, which sends Ready for mission to itself; that signal fires the transition to Ready for Mission, so it is internal and has no port. The transition is right-clicked, then MBSE Shepherd, Delegate to external systems. The effect now sends Ready for mission_ext. Right, the part Mission Configuration then has an output port ready_mission_ext, towards the base station and the operator.');
     root.appendChild(s);
     txt(s, 108, 13, 'STATE MACHINE', 'lg-tag', 'middle');
     txt(s, 352, 13, 'THE COMPONENT', 'lg-tag', 'middle');
     /* the state machine */
     el('rect', { x: 6, y: 20, width: 204, height: 172, rx: 8, class: 's-frame' }, s);
-    mstate(s, 24, 30, 150, 'Configured', 'Load Flight Plan');
+    mstate(s, 24, 30, 150, 'Configured', 'Parameter Mission');
     mstate(s, 24, 146, 150, 'Ready for Mission', 'Start subsystems');
     arrow(s, [[70, 66], [70, 146]]);
     txt(s, 76, 92, 'Ready for mission', 'lg-trig');
@@ -1575,7 +1577,7 @@
     const click = clicker(menu);
     return stager(root, s, [
       { label: 'Expected', text: 'The operator expects <b>Ready for mission</b>, through the base station. But Mission Configuration has no port for it: only the three that come in.' },
-      { label: 'Why', text: 'Load Flight Plan sends it, and the state machine of the same subsystem consumes it. It starts and ends inside: an <b>internal signal</b>. So no port, and rightly so.' },
+      { label: 'Why', text: 'Parameter Mission sends it, and the state machine of the same subsystem consumes it. It starts and ends inside: an <b>internal signal</b>. So no port, and rightly so.' },
       { label: 'Delegate', text: 'No panic, another magic button. Right-click the transition, <b>MBSE Shepherd ▸ Delegate to external systems</b>.' },
       { label: 'What it makes', text: 'A <b>new signal</b>, dedicated to the outside, <b>Ready for mission_ext</b>. The transition sends it in its effect. The port, the interface and the flow property come with it.', dwell: 5 },
       { label: 'Back on the component', text: 'This time there is an <b>output port</b>, with the signal <b>_ext</b>. The original signal still fires the transition inside; the new one goes to the base station.', dwell: 5 }
