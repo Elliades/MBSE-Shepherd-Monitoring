@@ -19,10 +19,21 @@ window.MODEL_LINKS = {
     path: ["1 - Operational Analysis", "B - Operational Breakdown", "Operational Elements"],
     url: ""
   },
+  "bear-part": {
+    name: "bear",
+    type: "part",
+    id: "_18_5_1_150503da_1508140908144_673387_49265",
+    path: ["1 - Operational Analysis", "B - Operational Breakdown", "Operational Context", "bear"],
+    kinds: ["package", "package", "block", "part"],
+    diagram: "op-context",
+    strict: true,
+    url: ""
+  },
   "bear-actor": {
     name: "Bear",
     type: "actor",
     path: ["1 - Operational Analysis", "B - Operational Breakdown", "Operational Elements", "Bear"],
+    diagram: "uc-diagram",
     url: ""
   },
   "uc-pkg": {

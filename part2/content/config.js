@@ -24,10 +24,32 @@ window.COURSE_CONFIG = {
   /* The marked seminar must not show the expected signals: the simulation panel only follows Cameo. */
   simPreview: false,
 
+  /* Question 7: the scenario that "Play the scenario in Cameo" (js/widgets-stm-check.js) plays on the state machine
+     of the drone, simulated alone. Signal names are those of the student model (three are spelled "perimiter").
+     expect = active after the step, entered = went through during the step, absent = must have left. */
+  stmScenario: {
+    context: "SOI - Pasture Sentinel",
+    path: "<root>",
+    states: ["Undeployed", "Off", "Unconfigured", "Configured", "Ready for Mission", "Deployed", "Going to Safe Area",
+      "Patrolling", "Perimiter watch", "Sheep Monitoring", "Predator Monitoring", "Mission Monitoring",
+      "Predator Detected", "Predator tracking", "Predator counteraction", "Crashed"],
+    steps: [
+      { signal: "Start SOI", note: "The operator powers the drone on.", expect: ["Undeployed", "Unconfigured"], absent: ["Off"] },
+      { signal: "FlightPlan Incorrect", note: "A wrong flight plan is checked and refused.", entered: ["Configured"], expect: ["Unconfigured"], absent: ["Ready for Mission"] },
+      { signal: "FlightPlan Correct", note: "A correct flight plan is checked and accepted.", entered: ["Configured"], expect: ["Ready for Mission"], absent: ["Unconfigured"] },
+      { signal: "Start Sheep Guard Mission", note: "The mission starts: the drone goes to the safe area, then patrols.", entered: ["Deployed", "Going to Safe Area"], expect: ["Patrolling", "Perimiter watch", "Sheep Monitoring", "Predator Monitoring", "Mission Monitoring"] },
+      { signal: "Predator Detected inside tracking perimeter", note: "A bear enters the tracking perimeter.", entered: ["Predator Detected", "Predator tracking"], expect: ["Predator Detected"], absent: ["Patrolling"] },
+      { signal: "Predator entering safe perimiter", note: "The bear comes close to the flock: counter actions.", expect: ["Predator counteraction"] },
+      { signal: "Predator leaving safe perimiter", note: "The bear moves back: tracking again.", entered: ["Predator tracking"], expect: ["Predator Detected"] },
+      { signal: "Predator leaving tracking perimiter", note: "The bear leaves: back to patrolling.", expect: ["Patrolling", "Predator Monitoring"], absent: ["Predator Detected"] },
+      { signal: "Crashed Detected", note: "The drone crashes.", expect: ["Crashed"], absent: ["Deployed"] }
+    ]
+  },
+
   /* Timing of the session (js/track.js, monitor/ of the site): which guide, and its version. Change
      tpVersion when the exercise changes, so the stats of the new content are kept apart. */
   trackPart: "part2",
-  tpVersion: "2026.10",
+  tpVersion: "2026.11",
 
   /* Where the timing goes: "auto" = the relay of this site (<site>/relay); empty = nothing is sent. */
   trackUrl: "auto",

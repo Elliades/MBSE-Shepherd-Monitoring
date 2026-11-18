@@ -5,10 +5,12 @@
    never exactly what to do: no signal names, no transitions, no function names, no subsystem
    choices, no allocations, no solution blocks. When a gesture is needed, a { recall } block sends
    the student back to the scene of Part 1 that shows it.
+   One exception, asked by the teachers: after Question 2, the scene q2-auto gives its answer for the alerts and builds
+   their ports in the student's model (widget cameoTask), so that nobody loses the session on ports. The counter actions
+   (drone to bear) stay the student's, unnamed.
 
    Extra fields used here:
      pts: 2           points of the question, shown next to the kind ("2 pts")
-     bonus: true      the points are a bonus ("Bonus · 1 pt")
    Extra blocks:
      { recall: { items: [{ id: "a-messages", title: "Send messages between actors" }] } }
                       links to scenes of Part 1 (config.recallBase), opened in a new tab
@@ -32,6 +34,7 @@ window.COURSE = {
     { id: "T4", code: "T4", title: "Functional architecture", blurb: "Functions, state machine, activities, simulation.", phase: "fn" },
     { id: "T5", code: "T5", title: "Physical architecture", blurb: "Subsystems for the new functions.", phase: "ph" },
     { id: "T6", code: "T6", title: "Allocation", blurb: "Give each new function to a subsystem.", phase: "ph" },
+    { id: "T7", code: "T7", title: "White box scenario", blurb: "Replay the scenario between the subsystems.", phase: "ph" },
     { id: "end", code: "✓", title: "Hand in", blurb: "Show your model, your answers." }
   ],
 
@@ -82,15 +85,6 @@ window.COURSE = {
             tone: "note", title: "Package numbers may change",
             text: "The number of a package (for example 1.A) may change between the models of Part 1 and of this seminar, but its name is always the same, for example **Use Cases and Scenarios**. Look for the name."
           }
-        },
-        {
-          tip: {
-            label: "Optional: download the handout",
-            blocks: [
-              { p: "The handout has the same tasks and questions as this guide. Nothing here is required to do the seminar." },
-              { download: { label: "Handout", file: "BE Cameo - Part 2 - Marked - 2025.docx", src: "assets/docs/BE Cameo - Part 2 - Marked - 2025.docx", size: "470 KB" } }
-            ]
-          }
         }
       ]
     },
@@ -118,7 +112,7 @@ window.COURSE = {
       title: "Load the model",
       lead: "The model of the seminar is on the LMS. It comes as two files: keep them together.",
       blocks: [
-        { download: { label: "File to open", file: "UAV_BE_Note_2026 _BE GRADED - Student.mdzip", src: "assets/models/UAV_BE_Note_2026 _BE GRADED - Student.mdzip", size: "913 KB" } },
+        { download: { label: "File to open", file: "UAV_BE_Note_2026 _BE GRADED - Student.mdzip", src: "assets/models/UAV_BE_Note_2026 _BE GRADED - Student.mdzip", size: "649 KB" } },
         {
           steps: [
             "Download the two model files from the LMS.",
@@ -135,54 +129,85 @@ window.COURSE = {
       ]
     },
     {
-      id: "settings", ch: "setup", kind: "do",
-      title: "Plugin, perspective, language, Expert mode",
-      lead: "Check the OMF-ISAE plugin first, then the same three settings as in Part 1.",
+      id: "install-plugin", ch: "setup", kind: "do",
+      title: "Install the OMF-ISAE plugin",
+      lead: "The exercise needs the OMF-ISAE plugin. Install it from the plugin manager.",
       blocks: [
         {
-          steps: [
-            "Look at the menu bar of Cameo. Is there an **ISAE** menu, after {{Help}}?"
+          tabs: [
+            {
+              label: "Standard", sub: "Cameo's plugin manager",
+              blocks: [
+                { download: { label: "Plugin to install", file: "com.elliades.mbseShepherd_1.7.0.zip", src: "../assets/plugins/com.elliades.mbseShepherd_1.7.0.zip", size: "20 MB" } },
+                {
+                  steps: [
+                    "In Cameo, choose {{Help > Resource & Plugin Manager}}, then click {{Import}}.",
+                    "Select the plugin file you downloaded."
+                  ]
+                },
+                {
+                  callout: {
+                    tone: "warn", title: "Restart MagicDraw",
+                    text: "Close and restart Cameo (MagicDraw) once the plugin is imported. The plugin is only loaded at startup."
+                  }
+                }
+              ]
+            },
+            {
+              label: "No admin rights", sub: "a script, no installer",
+              blocks: [
+                { download: { label: "Plugin archive", file: "com.elliades.mbseShepherd_1.7.0.zip", src: "../assets/plugins/com.elliades.mbseShepherd_1.7.0.zip", size: "20 MB" } },
+                { download: { label: "Install script", file: "install-plugin.ps1", src: "../assets/plugins/install-plugin.ps1", size: "2 KB" } },
+                {
+                  steps: [
+                    "Save both files in the same folder, for example your Downloads folder.",
+                    "Close Cameo (MagicDraw) if it is open.",
+                    "Open the folder, right-click **install-plugin.ps1** and choose **Run with PowerShell**.",
+                    "Wait for the line **Plugin installed**, then press Enter to close the window."
+                  ]
+                },
+                {
+                  copy: { label: "If Windows refuses to run the script, run this in that folder", value: "powershell -ExecutionPolicy Bypass -File .\\install-plugin.ps1" }
+                },
+                {
+                  callout: {
+                    tone: "tip", title: "No administrator rights needed",
+                    text: "The script copies the plugin into your own user folder: %LOCALAPPDATA%\\.magic.systems.of.systems.architect\\2026x. Nothing is written to Program Files."
+                  }
+                },
+                {
+                  callout: {
+                    tone: "warn", title: "Restart MagicDraw",
+                    text: "Start Cameo (MagicDraw) after the script has finished. The plugin is only loaded at startup."
+                  }
+                }
+              ]
+            },
+            {
+              label: "No script", sub: "3 steps, by hand",
+              blocks: [
+                { download: { label: "Plugin archive", file: "com.elliades.mbseShepherd_1.7.0.zip", src: "../assets/plugins/com.elliades.mbseShepherd_1.7.0.zip", size: "20 MB" } },
+                {
+                  copy: { label: "Your Cameo folder (no 2026x folder? create it)", value: "%LOCALAPPDATA%\\.magic.systems.of.systems.architect\\2026x" }
+                },
+                {
+                  steps: [
+                    "Close Cameo. Open a Windows Explorer window, **paste the path above** in its address bar and press Enter.",
+                    "**Move the zip there**, then right-click it and choose **Extract here** (or **Extract All…** and give the same path).",
+                    "Check that **data**, **plugins** and **profiles** are there, then start Cameo."
+                  ]
+                },
+                { widget: "pluginExtract", opts: { path: "%LOCALAPPDATA%\\.magic.systems.of.systems.architect\\2026x" } }
+              ]
+            }
           ]
-        },
-        {
-          callout: {
-            tone: "tip", title: "ISAE menu there?",
-            text: "The plugin is already installed. Go on with the settings below."
-          }
-        },
-        {
-          recall: {
-            label: "No ISAE menu? Install the plugin as in Part 1, then restart Cameo",
-            items: [{ id: "install-plugin", title: "Install the OMF-ISAE plugin" }]
-          }
-        },
-        {
-          steps: [
-            "When the tool starts, choose the **Systems Engineer** perspective. You can also do it later with {{Options > Perspectives}}.",
-            "Switch the language to English: {{Options > Environment}}, then {{General > Language}}, and choose **English**.",
-            "In the {{Specification}} window of an element, set {{Properties}} to **Expert** to see every property."
-          ]
-        },
-        {
-          figure: {
-            src: "../assets/img/spec-expert.png", w: 838, h: 544, size: "sm",
-            alt: "Specification window of the package 1 - Operational Analysis. At the top right, the Properties drop-down list is set to Expert and circled in red.",
-            caption: "Element specification, Expert mode."
-          }
-        },
-        {
-          recall: {
-            items: [
-              { id: "perspective", title: "Choose the Systems Engineer perspective" },
-              { id: "language", title: "Switch Cameo to English" },
-              { id: "expert-mode", title: "Show every property with Expert mode" }
-            ]
-          }
         }
       ]
     },
 
     /* ───────────────────────── 2 · The problem ───────────────────────── */
+    /* Link this guide to Cameo: the same scene in the four parts (js/pairing-scene.js). */
+    window.PAIRING_SCENE(),
     {
       id: "spec", ch: "problem", kind: "read",
       title: "The request",
@@ -294,6 +319,24 @@ window.COURSE = {
 
     /* ───────────────────────── T1 · Operational context ───────────────────────── */
     {
+      id: "op-intro", ch: "T1", kind: "read", mark: "intro",
+      title: "First, what changes around the system",
+      lead: "A bear is a new actor around the flock. As in Part 1, we start from the outside of the system, with three diagrams that follow each other.",
+      blocks: [
+        { phases: "op" },
+        {
+          widget: "phaseSteps", opts: {
+            steps: [
+              { pic: "context", rename: { Operator: "Bear", GNSS: "Shepherd", Station: "Flock" }, title: "Context", text: "Who is around the system, and what does it exchange with them? The bear joins the operational context." },
+              { pic: "usecase", rename: { Parameter: "Protect", Mission: "sheep" }, title: "Use case", text: "What service does the system now deliver? A new use case, linked to the actors it involves." },
+              { pic: "scenario", rename: { Operator: "Bear", Station: "UAV", UAV: "Shepherd" }, title: "Scenario", text: "How does it unfold? The scenario tells it, message by message, between the drone and its actors." }
+            ]
+          }
+        },
+        { p: "Each diagram feeds the next one, and the last one checks the first: keep this loop in mind through the three tasks." }
+      ]
+    },
+    {
       id: "t1-context", ch: "T1", kind: "do", ref: "Task 1",
       title: "Bring the bear into the operational context",
       lead: "Complete the operational context diagram: add the bear and connect it to the SoI.",
@@ -302,51 +345,34 @@ window.COURSE = {
         {
           steps: [
             "Open the **Operational Context** diagram.",
-            "Add the bear to the diagram. The bear part is already in the model: you do not create it."
+            "Add the [[bear-part|bear]] to the diagram. The bear part is already in the model: you do not create it."
           ]
         },
         {
           tip: {
             label: "Show the bear as a bear",
             blocks: [
-              { p: "Select the block named bear on the diagram, then click {{Show as Image}} in the toolbar of the diagram." },
+              { p: "Select the block named [[bear-part|bear]] on the diagram, then click {{Show as Image}} in the toolbar of the diagram." },
               { figure: { src: "assets/img/show-as-image.png", w: 453, h: 108, size: "sm", alt: "Toolbar of the Operational Context diagram, with the tooltip Show as Image on one of its buttons.", caption: "The Show as Image button." } }
             ]
           }
         },
         {
+          callout: {
+            tone: "note", title: "How the drone sees around it",
+            text: "The drone already watches the sheep: its port **infrared light** is connected to the **sheep**. Its infrared camera acquires what is around it, day and night."
+          }
+        },
+        {
           steps: [
-            "Connect the bear to the SoI. The type of the bear already declares two ports, and they should be used. The specification tells you enough to understand what they are."
+            "Connect the bear to the SoI: draw **one connector** from the **infrared light** port of the drone to the bear. Do not create any port: the connector alone is enough here."
           ],
           start: 3
         },
         {
-          tip: {
-            label: "Show the ports the bear already has",
-            blocks: [
-              { p: "Select the **bear** block: a small palette appears next to it. Click the button with three stacked rows, just below the picture icon, to display the ports of the bear on the block." },
-              { video: { src: "assets/video/display-ports.mp4", w: 364, h: 508, alt: "Cameo: the bear block is selected, the palette opens, and the button with three stacked rows displays its ports, light and s_l." } }
-            ]
-          }
-        },
-        {
-          steps: [
-            "When you connect them, create the conjugated ports on the SoI side."
-          ],
-          start: 4
-        },
-        {
           callout: {
-            tone: "note", title: "The flows come later",
-            text: "Which flows the bear and the SoI exchange (the arrows on the ports) is defined later, in Question 2."
-          }
-        },
-        {
-          tip: {
-            label: "Tip from the handout",
-            blocks: [
-              { p: "**Conjugated ports.** When you connect an existing port to a target part, Cameo (MagicDraw) automatically creates on the target a conjugated port typed by the same interface." }
-            ]
+            tone: "note", title: "The other exchanges come later",
+            text: "What else the bear, the drone and the shepherd exchange is the subject of Question 2. Right after it, the guide creates the ports and their flows in your model for you."
           }
         },
         { recall: { items: [
@@ -357,6 +383,22 @@ window.COURSE = {
 
     /* ───────────────────────── T2 · Use cases ───────────────────────── */
     {
+      id: "link-ctx-uc", ch: "T2", kind: "read", mark: "link",
+      title: "From the context to the use cases",
+      lead: "The bear is now in the operational context. Which service must the system deliver because of it?",
+      blocks: [
+        {
+          widget: "phaseSteps", opts: {
+            steps: [
+              { pic: "context", rename: { Operator: "Bear", GNSS: "Shepherd", Station: "Flock" }, done: true, title: "Context", text: "Task 1: the bear stands next to the drone, connected to it." },
+              { pic: "usecase", rename: { Parameter: "Protect", Mission: "sheep" }, title: "Use case", text: "Task 2: the same actor appears on the use case diagram, linked to what the system does about it." }
+            ]
+          }
+        },
+        { p: "The context says **who** is around the system. The use cases say **what** the system offers about each of them. An actor of the context with no use case, or a use case with no actor of the context, is a sign that something is missing." }
+      ]
+    },
+    {
       id: "t2-actor", ch: "T2", kind: "do", ref: "Task 2",
       title: "Add the Bear actor",
       lead: "The Bear actor is already declared in the model. Put it on the use case diagram.",
@@ -365,7 +407,7 @@ window.COURSE = {
         {
           steps: [
             "Open the use case diagram [[uc-diagram]].",
-            "Drag and drop the **Bear** actor from the Model Browser onto the diagram."
+            "Drag and drop the [[bear-actor|Bear]] actor from the Model Browser onto the diagram."
           ]
         },
         {
@@ -418,8 +460,8 @@ window.COURSE = {
       blocks: [
         {
           steps: [
-            "Create the use case <<Protect the sheeps from predators>>.",
-            "Create an **extend** relationship from <<Protect the sheeps from predators>> to **Surveillance of sheep in a safe zone area**. Cameo creates the extension point on the surveillance use case with this relationship: name it <<Predator entering the safe zone>>.",
+            "Create the use case <<Protect the sheep from predators>>.",
+            "Create an **extend** relationship from <<Protect the sheep from predators>> to **Surveillance of sheep in a safe zone area**. Cameo creates the extension point on the surveillance use case with this relationship: name it <<Predator entering the safe zone>>.",
             "The surveillance use case still applies as before; when a bear enters the safe zone, the new use case takes over."
           ]
         }
@@ -430,7 +472,7 @@ window.COURSE = {
       title: "Link the new use case",
       lead: "Link the use case to the other elements, as seen in the previous exercise and in the lesson.",
       blocks: [
-        { steps: ["Link the use case <<Protect the sheeps from predators>> to the other elements of the diagram."] },
+        { steps: ["Link the use case <<Protect the sheep from predators>> to the other elements of the diagram."] },
         { p: "Which relations, and with which elements: this is up to you, and it is part of what is marked." }
       ]
     },
@@ -442,7 +484,7 @@ window.COURSE = {
         { h: "Before you call" },
         {
           steps: [
-            "Task 1: the bear is on the operational context diagram, connected to the SoI.",
+            "Task 1: the bear is on the operational context diagram, connected to the **infrared light** port of the drone.",
             "Task 2: the Bear actor and the new use case are on the use case diagram, **Surveillance of sheep in a safe zone area** has the extension point **Predator entering the safe zone**, and the new use case is linked."
           ]
         },
@@ -452,9 +494,25 @@ window.COURSE = {
 
     /* ───────────────────────── T3 · Scenario ───────────────────────── */
     {
+      id: "link-uc-sc", ch: "T3", kind: "read", mark: "link",
+      title: "From the use case to its scenarios",
+      lead: "A use case names a goal. It does not say how the goal is reached: that is the job of the scenarios.",
+      blocks: [
+        {
+          widget: "phaseSteps", opts: {
+            steps: [
+              { pic: "usecase", rename: { Parameter: "Protect", Mission: "sheep" }, done: true, title: "Use case", text: "Task 2: the new use case gives the goal, protect the sheep from predators." },
+              { pic: "scenario", rename: { Operator: "Bear", Station: "UAV", UAV: "Shepherd" }, title: "Scenario", text: "Task 3: a sequence diagram, owned by that use case, tells one way it unfolds, message by message." }
+            ]
+          }
+        },
+        { p: "The lifelines of the scenario are the actors of the use case, and the drone. One use case usually has several scenarios: the sunny day, the rainy days, the alternatives." }
+      ]
+    },
+    {
       id: "t3-scenario", ch: "T3", kind: "read", ref: "Task 3",
       title: "Scenario 1",
-      lead: "Task 3: create a sequence diagram in the use case \"Protect the sheeps from predators\", from the following scenario.",
+      lead: "Task 3: create a sequence diagram in the use case \"Protect the sheep from predators\", from the following scenario.",
       blocks: [
         { h: "Description of scenario 1" },
         {
@@ -491,7 +549,7 @@ window.COURSE = {
         {
           question: {
             id: "q1-0", type: "list", initial: 3,
-            prompt: "List at least 3 scenarios of the use case <<Protect the sheeps from predators>>, with at least one of each kind. For each one, give its kind (SD, RD or ALT), then in one sentence what happens and how it ends for the flock.",
+            prompt: "List at least 3 scenarios of the use case <<Protect the sheep from predators>>, with at least one of each kind. For each one, give its kind (SD, RD or ALT), then in one sentence what happens and how it ends for the flock.",
             itemLabel: "Scenario"
           }
         },
@@ -504,13 +562,13 @@ window.COURSE = {
       ]
     },
     {
-      id: "q1-1", ch: "T3", kind: "do", ref: "Question 1.1", pts: 3,
+      id: "q1-1", ch: "T3", kind: "do", ref: "Question 1.1", pts: 2,
       title: "Question 1.1: model the sunny day scenario",
-      lead: "In the use case \"Protect the sheeps from predators\", model your sunny day scenario (Scenario 1) as a sequence diagram.",
+      lead: "In the use case \"Protect the sheep from predators\", model your sunny day scenario (Scenario 1) as a sequence diagram.",
       blocks: [
         {
           steps: [
-            "Create the sequence diagram from the use case <<Protect the sheeps from predators>>, so that it stays attached to it.",
+            "Create the sequence diagram from the use case <<Protect the sheep from predators>>, so that it stays attached to it.",
             "Tell the story of the sunny day in the diagram: who takes part, what they exchange, and what the drone does on its own, in the order the shepherd would tell it."
           ]
         },
@@ -534,35 +592,126 @@ window.COURSE = {
       ]
     },
     {
+      id: "link-sc-ctx", ch: "T3", kind: "read", mark: "link",
+      title: "Back to the context: is it consistent?",
+      lead: "The scenario is written. Now we go back up to the first diagram, to check that both tell the same story.",
+      blocks: [
+        {
+          widget: "phaseSteps", opts: {
+            steps: [
+              { pic: "scenario", rename: { Operator: "Bear", Station: "UAV", UAV: "Shepherd" }, done: true, title: "Scenario", text: "Question 1.1: every message between the drone and an actor crosses the boundary of the system." },
+              { pic: "context", rename: { Operator: "Bear", GNSS: "Shepherd", Station: "Flock" }, title: "Context", text: "Question 2: each of these messages must travel on a port and a connector of the operational context." }
+            ]
+          }
+        },
+        { p: "This is the bottom-up part of the approach: the scenario reveals exchanges that the context did not show yet, so the context is updated." }
+      ]
+    },
+    {
       id: "q2", ch: "T3", kind: "answer", ref: "Question 2", pts: 2,
       title: "Question 2: back to the context diagram",
-      lead: "Your scenario brings new flows. Show them on the operational context diagram.",
+      lead: "Your scenario brings new flows. Which ones must the operational context show?",
       blocks: [
         { path: "op-context" },
-        { h: "a) Which flows, on which connectors" },
-        { p: "On the connectors you created in Task 1, indicate which ones carry the new physical flows of your sunny day scenario (Question 1.1)." },
+        { p: "Read your sunny day scenario (Question 1.1) again, message by message. Every message that crosses the boundary of the drone is a physical flow, and the operational context diagram must show it, on a connector between the drone and an actor." },
         {
           question: {
             id: "q2a", type: "text",
-            prompt: "a) On which connectors do the new physical flows of your sunny day scenario go?",
-            hint: "One line per connector: the connector, then the flow(s) it carries."
+            prompt: "Overall, which information must be added to the operational context? Group it by kind, and for each kind say between which elements it goes and in which direction.",
+            hint: "One line per kind of information: what it is, from where, to where."
           }
         },
-        { h: "b) Update the context diagram" },
-        { steps: ["Update the context diagram with the new flow between the drone and the shepherd (see Question 1.1)."] },
-        { h: "Reminders" },
+        { call: "Show your answer to a teacher before you go on: the next scene gives it away." }
+      ]
+    },
+    {
+      id: "q2-auto", ch: "T3", kind: "do", ref: "Question 2",
+      title: "The exchanges: the alerts by the button, the counter actions by you",
+      lead: "Creating every port by hand takes long and teaches little more than Part 1 did. One click builds the alerts in your model; the connections from the drone to the bear are yours.",
+      blocks: [
         {
-          list: [
-            "A **port** is a point of connection. It is typed by an **Interface Block**.",
-            "An **interface block** is the interface contract: it defines which flows are provided or received. These flows are represented by **flow properties**, and you have to create them.",
-            "A flow property can be typed by a **signal**, to stay consistent."
+          callout: {
+            tone: "warn", title: "Question 2 first",
+            text: "This scene gives the answer of Question 2. Write yours and show it to a teacher before you read on."
+          }
+        },
+        { widget: "exchangeStory" },
+        { p: "The signals are those of the reference sequence diagram, in [[fd-root]] (**Predator Position** is created if your model has none). Keep your own sequence diagram, but use these signals from now on." },
+        {
+          steps: [
+            "Pair this guide with Cameo (the **Cameo** button at the top) and keep your Part 2 model open.",
+            "Click the button below.",
+            "Open the **Operational Context** diagram: the coloured ports and connectors are the ones the button made, in the colours of the animation.",
+            "Open the interface block **IF_Predator_Alert** in the containment tree: one flow property per signal, with its direction."
           ]
         },
-        { recall: { items: [{ id: "context-diagram", title: "Start from the operational context" }] } }
+        { widget: "cameoTask", opts: { task: "part2-predator", label: "Create the alerts in my model", model: "your Part 2 model" } },
+        { pair: true },
+        {
+          tip: {
+            label: "No link with Cameo? Build them by hand",
+            blocks: [
+              { p: "The alerts only: the counter actions are yours in any case. All interface blocks go under **D - Physical Interfaces**. The port of the drone (of the base station, for the relay) is typed by the interface block; the port at the other end by the same block, conjugated (~)." },
+              {
+                list: [
+                  "**infrared light** (already on the drone) : IF_Infrared_Light, add **in** Bear Signature. On the bear: **infrared light** : ~IF_Infrared_Light.",
+                  "**predator alert** : IF_Predator_Alert on the drone, **out** Predator Position and **out** Predator entering safe perimiter. On the base station: **drone alert** : ~IF_Predator_Alert.",
+                  "**shepherd alert** : IF_Predator_Alert on the base station (the same interface: it relays). On the shepherd: **predator alert** : ~IF_Predator_Alert."
+                ]
+              }
+            ]
+          }
+        },
+        { h: "Your turn: from the drone to the bear" },
+        { p: "Connect the drone to the bear for the counter actions of your scenario, on the **Operational Context** diagram." },
+        {
+          callout: {
+            tone: "note", title: "Before you draw a connector",
+            text: "Create first, for each exchange, the **port**, its **interface block** under **D - Physical Interfaces** and a **flow property typed by the signal**, with its direction. Then type the port at the other end by the same interface block, conjugated (~), and only then draw the connector."
+          }
+        },
+        { recall: { items: [{ id: "m-fp-port", title: "Create the ports and connections for the flight plan" }] } }
+      ]
+    },
+    {
+      id: "op-outro", ch: "T3", kind: "read", mark: "outro",
+      title: "What is expected of the system is now in the model",
+      lead: "Context, use case and scenario now tell the same story about the bear.",
+      blocks: [
+        { phases: "op" },
+        {
+          widget: "phaseSteps", opts: {
+            done: true,
+            steps: [
+              { pic: "context", rename: { Operator: "Bear", GNSS: "Shepherd", Station: "Flock" }, title: "Context", text: "The bear and the shepherd exchange flows with the drone, through its ports." },
+              { pic: "usecase", rename: { Parameter: "Protect", Mission: "sheep" }, title: "Use case", text: "Protecting the sheep from predators extends the surveillance of the flock." },
+              { pic: "scenario", rename: { Operator: "Bear", Station: "UAV", UAV: "Shepherd" }, title: "Scenario", text: "The sunny day tells, message by message, how the drone deals with the bear." }
+            ]
+          }
+        },
+        { p: "We know *what* is expected. The next layer answers *how* the drone does it." }
       ]
     },
 
     /* ───────────────────────── T4 · Functional architecture ───────────────────────── */
+    {
+      id: "fn-intro", ch: "T4", kind: "read", mark: "intro",
+      title: "Now, how the system does it",
+      lead: "The functional layer starts from the scenario: what the drone has to do to play it, and when.",
+      blocks: [
+        { phases: "fn" },
+        {
+          widget: "phaseSteps", opts: {
+            steps: [
+              { pic: "functions", title: "Functions", text: "Question 3: each message the drone handles in the scenario reveals a function." },
+              { pic: "stmFn", title: "Mission steps", text: "Question 4: the state machine gives the modes of the mission, and the signals that move from one to the next." },
+              { pic: "actFn", title: "Logic", text: "Questions 5 and 6: an activity says in which order, and on which condition, a function runs." },
+              { pic: "simRun", title: "Simulation", text: "Question 7: play it all with the signals of the scenario." }
+            ]
+          }
+        }
+      ]
+    },
     {
       id: "q3", ch: "T4", kind: "do", ref: "Question 3", pts: 1,
       title: "Question 3: the new functions",
@@ -588,6 +737,22 @@ window.COURSE = {
       ]
     },
     {
+      id: "link-fn-st", ch: "T4", kind: "read", mark: "link",
+      title: "From the functions to the mission steps",
+      lead: "The functions say what the drone does. They do not say when.",
+      blocks: [
+        {
+          widget: "phaseSteps", opts: {
+            steps: [
+              { pic: "functions", done: true, title: "Functions", text: "Question 3: the new functions are in the functional architecture." },
+              { pic: "stmFn", title: "Mission steps", text: "Question 4: the state machine says in which mode each function runs, and which signal of the scenario changes the mode." }
+            ]
+          }
+        },
+        { p: "The signals on the transitions are the messages of your scenario: the state machine and the sequence diagram must speak the same language." }
+      ]
+    },
+    {
       id: "q4", ch: "T4", kind: "do", ref: "Question 4", pts: 2,
       title: "Question 4: the state machine",
       lead: "Complete the state machine diagram with the transitions linked to the predator management states, and their signals.",
@@ -605,7 +770,23 @@ window.COURSE = {
       ]
     },
     {
-      id: "q5", ch: "T4", kind: "do", ref: "Question 5", pts: 3,
+      id: "link-st-logic", ch: "T4", kind: "read", mark: "link",
+      title: "From a mission step to its logic",
+      lead: "A state runs a function. What happens inside that function?",
+      blocks: [
+        {
+          widget: "phaseSteps", opts: {
+            steps: [
+              { pic: "stmFn", done: true, title: "Mission steps", text: "Question 4: a state of the machine runs a function while the drone is in it." },
+              { pic: "actFn", title: "Logic", text: "Questions 5 and 6: the activity diagram of that function details its actions, its decisions and the signals it sends." }
+            ]
+          }
+        },
+        { p: "The signals an activity sends are, again, those of the scenario and of the ports of the context." }
+      ]
+    },
+    {
+      id: "q5", ch: "T4", kind: "do", ref: "Question 5", pts: 2,
       title: "Question 5: Monitoring Predator",
       lead: "Describe the activity diagram of the function \"Monitoring Predator\".",
       blocks: [
@@ -630,8 +811,8 @@ window.COURSE = {
       ]
     },
     {
-      id: "q6", ch: "T4", kind: "do", ref: "Question 6", pts: 1, bonus: true,
-      title: "Bonus Question 6: Start Predator Tracking",
+      id: "q6", ch: "T4", kind: "do", ref: "Question 6", pts: 1,
+      title: "Question 6: Start Predator Tracking",
       lead: "Complete the activity diagram \"Start Predator Tracking\" so that it describes the tracking behavior and makes the state machine progress automatically.",
       blocks: [
         {
@@ -643,6 +824,23 @@ window.COURSE = {
         },
         { recall: { items: [{ id: "d-create-ad", title: "Create the activity diagram" }] } },
         { call: "Done? Raise your hand and show this question to a teacher." }
+      ]
+    },
+    {
+      id: "link-logic-sim", ch: "T4", kind: "read", mark: "link",
+      title: "The state machine and its behaviour, played together",
+      lead: "The modes and the functions are drawn apart. Only a simulation shows whether, together, they play the scenario.",
+      blocks: [
+        {
+          widget: "phaseSteps", opts: {
+            steps: [
+              { pic: "stmFn", done: true, title: "State machine", text: "Question 4: the modes, the signals between them, and the function each mode runs." },
+              { pic: "actFn", done: true, title: "Behaviour", text: "Questions 5 and 6: what each function does, and the signals it sends." },
+              { pic: "simRun", title: "Simulation", text: "Question 7: the scenario sends its signals one after the other. The machine changes mode, each mode runs its function, and the story must reach its end." }
+            ]
+          }
+        },
+        { p: "A state that is never entered, a function that never runs, or a signal that nobody waits for: the simulation shows it at once. It closes the loop of the functional layer, by checking the functions against the operational scenario you started from." }
       ]
     },
     {
@@ -667,6 +865,9 @@ window.COURSE = {
             ]
           }
         },
+        { h: "Check it with a scenario" },
+        { p: "Link this guide to Cameo with the **Cameo** button at the top, open your model, then play the scenario: the guide sends the signals of the mission to your simulation, one after the other, and says for each step what passes and what fails. A failed step is a clue: fix your model and play again." },
+        { widget: "stmCheck" },
         { call: "Done? Raise your hand and show this question to a teacher." },
         { h: "Optional: watch the drone" },
         { p: "If the OMF-ISAE plugin of Part 1 is installed in your Cameo, pair this guide with Cameo: the drone of the **Simulation** panel, at the top of the page, follows the states of your simulation." },
@@ -674,8 +875,45 @@ window.COURSE = {
         { widget: "simHint" }
       ]
     },
+    {
+      id: "fn-outro", ch: "T4", kind: "read", mark: "outro",
+      title: "How the drone deals with the bear is now in the model",
+      lead: "The new functions, the modes that run them and their logic play the scenario.",
+      blocks: [
+        { phases: "fn" },
+        {
+          widget: "phaseSteps", opts: {
+            done: true,
+            steps: [
+              { pic: "functions", title: "Functions", text: "The new functions, revealed by the scenario." },
+              { pic: "stmFn", title: "Mission steps", text: "The state machine runs them, mode by mode." },
+              { pic: "actFn", title: "Logic", text: "Their activities detail the actions and the signals." },
+              { pic: "simRun", title: "Simulation", text: "The machine plays the scenario." }
+            ]
+          }
+        },
+        { p: "We know *how* the drone does it. The last layer answers *who* does it: which hardware and software." }
+      ]
+    },
 
     /* ───────────────────────── T5 · Physical architecture ───────────────────────── */
+    {
+      id: "ph-intro", ch: "T5", kind: "read", mark: "intro",
+      title: "Last, who does what",
+      lead: "The physical layer starts from the functions: which subsystems carry them out?",
+      blocks: [
+        { phases: "ph" },
+        {
+          widget: "phaseSteps", opts: {
+            steps: [
+              { pic: "breakdown", title: "Subsystems", text: "Question 8: do we have all the hardware and software the new functions need?" },
+              { pic: "alloc", title: "Allocation", text: "Question 9: give each new function to a subsystem." },
+              { pic: "architecture", title: "White box", text: "Question 10: open the drone, and replay the scenario between its subsystems." }
+            ]
+          }
+        }
+      ]
+    },
     {
       id: "q8", ch: "T5", kind: "do", ref: "Question 8", pts: 2,
       title: "Question 8: a physical solution",
@@ -705,9 +943,62 @@ window.COURSE = {
       ]
     },
 
+    /* ───────────────────────── T6 · Allocation ───────────────────────── */
     {
-      id: "q8-1", ch: "T5", kind: "do", ref: "Question 8.1",
-      title: "Question 8.1: white box scenario, detecting the bear",
+      id: "link-alloc", ch: "T6", kind: "read", mark: "link",
+      title: "Functions meet subsystems",
+      lead: "The functional layer and the physical layer were built apart. Allocation ties them together.",
+      blocks: [
+        {
+          widget: "phaseSteps", opts: {
+            steps: [
+              { pic: "functions", done: true, title: "Functions", text: "Task 4: what the drone must do." },
+              { pic: "breakdown", done: true, title: "Subsystems", text: "Task 5: what the drone is made of." },
+              { pic: "alloc", title: "Allocation", text: "Task 6: who does each function." }
+            ]
+          }
+        },
+        { p: "Think of the messages of the scenario: the subsystem that receives or sends one is often the one that carries out the function behind it." }
+      ]
+    },
+    {
+      id: "q9", ch: "T6", kind: "do", ref: "Question 9", pts: 1,
+      title: "Question 9: allocate the new functions",
+      lead: "Task 6: depending on your choices, allocate all the new functions to the subsystems you created, to existing ones, or to both.",
+      blocks: [
+        { path: "alloc-matrix" },
+        {
+          steps: [
+            "Open the **Function Allocation** matrix in [[alloc-pkg]].",
+            "Allocate every new function to a subsystem."
+          ]
+        },
+        { recall: { items: [{ id: "e-allocate", title: "Allocate the functions to subsystems" }] } },
+        { call: "Done? Raise your hand and show this question to a teacher." }
+      ]
+    },
+
+    /* ───────────────────────── T7 · White box scenario ───────────────────────── */
+    {
+      id: "link-bb-wb", ch: "T7", kind: "read", mark: "link",
+      title: "From the black box to the white box",
+      lead: "In Task 3, the drone was one lifeline. Now we open it.",
+      blocks: [
+        {
+          widget: "phaseSteps", opts: {
+            steps: [
+              { pic: "scenario", rename: { Operator: "Bear", Station: "UAV", UAV: "Shepherd" }, done: true, title: "Black box scenario", text: "Task 3: the drone exchanges messages with the bear and the shepherd, seen from outside." },
+              { pic: "breakdown", done: true, title: "Subsystems", text: "Question 8: the drone is made of subsystems." },
+              { pic: "architecture", title: "White box scenario", text: "Question 10: the same story, with one lifeline per subsystem." }
+            ]
+          }
+        },
+        { p: "The messages from and to the bear and the shepherd stay the same. What is new are the messages between the subsystems, inside the drone." }
+      ]
+    },
+    {
+      id: "q10", ch: "T7", kind: "do", ref: "Question 10", pts: 2,
+      title: "Question 10: white box scenario, detecting the bear",
       lead: "Describe, as a white box sequence diagram, how the physical architecture detects the bear.",
       blocks: [
         {
@@ -733,46 +1024,6 @@ window.COURSE = {
         },
         { recall: { items: [{ id: "a-create-sd", title: "Create the sequence diagram" }, { id: "a-lifelines", title: "Add the lifelines" }, { id: "a-messages", title: "Send messages between actors" }] } },
         { call: "When your sequence diagram is finished, call the teacher to see it." }
-      ]
-    },
-    {
-      id: "q8-2", ch: "T5", kind: "do", ref: "Question 8.2",
-      title: "Question 8.2: white box scenario, engaging the bear",
-      lead: "Describe, as a white box sequence diagram, how the physical architecture engages the bear once it enters the safe zone.",
-      blocks: [
-        {
-          steps: [
-            "Create a second sequence diagram of the physical scenario \"engage the bear\", from the bear entering the safe zone to the counter actions on the bear.",
-            "Show the **actors** and the **subsystems** that act: the ones that decide, alert the shepherd, and scare the bear with sound and light.",
-            "Draw the physical flows in order, down to the subsystem that acts on the bear.",
-            "As in Question 8.1, **decompose** a subsystem when it is too coarse to show who does what."
-          ]
-        },
-        {
-          callout: {
-            tone: "tip", title: "Same shape as Question 8.1",
-            text: "The bear is the first lifeline again, and the flows go through the subsystems one after the other, as in the figure of Question 8.1."
-          }
-        },
-        { call: "When your sequence diagram is finished, call the teacher to see it." }
-      ]
-    },
-
-    /* ───────────────────────── T6 · Allocation ───────────────────────── */
-    {
-      id: "q9", ch: "T6", kind: "do", ref: "Question 9", pts: 1,
-      title: "Question 9: allocate the new functions",
-      lead: "Task 6: depending on your choices, allocate all the new functions to the subsystems you created, to existing ones, or to both.",
-      blocks: [
-        { path: "alloc-matrix" },
-        {
-          steps: [
-            "Open the **Function Allocation** matrix in [[alloc-pkg]].",
-            "Allocate every new function to a subsystem."
-          ]
-        },
-        { recall: { items: [{ id: "e-allocate", title: "Allocate the functions to subsystems" }] } },
-        { call: "Done? Raise your hand and show this question to a teacher." }
       ]
     },
 
@@ -815,21 +1066,23 @@ window.COURSE = {
   authorNotes: [
     { scene: "welcome", text: "Authors: this handout spells “Mayssa Chebbi”, the Part 1 guide (content/config.js) “Mayssa Chebi”. One of the two is wrong." },
     { scene: "load-model", text: "The handout writes “.mzip” and asks for two files (UAV_BE*.mdzip and SAMAREQ_Profile.mdzip), while the Part 1 guide gives one file. The guide says .mdzip and two files. Check on the LMS." },
-    { scene: "top-down", text: "The note speaks of detailing the “Avoid Bear Approach” case, while Tasks 2 and 3 name the use case “Protect the sheeps from predators”. The guide says “the use case about predators”." },
+    { scene: "top-down", text: "The note speaks of detailing the “Avoid Bear Approach” case, while Tasks 2 and 3 name the use case “Protect the sheep from predators”. The guide says “the use case about predators”." },
     { scene: "t1-context", text: "The handout says “Display as Image”; the screenshot shows the tooltip “Show as Image”. The guide follows the screenshot." },
-    { scene: "t2-use-case", text: "Names kept as written in the handout: “Protect the sheeps from predators” (sheeps), “Surveillance of sheep in a safe zone area”. Part 1 calls a use case “Surveillance of a \"safe zone\" area”. Check the exact names in the marked model." },
+    { scene: "t1-context", text: "Since 2026-11-15 the bear has no port in the starting model: students draw one connector from the drone's infrared light port (already connected to the sheep) to the bear. The handout still asks to use the bear's two ports and create conjugated ports: update it and the marking sheet." },
+    { scene: "q2-auto", text: "The button calls exercise/apply part2-predator (mbseShepherd plugin 1.6.0 or later, relay allow-list in omf-core-framework). Older plugins answer unknown-method: the guide then says to install the latest one. The plugin zip offered in Setup must be rebuilt with it. Since 2026-11-15 the alerts go from the drone to the ground station (drone alert) and from the ground station to the shepherd (shepherd alert), one interface IF_Predator_Alert; a model where the first button joined the drone to the shepherd is repaired by a new click. The button colours the ports and connectors of the exchanges by kind, in the colours of the exchangeStory animation (red infrared, blue alerts). Since 2026-11-16 the counter actions (drone to bear) are left to the students, without their names: the scene only reminds them to create the port, the interface block and the flow property typed by the signal before drawing the connector. Expected at least light and sound (Light burst, Sound burst). A model where an earlier button built them keeps them. Update the handout and the marking sheet (points for these connections?)." },
+    { scene: "t2-use-case", text: "Names kept as written in the handout: “Protect the sheep from predators” (sheep), “Surveillance of sheep in a safe zone area”. Part 1 calls a use case “Surveillance of a \"safe zone\" area”. Check the exact names in the marked model." },
     { scene: "t2-use-case", text: "How does the Extension Points window open (from the use case, or while drawing the Extend relation)? Neither handout says it. Once confirmed, start step 3 with that gesture." },
     { scene: "q1-0", text: "The Word handout of Part 2 still asks for the signals of Scenario 1 in Question 1.0, with Notes 1 and 2 in Task 3. The guide now asks for at least 3 scenarios (SD, RD, ALT) and leaves the signals to Question 1.1, less guided. Update the handout and the marking sheet." },
     { scene: "t3-scenario", text: "The grammar of scenario 1 was corrected (enter/enters, thus/so, deploy counter action/deploys counter actions). Check that the meaning is unchanged." },
     { scene: "requirements", text: "The handout does not say which boundary the alert line (< 1 km from the flock) is: the tracking perimeter or the safe zone of the three steps. The guide does not explain it until you confirm." },
     { scene: "q4", text: "The handout does not name the state machine of Question 4, nor say whether the predator states already exist. The guide assumes SOI - Pasture Sentinel (named in Question 7) and existing states. Check in the marked model." },
-    { scene: "q2", text: "Question 2 speaks of “the connectors previously created in task 2.1”: the connectors are created in Task 1. The guide says Task 1." },
+    { scene: "q2", text: "Question 2 now asks which information the operational context lacks, grouped by kind (infrared acquisition, to the shepherd, counter actions). Updating the context by hand was dropped: the next scene (q2-auto) builds it. Update the handout and the marking sheet." },
     { scene: "q3", text: "“Only consider the steps related to tracing” was read as “tracking”." },
     { scene: "q5", text: "The sheep monitoring function is assumed to be under A - Functional architecture: the handout does not say where it is." },
     { scene: "q5", text: "No model chip for “Monitoring Predator”, the sheep monitoring function, “Start Predator Tracking”, the package “tracking predator” or the function “engage predator”: their paths in the marked model are not known. Add them to part2/content/model-links.js once checked." },
     { scene: "q7", text: "The Simulation panel of this guide never lists the signals (simPreview: false in part2/content/config.js): it only follows the states that Cameo publishes. Its steps are named Predator tracking and Predator counteraction; a state named otherwise in the model leaves the drone where it is." },
     { scene: "q9", text: "The handout calls the matrix “C – Function Allocation”; the Part 1 model links call it “Function Allocation”. Check the name." },
-    { scene: "marking", text: "Points as in the handout: 19 points plus 1 bonus point (Question 6). The model-link ids are reused from Part 1 and were not checked in the marked model." },
+    { scene: "marking", text: "Points out of 20: Question 6 is no longer a bonus, and the white box scenario (Question 10, 2 points) replaces Questions 8.1 and 8.2, so Questions 1.1 and 5 lost 1 point each. The Word handout and the marking sheet still have the old scale. The model-link ids are reused from Part 1 and were not checked in the marked model." },
     { scene: "three-steps", text: "The three pictures of the handout were redrawn as an animation. The originals are in part2/assets/img/bear-step-*-original.png and shown in the tip under it." }
   ]
 };
