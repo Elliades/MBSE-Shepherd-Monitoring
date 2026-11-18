@@ -96,7 +96,7 @@
       </svg>
       <figcaption>Figure 1. Les scénarios sont écrits une fois et jugent les deux couches.</figcaption>
     </figure>
-    <p>Le fil rouge : <i>Pasture Sentinel</i>, un drone berger qui garde un troupeau et éloigne les prédateurs, modélisé en SysML dans Cameo pour un bureau d’études de l’ISAE. Un seul cas d’utilisation sert d’exemple de bout en bout : <b>protéger le troupeau d’un prédateur</b>.</p>
+    <p>Le fil rouge : <i>Pasture Sentinel</i>, un drone berger qui garde un troupeau et éloigne les prédateurs, modélisé en SysML pour un bureau d’études de l’ISAE. Un seul cas d’utilisation sert d’exemple de bout en bout : <b>protéger le troupeau d’un prédateur</b>.</p>
   </section>
 
   <!-- ───────── 2 ───────── -->
@@ -164,7 +164,7 @@
   <!-- ───────── 5 ───────── -->
   <section id="simuler">
     <h2><span class="n">5</span> Ce qu’il faut pour qu’un modèle SysML simule</h2>
-    <p>Un diagramme SysML ne s’exécute pas tout seul. Le simulateur de Cameo s’appuie sur les sémantiques exécutables de l’OMG, fUML pour les activités et PSSM pour les machines d’états : il exécute ce que le modèle dit, et seulement ça. Chaque composant a sa machine d’états ; un envoi de signal vise un port relié au bon destinataire, avec une interface compatible des deux côtés ; une garde que le simulateur ne sait pas évaluer ouvre une fenêtre de dialogue à chaque passage. Ces règles sont simples une à une, mais une architecture à dix composants demande de les appliquer des centaines de fois. C’est ce coût qui fait sauter la couche logique.</p>
+    <p>Un diagramme SysML ne s’exécute pas tout seul. Le simulateur s’appuie sur les sémantiques exécutables de l’OMG, fUML pour les activités et PSSM pour les machines d’états : il exécute ce que le modèle dit, et seulement ça. Chaque composant a sa machine d’états ; un envoi de signal vise un port relié au bon destinataire, avec une interface compatible des deux côtés ; une garde que le simulateur ne sait pas évaluer ouvre une fenêtre de dialogue à chaque passage. Ces règles sont simples une à une, mais une architecture à dix composants demande de les appliquer des centaines de fois. C’est ce coût qui fait sauter la couche logique.</p>
     <table>
       <thead><tr><th>Choix</th><th>Ce qu’il permet</th><th>Ce qu’il coûte</th></tr></thead>
       <tbody>
@@ -194,14 +194,14 @@
         <text x="36" y="70" class="h-name s">Sheep monitoring</text><text x="36" y="88" class="h-sub">fonctionnel, état Sheep Monitoring</text>
         <text x="36" y="122" class="h-it d-zp">1. Capture surrounding</text>
         <text x="36" y="148" class="h-it d-zp">2. Analyse surrounding signature</text>
-        <text x="36" y="174" class="h-it d-sm">3. Detect Sheeps</text>
-        <text x="36" y="200" class="h-it d-sm">4. Store sheeps location</text>
+        <text x="36" y="174" class="h-it d-sm">3. Detect Sheep</text>
+        <text x="36" y="200" class="h-it d-sm">4. Store sheep location</text>
         <text x="36" y="226" class="h-it d-pm">5. Detect Predator</text>
         <path d="M252 134 C 320 134, 320 76, 386 76" class="a-arrow" marker-end="url(#d-head)"/>
         <path d="M252 187 C 320 187, 320 168, 386 168" class="a-arrow" marker-end="url(#d-head)"/>
         <path d="M252 226 C 320 226, 320 254, 386 254" class="a-arrow" marker-end="url(#d-head)"/>
         <rect x="388" y="44" width="352" height="66" rx="10" class="h-box d-box-zp"/><text x="404" y="68" class="h-name s">Zone Patrolling · Capture surrounding</text><text x="404" y="88" class="h-sub">capte, analyse, et envoie chaque observation à l’orchestrateur</text>
-        <rect x="388" y="124" width="352" height="86" rx="10" class="h-box d-box-sm"/><text x="404" y="148" class="h-name s">SheepMonitoring · Sheep monitoring</text><text x="404" y="168" class="h-sub">réagit au troupeau en vue : Detect Sheeps, store location</text><text x="404" y="188" class="h-sub">réagit au mouton sorti : nouvelle alerte Sheep Exit Alert</text>
+        <rect x="388" y="124" width="352" height="86" rx="10" class="h-box d-box-sm"/><text x="404" y="148" class="h-name s">SheepMonitoring · Sheep monitoring</text><text x="404" y="168" class="h-sub">réagit au troupeau en vue : Detect Sheep, store location</text><text x="404" y="188" class="h-sub">réagit au mouton sorti : nouvelle alerte Sheep Exit Alert</text>
         <rect x="388" y="224" width="352" height="56" rx="10" class="h-box d-box-pm"/><text x="404" y="248" class="h-name s">Predator Management</text><text x="404" y="266" class="h-sub">garde Detect Predator, demande le suivi à l’orchestrateur</text>
       </svg>
       <figcaption>Figure 4. La mission reste la référence validée ; la copie, elle, se redécoupe entre composants.</figcaption>
@@ -257,7 +257,7 @@
     <p>Deux suites sont déjà à portée. Une deuxième candidate coûte peu : on repart de la même mission, on regroupe ou on scinde des composants, on reconnecte, on rejoue. Et comme la simulation s’ouvre par API, on peut y brancher d’autres outils : une scène 3D qui montre le drone au-dessus du troupeau, des outils qui jouent les scénarios, réagissent, journalisent et aident au diagnostic.</p>
     <figure class="fig">
       <video controls preload="none" playsinline poster="../../assets/img/promo-parts34-poster.jpg" src="../../assets/video/promo-parts34-en.mp4"></video>
-      <figcaption>Figure 7. Le TP en film (en anglais) : la scène 3D du pâturage pilotée par la simulation de Cameo.</figcaption>
+      <figcaption>Figure 7. Le TP en film (en anglais) : la scène 3D du pâturage pilotée par la simulation de l’outil.</figcaption>
     </figure>
     <p>Le TP complet, ses modèles et la simulation sont en ligne : <a href="../../">shepherd.chaos-art.fr</a>.</p>
   </section>

@@ -46,6 +46,62 @@
 
   /* ───────── the guide of Part 3, one widget at a time ───────── */
   const docOf = (f) => { try { const d = f.contentDocument; return d && d.documentElement ? d : null; } catch (e) { return null; } };
+  /* The guide of Part 3 still names the modeling tool. In an article, that name is "the tool". */
+  const branded = new WeakSet();
+  function debrand(s) {
+    if (!/Cameo|MagicDraw/i.test(s)) return s;
+    let t = s.replace(/Cameo \(MagicDraw\)/g, 'the tool').replace(/MagicDraw/gi, 'the tool').replace(/\bCameo\b/g, 'the tool');
+    t = t.replace(/\bthe the tool\b/gi, 'the tool');
+    return t.replace(/(^|[.!:?]\s+)the tool\b/g, (m, p) => p + 'The tool');
+  }
+  function stripBrand(root) {
+    if (!root || !root.ownerDocument) return;
+    const w = root.ownerDocument.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode(n) {
+        const tag = n.parentElement && n.parentElement.tagName;
+        return tag === 'SCRIPT' || tag === 'STYLE' || tag === 'NOSCRIPT' ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    for (let n = w.nextNode(); n; n = w.nextNode()) {
+      const next = debrand(n.nodeValue);
+      if (next !== n.nodeValue) n.nodeValue = next;
+    }
+    if (!root.querySelectorAll) return;
+    root.querySelectorAll('[alt],[title],[aria-label],[placeholder]').forEach((el) => {
+      ['alt', 'title', 'aria-label', 'placeholder'].forEach((a) => {
+        const v = el.getAttribute(a);
+        if (!v) return;
+        const next = debrand(v);
+        if (next !== v) el.setAttribute(a, next);
+      });
+    });
+    root.querySelectorAll('iframe').forEach((child) => watchBrand(child));
+  }
+  function watchBrand(f) {
+    if (!f || branded.has(f)) {
+      const d = f && docOf(f);
+      if (d && d.body) stripBrand(d.body);
+      return;
+    }
+    branded.add(f);
+    const run = () => { const d = docOf(f); if (d && d.body) stripBrand(d.body); };
+    const arm = () => {
+      run();
+      const d = docOf(f);
+      if (!d || !d.body || !('MutationObserver' in window) || d.body.dataset.branded) return;
+      d.body.dataset.branded = '1';
+      let busy = false;
+      new MutationObserver(() => {
+        if (busy) return;
+        busy = true;
+        try { run(); } finally { busy = false; }
+      }).observe(d.body, { childList: true, subtree: true, characterData: true });
+    };
+    f.addEventListener('load', arm);
+    try {
+      if (f.contentDocument && f.contentDocument.body && f.contentWindow.location.href !== 'about:blank') arm();
+    } catch (e) { /* not reachable yet */ }
+  }
   /* embed=widget: the guide shows the interactive piece of the scene alone, without Next, top bar or title (js/engine.js) */
   const guideUrl = (scene, widget) => `${BASE}part3/index.html?author=0&embed=widget&w=${widget}#${scene}`;
   function whenNear(node, fn) {
@@ -59,6 +115,7 @@
     const slot = $('[data-focus]', root);
     slot.innerHTML = '<div class="focus-box"><iframe scrolling="no" title="Le guide de la partie 3"></iframe></div>';
     const f = $('iframe', slot);
+    watchBrand(f);
     f.style.height = '420px';
     f.addEventListener('load', () => {
       const d = docOf(f);
@@ -177,11 +234,11 @@
       if (note) {
         note.innerHTML = k === 'all'
           ? (isFr
-              ? `<b>Les trois candidates du TP : ${n} éléments</b> à créer, typer et relier dans Cameo, avant la première simulation.`
-              : `<b>The lab’s three candidates: ${n} elements</b> to create, type, and connect in Cameo before the first simulation.`)
+              ? `<b>Les trois candidates du TP : ${n} éléments</b> à créer, typer et relier dans l’outil, avant la première simulation.`
+              : `<b>The lab’s three candidates: ${n} elements</b> to create, type, and connect in the tool before the first simulation.`)
           : (isFr
-              ? `<b>Une seule candidate : ${n} éléments</b> à créer, typer et relier dans Cameo (composants, ports, interfaces, propriétés de flux, états, fonctions, connecteurs), avant la première simulation. Et aucun ne doit manquer.`
-              : `<b>A single candidate: ${n} elements</b> to create, type, and connect in Cameo (components, ports, interfaces, flow properties, states, functions, connectors) before the first simulation. And not one can be missing.`);
+              ? `<b>Une seule candidate : ${n} éléments</b> à créer, typer et relier dans l’outil (composants, ports, interfaces, propriétés de flux, états, fonctions, connecteurs), avant la première simulation. Et aucun ne doit manquer.`
+              : `<b>A single candidate: ${n} elements</b> to create, type, and connect in the tool (components, ports, interfaces, flow properties, states, functions, connectors) before the first simulation. And not one can be missing.`);
       }
       $$('[data-k]', root).forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.k === k)));
     }

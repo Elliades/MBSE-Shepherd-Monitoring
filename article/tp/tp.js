@@ -2,7 +2,7 @@
 
    - film    : the promo film (promo/?lang=fr), loaded on demand;
    - phones  : the guide of Part 1 in a phone, on one scene ([data-phone]); the gallery switches its scene;
-   - desk    : the demo tool (tool/, which plays Cameo) and the guide in a phone, paired through the relay of the
+   - desk    : the demo tool (tool/) and the guide in a phone, paired through the relay of the
                site, as in promo/promo.js; "Montre-moi" clicks in them like the film does;
    - build   : the mission state machine built in the five steps of the text, until an activity sends the signal
                that moves it;
@@ -46,6 +46,62 @@
 
   /* ───────── reaching into a frame (same origin) ───────── */
   const docOf = (f) => { try { const d = f.contentDocument; return d && d.documentElement ? d : null; } catch (e) { return null; } };
+  /* The guides and the film still name the modeling tool. In an article, that name is "the tool". */
+  const branded = new WeakSet();
+  function debrand(s) {
+    if (!/Cameo|MagicDraw/i.test(s)) return s;
+    let t = s.replace(/BE Cameo - /g, '').replace(/Cameo \(MagicDraw\)/g, 'the tool').replace(/MagicDraw/gi, 'the tool').replace(/\bCameo\b/g, 'the tool');
+    t = t.replace(/\bthe the tool\b/gi, 'the tool');
+    return t.replace(/(^|[.!:?]\s+)the tool\b/g, (m, p) => p + 'The tool');
+  }
+  function stripBrand(root) {
+    if (!root || !root.ownerDocument) return;
+    const w = root.ownerDocument.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode(n) {
+        const tag = n.parentElement && n.parentElement.tagName;
+        return tag === 'SCRIPT' || tag === 'STYLE' || tag === 'NOSCRIPT' ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    for (let n = w.nextNode(); n; n = w.nextNode()) {
+      const next = debrand(n.nodeValue);
+      if (next !== n.nodeValue) n.nodeValue = next;
+    }
+    if (!root.querySelectorAll) return;
+    root.querySelectorAll('[alt],[title],[aria-label],[placeholder]').forEach((el) => {
+      ['alt', 'title', 'aria-label', 'placeholder'].forEach((a) => {
+        const v = el.getAttribute(a);
+        if (!v) return;
+        const next = debrand(v);
+        if (next !== v) el.setAttribute(a, next);
+      });
+    });
+    root.querySelectorAll('iframe').forEach((child) => watchBrand(child));
+  }
+  function watchBrand(f) {
+    if (!f || branded.has(f)) {
+      const d = f && docOf(f);
+      if (d && d.body) stripBrand(d.body);
+      return;
+    }
+    branded.add(f);
+    const run = () => { const d = docOf(f); if (d && d.body) stripBrand(d.body); };
+    const arm = () => {
+      run();
+      const d = docOf(f);
+      if (!d || !d.body || !('MutationObserver' in window) || d.body.dataset.branded) return;
+      d.body.dataset.branded = '1';
+      let busy = false;
+      new MutationObserver(() => {
+        if (busy) return;
+        busy = true;
+        try { run(); } finally { busy = false; }
+      }).observe(d.body, { childList: true, subtree: true, characterData: true });
+    };
+    f.addEventListener('load', arm);
+    try {
+      if (f.contentDocument && f.contentDocument.body && f.contentWindow.location.href !== 'about:blank') arm();
+    } catch (e) { /* not reachable yet */ }
+  }
   function find(f, sel) {
     const d = docOf(f);
     if (!d) return null;
@@ -78,6 +134,7 @@
     fit();
     if ('ResizeObserver' in window) new ResizeObserver(fit).observe(box);
     else addEventListener('resize', fit);
+    watchBrand(f);
     return f;
   }
   const PHONE = { iw: 390, ih: 800 };
@@ -100,6 +157,7 @@
       const f = document.createElement('iframe');
       f.title = document.documentElement.lang === 'fr' ? 'Le film du TP' : 'The lab film';
       f.allow = 'autoplay';
+      watchBrand(f);
       f.src = `${BASE}promo/?lang=${document.documentElement.lang === 'fr' ? 'fr' : 'en'}&hud=0`;
       box.appendChild(f);
       box.classList.add('on');
@@ -118,6 +176,7 @@
     host.innerHTML = '<div class="focus-box"><iframe scrolling="no"></iframe></div>';
     const f = $('iframe', host);
     f.title = title;
+    watchBrand(f);
     f.style.height = '420px';
     f.addEventListener('load', () => {
       const d = docOf(f);
@@ -151,7 +210,7 @@
     let guide = null;
     let busy = false;
 
-    /* what the tool logs for the guide is told here too: the reader sees Cameo answer */
+    /* what the tool logs for the guide is told here too: the reader sees the tool answer */
     function listen() {
       const list = docOf(tool) && docOf(tool).getElementById('log');
       if (!list || !('MutationObserver' in window)) return;
@@ -159,8 +218,8 @@
         ms.forEach((m) => m.addedNodes.forEach((li) => {
           if (!li.classList || !/lg-(guide|signal)/.test(li.className)) return;
           const t = (li.querySelector('.lg-txt') || li).textContent;
-          if (/select|open/i.test(t)) say(`<b>Cameo a reçu la demande du guide.</b> ${esc(t)}`, 'ok');
-          else if (/sent to the guide/i.test(t)) say(`<b>Cameo → guide :</b> ${esc(t.replace(/\s*\+\s*sent to the guide/i, ''))}`, 'ok');
+          if (/select|open/i.test(t)) say(`<b>L’outil a reçu la demande du guide.</b> ${esc(t)}`, 'ok');
+          else if (/sent to the guide/i.test(t)) say(`<b>Outil → guide :</b> ${esc(t.replace(/\s*\+\s*sent to the guide/i, ''))}`, 'ok');
         }));
       }).observe(list, { childList: true });
     }
@@ -169,7 +228,7 @@
       $('.desk-cover', root).remove();
       say('Démarrage de l’outil…');
       forget('sysml-tool:code');
-      tool = scaled($('.desk-screen', root), 1280, 800, 'L’outil de démonstration, qui joue Cameo');
+      tool = scaled($('.desk-screen', root), 1280, 800, 'L’outil de démonstration');
       tool.src = `${BASE}tool/?relay=here&stage=all&diagram=op-context`;
       guide = phone($('.desk-phone', root));
       await loaded(tool);
@@ -213,7 +272,7 @@
       await sleep(600);
       const play = find(tool, '#play');
       if (play) play.click();
-      say('Cameo joue le scénario nominal : <i>Start SOI</i>, <i>FlightPlan</i>, <i>Start Sheep Guard Mission</i>… Regardez le drone.', 'ok');
+      say('L’outil joue le scénario nominal : <i>Start SOI</i>, <i>FlightPlan</i>, <i>Start Sheep Guard Mission</i>… Regardez le drone.', 'ok');
     }
 
     $('[data-start]', root).addEventListener('click', start);
@@ -554,7 +613,7 @@
       if (n === 4) {
         R.dos.cfg.classList.add('run');
         R.adFrame.classList.add('run');
-        note.innerHTML = isFr ? 'Dans Cameo, un double-clic sur <i>do / Load Flight Plan</i> ouvre ce diagramme.' : 'In Cameo, double-clicking <i>do / Load Flight Plan</i> opens this diagram.';
+        note.innerHTML = isFr ? 'Dans l’outil, un double-clic sur <i>do / Load Flight Plan</i> ouvre ce diagramme.' : 'In the tool, double-clicking <i>do / Load Flight Plan</i> opens this diagram.';
       }
       if (n === 5) {
         const ko = koInput.checked;
