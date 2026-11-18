@@ -264,3 +264,16 @@ credible for a GoA4 metro (trainsets, saloons, traction and brakes, couplers) th
 | LOG-14 | `ownLogic` components (own state machine) are described by the DSL but not written by the logical applier | orchestrators and aggregators (for instance "all doors locked" over every saloon) | OMF `LogicalApplier` | an ownLogic state machine is written and simulated | todo |
 | LOG-15 | Several instances of a component: ATO leaves on the first "Doors closed and locked", not once every saloon of every trainset is locked | a train leaves with every door locked | metro generator (needs LOG-14) | departure waits for every saloon | todo |
 | SIM-01 | Logical simulation of the metro is slow: about 9 s for a train line signal to reach the second trainset (Cameo animation); `play_metro.py` waits 12 s per injection | a full logical pass takes about 40 min | OMF `simtest/start` (animation off) | a logical scenario plays in seconds | todo |
+
+## Seminar tooling: Part 2 bear exchanges (2026-11-15)
+
+Asked by the user: in Part 2, students only draw the connector from the drone's infrared light port to the bear;
+after Question 2 a button of the guide builds the other exchanges (ports, interface blocks, flow properties typed by
+the signals of the reference sequence, connectors) in their model.
+
+| Id | What | Why | Where | Done when | Status |
+|---|---|---|---|---|---|
+| SEM-01 | MCP category `exercise` (`apply`, `check`, `setup` of `part2-predator`), `exercise/apply` and `exercise/check` on the relay allow-list, widget `cameoTask` and scene `q2-auto` | students lost the session on ports and conjugated ports | OMF `features/exercise`, `RpcDispatcher`; shepherd `js/widgets-cameo-task.js`, `part2/` | tested over MCP (hot reload) and in the guide with a stand-in bridge | **done** 2026-11-15, not committed |
+| SEM-02 | Release a plugin zip that contains SEM-01 and offer it in Part 2 Setup (it still offers 1.4.0, which answers `unknown-method`) | the button needs the new plugin in the students' Cameo | OMF `packageMbseShepherd`, `assets/plugins/`, `part2/content/scenes.js` | the guide downloads the new zip and the button works through the relay after a restart | todo |
+| SEM-03 | Correction model of Part 2 aligned with the new starting model: `setup`, then `apply`, then the Speaker and Flashlight delegated to the new `light` and `sound` ports of the drone | the teachers compare with it | `part2/assets/models/…Correction.mdzip` | the correction shows the four exchanges and no IF_Light ports | todo |
+| SEM-04 | Word handout and marking sheet of Part 2: Task 1 (one connector, no bear ports) and Question 2 (which information, by kind) | the guide and the handout must say the same | handout, marking sheet | both updated | todo |
