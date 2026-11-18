@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- **A pairing scene in the four parts** (`js/pairing-scene.js`, after the plugin install, before the model): how to link the guide to Cameo, on the same computer or on another device (a phone or a laptop) through the browser bridge (school PCs), with a looping explanation in four stages drawn on devices (`pairFlow`: a monitor with Cameo and the guide side by side; a laptop with Cameo and the bridge tab next to a phone that scans the QR code or types the online code), steps, checks with a live box that reads the link (`pairCheck`), how to keep it open, and what to do when it stays grey. The menu is now named as the plugin names it: **Webapp Relay > Relay pairing code**.
+- **A pasted code with spaces pairs**: the plugin shows the code as "A B C D E F"; the guide, the bridge page, the network check and the demo tool now keep only the letters (no more `maxlength` cutting the pasted text before its spaces are removed), and a full code pasted in the Cameo dialog connects at once. A guide that comes back on screen (phone unlocked) reconnects at once instead of waiting out the backoff.
+
+- **Part 2 shows how the diagrams follow each other**: 13 short bridge scenes (`mark: "link"`, chip **Next diagram**, plus `intro`/`outro` per layer) recall the approach at each change of diagram: context → use case → scenario → back to the context (consistency), then functions → mission steps → logic → simulation, subsystems → white box scenario → allocation. They reuse the `phaseSteps` pictures of Part 1; a step can now be ticked alone (`done: true`) and rename the labels of its picture (`rename: { Operator: "Bear" }`). Goals only, no answers.
+- **Two modes for the simulation widgets** (`js/cameo-sim.js`): once paired, the step 50 state machine (and the other state machine widgets of Part 1) and the drone panel **drive the Cameo simulation**: a signal goes to Cameo (`simtest/send`, the first one starts the simulation of SOI - Pasture Sentinel), and the page moves only from what Cameo reports (`simtest/states`, read after each signal and after each frame of Cameo). When Cameo does not move, the page says which state it stayed in and which transition to check; when it refuses, the page shows why. Not paired (or switched to it), a striped **Demo · Not connected to Cameo** banner says that the page plays alone.
+- **Plugin 1.7.0**: `assets/plugins/com.elliades.mbseShepherd_1.7.0.zip` (OMF `packageMbseShepherd`; the 1.4.0 archive is retired from the site bundle). `install-plugin.ps1` picks the newest `com.elliades.mbseShepherd_*.zip`.
+
+- **A support page** (`/support/`): the student projects of Parts 1 to 4, the plugin and the profile. Corrections stay off this page. Part 1 also offers the exercise saved at step 36.
 - **A second promo film, Parts 3 and 4** (`/promo/next.html`, ~2 min 20; the file is `assets/video/promo-parts34-en.mp4`): the logical
   architecture (the approach, several versions and one choice, the three commands of the plugin that do the repetitive part, the
   drone built one event at a time and validated each time, the whole mission), then the swarm (one level up, the dilemma, who
@@ -36,7 +44,7 @@
   gave false reds on a correct model) and also checks the messages the states do not show (alerts, bursts, verdict), with
   `simtest/trace` on the relay. The do activity of the orchestrator in architecture 3 is `Start And Relay Tracking`: two
   activities shared the name `Track predator`. `scripts/make-part3-archs.py` follows the current specs. Author mode off.
-  The models come with `ISAE-Profile.mdzip`, to keep in their folder. Validate also waits for the simulation to listen
+  The models come with `MBSE-Shepherd-Profile.mdzip`, to keep in their folder. Validate also waits for the simulation to listen
   before its first signal.
 - **Part 3, the links follow the model**: every link and Validate point at `TP - Logical Architecture`, its IBD
   `TP Logical SOI` and `TP1 SOI Simulation`, one package whatever the architecture; a state machine link opens its
