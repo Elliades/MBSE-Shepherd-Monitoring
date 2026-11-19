@@ -5,6 +5,15 @@ README.md
 docker-compose.yml
 Dockerfile
 .dockerignore
+relay
+scripts
+scenarios
+method
+content
+tmp-*.png
+support/README.md
 # Corrections of the exercises stay off the public site (graded seminar).
 **/*orrection*
 **/*.bak
+# Cameo models of the blog article, kept local
+article/models

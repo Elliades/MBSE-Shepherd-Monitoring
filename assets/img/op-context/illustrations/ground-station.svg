@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="1000" viewBox="0 0 240 240">
+  <!-- Ground Station : portable base seen from above (same layout as the simulation BaseStation) -->
+  <defs>
+    <g id="p">
+      <path d="M134 97L208 47L230 78L155 128Z" fill="#262626" stroke="#042433" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M149 87L171 105M164 77L186 95M179 67L201 85" stroke="#4a4f55" stroke-width="2"/>
+      <path d="M138 98L208 51" stroke="#6b737b" stroke-width="2" opacity=".7"/>
+    </g>
+  </defs>
+  <!-- signal -->
+  <circle cx="120" cy="44" r="4" fill="#156082"/>
+  <g fill="none" stroke="#156082" stroke-width="3.5" stroke-linecap="round">
+    <path d="M110 36a14 14 0 0 1 20 0"/>
+    <path d="M102 28a26 26 0 0 1 36 0"/>
+  </g>
+  <!-- case -->
+  <rect x="20" y="62" width="200" height="139" rx="6" fill="#156082" stroke="#042433" stroke-width="3"/>
+  <rect x="26" y="68" width="188" height="6" rx="3" fill="#2a86ad" opacity=".6"/>
+  <circle cx="120" cy="131" r="38" fill="none" stroke="#7fc4e0" stroke-width="3" stroke-dasharray="6 5" opacity=".8"/>
+  <!-- unfolded panels -->
+  <use xlink:href="#p" xmlns:xlink="http://www.w3.org/1999/xlink"/>
+  <use xlink:href="#p" xmlns:xlink="http://www.w3.org/1999/xlink" transform="translate(240 0) scale(-1 1)"/>
+  <use xlink:href="#p" xmlns:xlink="http://www.w3.org/1999/xlink" transform="translate(0 263) scale(1 -1)"/>
+  <use xlink:href="#p" xmlns:xlink="http://www.w3.org/1999/xlink" transform="translate(240 263) scale(-1 -1)"/>
+  <!-- handles -->
+  <rect x="76" y="57" width="90" height="11" rx="4" fill="#262626" stroke="#042433" stroke-width="3"/>
+  <rect x="76" y="193" width="90" height="11" rx="4" fill="#262626" stroke="#042433" stroke-width="3"/>
+  <!-- charge bolt -->
+  <path d="M127 99L106 134H118L111 164L136 124H123Z" fill="#FFC000" stroke="#a87a00" stroke-width="1.5" stroke-linejoin="round"/>
+</svg>

@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Scenario library</title>
+  <link rel="stylesheet" href="viewer.css">
+</head>
+<body>
+  <header class="top">
+    <div class="brand"><span class="logo" aria-hidden="true">◆</span> Scenario library <span class="sub">MBSE Shepherd · simulation scenarios</span></div>
+    <div class="tools">
+      <input type="search" id="q" placeholder="Search a title, an id, a tag…" aria-label="Search">
+      <div class="kinds" role="group" aria-label="Kind">
+        <button type="button" data-kind="all" class="on">All</button>
+        <button type="button" data-kind="nominal"><i class="dot nominal"></i>Nominal</button>
+        <button type="button" data-kind="alternative"><i class="dot alternative"></i>Alternative</button>
+        <button type="button" data-kind="dysfunctional"><i class="dot dysfunctional"></i>Dysfunctional</button>
+      </div>
+      <button type="button" id="new" class="btn">New</button>
+      <label class="btn">Import JSON<input type="file" id="import" accept=".json,application/json" multiple hidden></label>
+    </div>
+  </header>
+  <div class="layout">
+    <nav class="side" id="side" aria-label="Scenarios"></nav>
+    <main class="main" id="main"></main>
+  </div>
+  <script src="scenario-dsl.js"></script>
+  <script src="library.js"></script>
+  <script src="library-private.js" onerror="this.remove()"></script>
+  <script src="viewer.js"></script>
+</body>
+</html>

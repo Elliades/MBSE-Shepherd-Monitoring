@@ -73,6 +73,7 @@
 .lg-rename { stroke: var(--danger); stroke-dasharray: 4 3; fill: var(--danger-soft); }
 .lg-new { stroke: var(--grass); stroke-width: 2; }
 .lg-pointer { fill: var(--ink); stroke: var(--surface); stroke-width: 1; }
+.lg-click { fill: none; stroke: var(--route); stroke-width: 2.5; display: none; }
 .lg-mini svg { max-width: 460px; }
 .lg-mp-route { fill: none; stroke: none; }
 .lg-mp-row.lg-mp-on text { fill: var(--route); font-weight: 700; }
@@ -158,6 +159,9 @@
 .lg-flock { fill: color-mix(in srgb, var(--pasture) 60%, var(--surface)); stroke: var(--pasture-edge); stroke-width: 1.2; transition: fill 0.3s, stroke 0.3s; }
 .lg-flock.alone { fill: var(--danger-soft); stroke: var(--danger); stroke-width: 2.4; }
 .lg-flock.kept { stroke: var(--grass); stroke-width: 2.4; }
+.lg-bear { filter: drop-shadow(0 0 1px #fde68a) drop-shadow(0 0 3px rgba(245, 158, 11, 0.95)); }
+.lg-bear-halo { fill: rgba(245, 158, 11, 0.22); stroke: #f59e0b; stroke-width: 1.4; stroke-dasharray: 3 2.5; }
+.lg-stray { filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.75)); }
 
 /* ───────── Part 4: parallel regions ───────── */
 .w svg text.lg-reg-t { font-family: var(--font-mono); font-size: 9.5px; font-weight: 700; fill: var(--ink-3); text-transform: uppercase; }
@@ -300,7 +304,7 @@
 .w svg text.lg-ms.ok { fill: var(--grass); }
 
 /* behaviourAB: the functional mission in the colour of the functional level, the subsystem in the logical one;
-   the same name, Load Flight Plan, is not the same function: the logical one refines the functional one. */
+   the same name, Parameter Mission, is not the same function: the logical one refines the functional one. */
 .w svg text.lg-tag-fn { fill: var(--ph-fn); }
 .w svg text.lg-tag-lg { fill: var(--ph-lg); }
 .lg-ab-fr { stroke: var(--ph-fn); }

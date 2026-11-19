@@ -1,0 +1,20 @@
+scenario: The bear leaves: back to patrol
+id: arch2.bear-gone
+kind: nominal
+version: 1.0
+status: in use
+goal: The bear leaves the tracking perimeter: predator defense hands control back and the patrol resumes.
+description: 2 - Patch, decentralized. One moment of the mission; what leads there is in its preconditions.
+author: MBSE Shepherd, Part 3
+date: 2026-11-04
+tags: part3, architecture 2
+given: arch2.bear-enters
+
+phase Predator response
+
+  step bear-gone: pasture sends Predator leaving tracking perimiter
+    note: The bear is gone: Predator Management turns the sheep guard back on.
+    then soi.pm is No predator
+    then soi.sm is Sheep Monitoring
+    then soi.ap is Following Watch Path
+    then message Predator Cleared

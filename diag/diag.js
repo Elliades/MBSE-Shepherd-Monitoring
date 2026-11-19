@@ -262,7 +262,7 @@
   }
 
   async function testRoom() {
-    const raw = $('code').value.replace(/[\s-]/g, '').toUpperCase();
+    const raw = $('code').value.replace(/[^a-z]/gi, '').toUpperCase();
     if (!raw) return { verdict: 'skip', text: 'No code typed.' };
     if (!/^[A-Z]{6}$/.test(raw)) return { verdict: 'warn', text: `"${raw}" is not 6 letters.` };
     const r = await fetchJson(`${RELAY}/v1/room/${raw}`);

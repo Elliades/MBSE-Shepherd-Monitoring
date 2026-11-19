@@ -16,11 +16,11 @@ window.MODEL_LINKS = {
     note: "The functional mission: every Logical Transition starts from its states. It is never changed.",
     url: ""
   },
-  "load-flight-plan": {
-    name: "Load Flight Plan",
+  "parameter-mission": {
+    name: "Parameter Mission",
     type: "ad",
     id: "_2022x_2_302b0611_1731526311194_937883_18240",
-    path: ["2 - Functional Analysis", "A - Functional architecture", "Deployement", "Load Flight Plan", "Load Flight Plan"],
+    path: ["2 - Functional Analysis", "A - Functional architecture", "Deployement", "Parameter Mission", "Parameter Mission"],
     kinds: ["package", "package", "package", "activity", "ad"],
     note: "The functional activity. Its copy, made by Logical Transition, has the same name.",
     url: ""

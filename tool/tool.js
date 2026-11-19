@@ -108,7 +108,12 @@
     select(node.id);
     const row = $(`.tr-row[data-id="${CSS.escape(node.id)}"]`);
     if (row) {
-      row.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      /* the tree only: scrollIntoView would also scroll the pages that embed the tool (the promo film) */
+      const box = row.closest('.tree');
+      if (box) {
+        const top = row.getBoundingClientRect().top - box.getBoundingClientRect().top + box.scrollTop;
+        box.scrollTo({ top: top - (box.clientHeight - row.offsetHeight) / 2, behavior: 'smooth' });
+      }
       if (flash) { row.classList.remove('flash'); void row.offsetWidth; row.classList.add('flash'); }
     }
   }
@@ -331,7 +336,7 @@
     return c.replace(/\/+$/, '').replace(/^http/, 'ws');
   }
   function wantedCode() {
-    const fromUrl = (params.get('code') || '').replace(/[\s-]/g, '').toUpperCase();
+    const fromUrl = (params.get('code') || '').replace(/[^a-z]/gi, '').toUpperCase();
     if (/^[A-Z]{6}$/.test(fromUrl)) return fromUrl;
     try { return localStorage.getItem(CODE_KEY) || ''; } catch (e) { return ''; }
   }

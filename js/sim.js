@@ -40,6 +40,7 @@
             <button type="button" role="tab" class="sim-tab" id="sim-tab-log" data-tab="log" aria-selected="false" aria-controls="sim-pane-log" tabindex="-1">Event log <span class="sim-count" id="sim-count">0</span></button>
           </div>
           <div class="sim-pane sim-scroll" role="tabpanel" id="sim-pane-go" aria-labelledby="sim-tab-go">
+            <div id="sim-drive"></div>
             <div id="sim-now"></div>
             <div id="sim-lanes"></div>
             <div class="sim-quiet">
@@ -69,6 +70,25 @@
     $('.sim-hint').textContent = 'This panel only follows Cameo: link it with the Cameo button.';
   }
   const scene = window.SimScene.create($('#sim-stage'));
+  /* Cameo mode (paired, js/cameo-sim.js): the signal buttons go to Cameo, and the drone moves only from
+     what Cameo answers (its frames and the active states it reports). Demo mode: the preview plays alone,
+     under a banner that says so. */
+  const C = PREVIEW ? window.CameoSim : null;
+  const driving = () => !!C && C.ready();
+  if (C) C.bar($('#sim-drive'));
+  function paintDrive() {
+    if (!C) return;
+    $('.sim-hint').hidden = true;
+    const nominal = $('#sim-nominal');
+    if (nominal) nominal.hidden = driving();
+  }
+  if (C) {
+    C.onChange(paintDrive);
+    C.onStates((names) => {
+      const step = names.map((n) => window.SimCore.stepFromName(n)).find(Boolean);
+      if (driving() && step && step !== pilot.getSnapshot().step) pilot.jumpTo(step);
+    });
+  }
 
   /* ───────── what the pilot tells us ───────── */
   const OBJECTIVES = [
@@ -216,17 +236,22 @@
     });
   }
   renderLink();
+  paintDrive();
 
   /* ───────── buttons ───────── */
   drawer.addEventListener('click', (e) => {
     const edge = e.target.closest('[data-signal]');
-    if (edge) { pilot.play(edge.dataset.signal); return; }
+    if (edge) {
+      if (driving()) C.send(edge.dataset.signal).catch(() => {}); else pilot.play(edge.dataset.signal);
+      return;
+    }
     if (e.target.closest('#sim-nominal')) {
       if (pilot.getSnapshot().running) pilot.stopNominal(); else pilot.runNominal();
       return;
     }
     if (e.target.closest('#sim-reset')) {
       pilot.reset();
+      if (driving() && C.started()) C.restart();
       /* following Cameo: start again from where Cameo is, not from Off */
       if (!PREVIEW && lastState) pilot.jumpTo(lastState.step);
       return;

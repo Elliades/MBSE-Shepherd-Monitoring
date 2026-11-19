@@ -5,7 +5,9 @@
 
   const W = (window.WIDGETS = {});
   const NS = 'http://www.w3.org/2000/svg';
-  const reduced = () => !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  /* ?motion=1: the promo film plays the guide in an iframe, and must move even when the system asks for calm */
+  const MOTION = /[?&]motion=1\b/.test(location.search);
+  const reduced = () => !MOTION && !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 
   /* ───────── helpers ───────── */
   function svg(viewBox, label, cls) {
@@ -593,7 +595,7 @@
   const ST = {
     off: { x: 24, y: 78, w: 108, h: 42, name: 'Off', zone: 'und' },
     unconf: { x: 196, y: 78, w: 140, h: 42, name: 'Unconfigured', zone: 'und' },
-    conf: { x: 196, y: 164, w: 140, h: 54, name: 'Configured', act: 'Load Flight Plan', zone: 'und' },
+    conf: { x: 196, y: 164, w: 140, h: 54, name: 'Configured', act: 'Parameter Mission', zone: 'und' },
     ready: { x: 196, y: 250, w: 140, h: 50, name: 'Ready for Mission', act: 'Start subsystems', zone: 'und' },
     safe: { x: 20, y: 372, w: 104, h: 30, name: 'Going to Safe Area', pill: true, zone: 'dep' },
     patrol: { x: 142, y: 372, w: 70, h: 30, name: 'Patrolling', pill: true, zone: 'dep' },
@@ -692,8 +694,8 @@
       if (doMode) {
         sm.st.conf.classList.toggle('no-act', !solved);
         sm.st.conf.classList.remove('target', 'act-in');
-        chips.innerHTML = `<button type="button" class="chip" data-chip="act" aria-pressed="false"${solved ? ' disabled' : ''}>${api.icon('activity')}Load Flight Plan</button>`;
-        say(solved ? 'ok' : '', solved ? '<strong>Done.</strong> While the system is in Configured, it runs Load Flight Plan.' : 'The state Configured does nothing yet.');
+        chips.innerHTML = `<button type="button" class="chip" data-chip="act" aria-pressed="false"${solved ? ' disabled' : ''}>${api.icon('activity')}Parameter Mission</button>`;
+        say(solved ? 'ok' : '', solved ? '<strong>Done.</strong> While the system is in Configured, it runs Parameter Mission.' : 'The state Configured does nothing yet.');
       } else {
         sm.st.conf.classList.add('no-act');
         targets.forEach((id) => { sm.tr[id].classList.toggle('todo', !solved); sm.tr[id].classList.remove('placed'); });
@@ -704,7 +706,7 @@
     function finish() {
       api.set(true);
       say('ok', doMode
-        ? '<strong>Exactly.</strong> “do / Load Flight Plan” now shows inside the state: the function runs while the system is Configured.'
+        ? '<strong>Exactly.</strong> “do / Parameter Mission” now shows inside the state: the function runs while the system is Configured.'
         : '<strong>All three signals are in place.</strong> Compare with your diagram in Cameo.');
     }
 
@@ -724,7 +726,7 @@
       if (doMode) {
         const st = e.target.closest('.st');
         if (!st || st.dataset.st !== 'conf' || placed.size) { if (st && picked) nope(art); return; }
-        if (!picked) { say('no', 'Pick the activity <strong>Load Flight Plan</strong> first, in <strong>Deployment &gt; Parameter Mission</strong>, as you would grab it in the Model Browser.'); nope(chips); return; }
+        if (!picked) { say('no', 'Pick the activity <strong>Parameter Mission</strong> first, in <strong>Deployment &gt; Parameter Mission</strong>, as you would grab it in the Model Browser.'); nope(chips); return; }
         closeMenu();
         const r = st.getBoundingClientRect();
         const h = art.getBoundingClientRect();
@@ -795,6 +797,15 @@
         <div><span class="mono-label">What happened</span><ol class="sm-log" aria-live="polite" style="margin-top:.4rem"></ol></div>
         <button type="button" class="btn ghost small" data-do="reset" style="justify-self:start">Restart the simulation</button>
       </div>`;
+    /* Demo or Cameo mode (js/cameo-sim.js): in Cameo mode the clicks go to Cameo and the drawing follows
+       the states Cameo reports, so a wrong model shows here as it is. */
+    const C = window.CameoSim;
+    const live = () => !!C && C.ready();
+    if (C) {
+      const modeEl = document.createElement('div');
+      root.querySelector('.sm-panel').prepend(modeEl);
+      C.bar(modeEl);
+    }
     const s = svg('0 0 360 484', 'State machine of SOI - Pasture Sentinel. Undeployed contains Off, Unconfigured, Configured and Ready for Mission. Deployed contains Going to Safe Area, Patrolling and Predator Detected. Crashed is apart.');
     root.querySelector('.sm-art').appendChild(s);
     const sm = buildSM(s, false);
@@ -825,33 +836,55 @@
       sm.frames.und.classList.toggle('on', ST[id].zone === 'und');
       sm.frames.dep.classList.toggle('on', ST[id].zone === 'dep');
       nowEl.textContent = FULLNAME[id];
-      if (cross && id === 'conf') {
+      if (cross && id === 'conf' && !live()) {
         sm.st.conf.classList.add('busy');
-        note('auto', 'Entering Configured starts <strong>do / Load Flight Plan</strong>. The activity diagram runs…');
+        note('auto', 'Entering Configured starts <strong>do / Parameter Mission</strong>. The activity diagram runs…');
         clearTimeout(autoTimer);
         autoTimer = lf.wait(() => {
           if (cur !== 'conf' || busy) return;
           const ok = root.querySelector('[data-valid]').checked;
           const sig = ok ? 'Ready for mission' : 'FlightPlan Check Failed';
-          note('auto', `Load Flight Plan ${ok ? 'succeeded' : 'failed'}: the activity sends <strong>${sig}</strong> by itself.`);
+          note('auto', `Parameter Mission ${ok ? 'succeeded' : 'failed'}: the activity sends <strong>${sig}</strong> by itself.`);
           fire(sig, true);
         }, 1700);
       }
     }
-    function fire(sig, auto) {
-      if (busy) return;
-      const id = Object.keys(TR).find((k) => TR[k].sig === sig && [].concat(TR[k].from).includes(cur));
-      const btn = root.querySelector(`.sm-trigger[data-sig="${sig}"]`);
-      const flash = (c) => { btn.classList.add(c); setTimeout(() => btn.classList.remove(c), 600); };
-      if (!id) {
-        flash('flash-no');
-        const final = cur === 'crashed' || cur === 'pred';
-        note('no', `<strong>${sig}</strong> is ignored: ${FULLNAME[cur]} has no transition triggered by this signal${final && cur === 'crashed' ? '. Nothing leaves Crashed' : ''}.`);
-        return;
-      }
-      clearTimeout(autoTimer);
-      sm.st.conf.classList.remove('busy');
-      flash('flash-ok');
+    const flashBtn = (sig, c) => {
+      const btn = root.querySelector(`.sm-trigger[data-sig="${CSS.escape(sig)}"]`);
+      if (btn) { btn.classList.add(c); setTimeout(() => btn.classList.remove(c), 600); }
+    };
+    /* Cameo mode: send, then wait for Cameo. Only its states move the drawing (onStates below). */
+    function ask(sig) {
+      const btn = root.querySelector(`.sm-trigger[data-sig="${CSS.escape(sig)}"]`);
+      if (btn) btn.classList.add('waiting');
+      C.send(sig).then((r) => {
+        if (r.moved) { flashBtn(sig, 'flash-ok'); note('', `<strong>${sig}</strong> sent to Cameo: it went to <strong>${r.states[0]}</strong>`); }
+        else { flashBtn(sig, 'flash-no'); note('no', `<strong>${sig}</strong> sent to Cameo, but Cameo stayed in <strong>${r.before[0] || 'no state'}</strong>. Check the transition and its trigger in your model.`); }
+      }, (e) => {
+        flashBtn(sig, 'flash-no');
+        note('no', `Cameo refused <strong>${sig}</strong>: ${String(e && e.message).replace(/[<>&]/g, '')}`);
+      }).finally(() => { if (btn) btn.classList.remove('waiting'); });
+    }
+    function follow(names) {
+      if (!live() || !root.isConnected) return;
+      const to = names.map((n) => Object.keys(ST).find((k) => ST[k].name === n)).find(Boolean);
+      if (!to) { if (names.length) note('no', `Cameo is in <strong>${names[0]}</strong>, a state this drawing does not have.`); return; }
+      want = to;
+      if (!busy) catchUp();
+    }
+    /* Cameo can move again while a transition is still drawn: go on to its last state afterwards. */
+    let want = null;
+    function catchUp() {
+      if (!want || want === cur) return;
+      const id = Object.keys(TR).find((k) => TR[k].to === want && [].concat(TR[k].from).includes(cur));
+      if (id) travel(id, true); else enter(want);
+    }
+    if (C) {
+      C.onStates(follow);
+      let mode = live();
+      C.onChange(() => { if (root.isConnected && live() !== mode) { mode = live(); reset(); } });
+    }
+    function travel(id, quiet) {
       const t = TR[id];
       const g = sm.tr[id];
       busy = true;
@@ -863,11 +896,29 @@
         g.classList.remove('fire');
         g.classList.add('was');
         busy = false;
-        if (!auto) note('', `<strong>${sig}</strong>: ${FULLNAME[cur]} → ${FULLNAME[t.to]}`);
+        if (!quiet) note('', `<strong>${t.sig}</strong>: ${FULLNAME[cur]} → ${FULLNAME[t.to]}`);
         enter(t.to);
+        if (live()) catchUp();
       });
     }
+    function fire(sig, auto) {
+      if (!auto && live()) { ask(sig); return; }
+      if (busy) return;
+      const id = Object.keys(TR).find((k) => TR[k].sig === sig && [].concat(TR[k].from).includes(cur));
+      const flash = (c) => flashBtn(sig, c);
+      if (!id) {
+        flash('flash-no');
+        const final = cur === 'crashed' || cur === 'pred';
+        note('no', `<strong>${sig}</strong> is ignored: ${FULLNAME[cur]} has no transition triggered by this signal${final && cur === 'crashed' ? '. Nothing leaves Crashed' : ''}.`);
+        return;
+      }
+      clearTimeout(autoTimer);
+      sm.st.conf.classList.remove('busy');
+      flash('flash-ok');
+      travel(id, auto);
+    }
     function reset() {
+      want = null;
       clearTimeout(autoTimer);
       busy = false;
       token.setAttribute('opacity', 0);
@@ -876,12 +927,12 @@
       log.innerHTML = '';
       sm.tr.t0.classList.add('was');
       enter('off', true);
-      note('', 'The simulation starts in <strong>Off</strong>. Which signal wakes the drone up?');
+      note('', live() ? 'Cameo mode: send a signal, the drawing shows what Cameo does with it.' : 'The simulation starts in <strong>Off</strong>. Which signal wakes the drone up?');
     }
     root.addEventListener('click', (e) => {
       const b = e.target.closest('.sm-trigger');
       if (b) { fire(b.dataset.sig); return; }
-      if (e.target.closest('[data-do="reset"]')) reset();
+      if (e.target.closest('[data-do="reset"]')) { reset(); if (live() && C.started()) C.restart(); }
     });
     reset();
     return lf.end;
@@ -897,7 +948,7 @@
     ];
     root.className = 'w anat';
     root.innerHTML = anatHTML(KEYS);
-    const s = svg('0 0 360 200', 'Two states, Unconfigured and Configured, linked by a transition labelled FlightPlan. Configured contains do / Load Flight Plan. Four numbered pins point at a state, the transition, the signal and the do activity.');
+    const s = svg('0 0 360 200', 'Two states, Unconfigured and Configured, linked by a transition labelled FlightPlan. Configured contains do / Parameter Mission. Four numbered pins point at a state, the transition, the signal and the do activity.');
     root.querySelector('.anat-art').appendChild(s);
     const part = (name) => el('g', { 'data-part': name }, s);
     const s1 = part('state');
@@ -912,7 +963,7 @@
     txt(s2, 272, 138, 'Configured', 's-name', 'middle');
     el('line', { x1: 204, y1: 147, x2: 340, y2: 147, class: 's-line' }, s2);
     const d = part('do');
-    txt(d, 272, 165, 'do / Load Flight Plan', 's-sub', 'middle');
+    txt(d, 272, 165, 'do / Parameter Mission', 's-sub', 'middle');
     anatPins(s, [['state', 22, 34], ['transition', 272, 86], ['signal', 170, 30], ['do', 204, 162]]);
     anatKeys(root, s);
   };
@@ -1247,13 +1298,15 @@
     return lf.end;
   };
 
-  /* ───────── Load Flight Plan: solution diagram ───────── */
+  /* ───────── Parameter Mission: solution diagram ───────── */
+  /* Acquire, then Load, then Check, as in the scenario (3: FlightPlan, 4: Load FlightPlan, 5: Check FlightPlan Perimeter). */
   W.lfpSolution = function (root, opts) {
     const notify = !!(opts && opts.notify);
     root.className = 'w lfp';
-    const s = svg('0 0 360 250', notify
-      ? 'Activity diagram Load Flight Plan. Read FlightPlan passes the FlightPlan to Check FlightPlan. A decision follows. On FlightPlan OK, a fork starts Send Mission Ready and the send signal FlightPlan Correct at the same time; a join brings them together before the final node. On else, the signal FlightPlan Check Failed is sent, then the activity ends.'
-      : 'Activity diagram Load Flight Plan. Read FlightPlan passes the FlightPlan to Check FlightPlan. A decision follows. On FlightPlan OK, Send Mission Ready runs, then the activity ends. On else, the signal FlightPlan Check Failed is sent, then the activity ends.');
+    const head = 'Activity diagram Parameter Mission. Acquire Flight Plan passes the FlightPlan to Load Flight Plan, then Check Flight Plan runs. A decision follows. ';
+    const s = svg('0 0 360 302', head + (notify
+      ? 'On FlightPlan OK, a fork starts Send Mission Ready and the send signal FlightPlan Correct at the same time; a join brings them together before the final node. On else, the signal FlightPlan Check Failed is sent, then the activity ends.'
+      : 'On FlightPlan OK, Send Mission Ready runs, then the activity ends. On else, the signal FlightPlan Check Failed is sent, then the activity ends.'));
     const dash = (g) => { g.querySelector('.s-line').classList.add('s-dash'); return g; };
     const box = (p, x, y, w, h, name) => {
       el('rect', { x, y, width: w, height: h, rx: 14, class: 's-box' }, p);
@@ -1264,42 +1317,45 @@
       txt(p, x + (w - 12) / 2, y + h / 2 + ([].concat(name).length > 1 ? -2 : 4), name, 's-name', 'middle', 13);
     };
     const final = (x, y) => { el('circle', { cx: x, cy: y, r: 8, class: 'fin' }, s); el('circle', { cx: x, cy: y, r: 4.5, class: 's-dot' }, s); };
+    const D = 52; // everything under the first row moves down by the height of the Check box and its flow
 
     el('circle', { cx: 12, cy: 40, r: 7, class: 's-dot' }, s);
     dash(arrow(s, [[19, 40], [32, 40]]));
-    box(s, 34, 20, 104, 40, ['Read', 'FlightPlan']);
+    box(s, 34, 20, 104, 40, ['Acquire', 'Flight Plan']);
     el('rect', { x: 138, y: 34, width: 12, height: 12, class: 's-box pin' }, s);
     arrow(s, [[150, 40], [204, 40]]);
     txt(s, 177, 33, 'FlightPlan', 'obj', 'middle');
     el('rect', { x: 206, y: 34, width: 12, height: 12, class: 's-box pin' }, s);
-    box(s, 218, 20, 112, 40, ['Check', 'FlightPlan']);
+    box(s, 218, 20, 112, 40, ['Load', 'Flight Plan']);
     dash(arrow(s, [[274, 60], [274, 82]]));
-    el('path', { d: 'M274,84 l16,16 -16,16 -16,-16 z', class: 'diamond' }, s);
-    txt(s, 180, 92, '[FlightPlan OK]', 'guard', 'middle');
-    txt(s, 282, 134, '[else]', 'guard', 'start');
+    box(s, 218, 84, 112, 40, ['Check', 'Flight Plan']);
+    dash(arrow(s, [[274, 60 + D], [274, 82 + D]]));
+    el('path', { d: `M274,${84 + D} l16,16 -16,16 -16,-16 z`, class: 'diamond' }, s);
+    txt(s, 180, 92 + D, '[FlightPlan OK]', 'guard', 'middle');
+    txt(s, 282, 134 + D, '[else]', 'guard', 'start');
 
     if (notify) {
       const g = el('g', { class: 'new' }, s);
-      dash(arrow(s, [[258, 100], [103, 100], [103, 120]]));
-      el('rect', { x: 14, y: 122, width: 178, height: 5, rx: 2, class: 'bar' }, g);
-      dash(arrow(s, [[54, 127], [54, 146]]));
-      dash(arrow(g, [[152, 127], [152, 146]]));
-      box(s, 10, 148, 88, 40, ['Send Mission', 'Ready']);
-      signal(g, 106, 148, 94, 40, ['FlightPlan', 'Correct']);
-      dash(arrow(s, [[54, 188], [54, 204]]));
-      dash(arrow(g, [[152, 188], [152, 204]]));
-      el('rect', { x: 14, y: 206, width: 178, height: 5, rx: 2, class: 'bar' }, g);
-      dash(arrow(s, [[103, 211], [103, 224]]));
+      dash(arrow(s, [[258, 100 + D], [103, 100 + D], [103, 120 + D]]));
+      el('rect', { x: 14, y: 122 + D, width: 178, height: 5, rx: 2, class: 'bar' }, g);
+      dash(arrow(s, [[54, 127 + D], [54, 146 + D]]));
+      dash(arrow(g, [[152, 127 + D], [152, 146 + D]]));
+      box(s, 10, 148 + D, 88, 40, ['Send Mission', 'Ready']);
+      signal(g, 106, 148 + D, 94, 40, ['FlightPlan', 'Correct']);
+      dash(arrow(s, [[54, 188 + D], [54, 204 + D]]));
+      dash(arrow(g, [[152, 188 + D], [152, 204 + D]]));
+      el('rect', { x: 14, y: 206 + D, width: 178, height: 5, rx: 2, class: 'bar' }, g);
+      dash(arrow(s, [[103, 211 + D], [103, 224 + D]]));
     } else {
-      dash(arrow(s, [[258, 100], [103, 100], [103, 146]]));
-      box(s, 40, 148, 126, 40, ['Send Mission', 'Ready']);
-      dash(arrow(s, [[103, 188], [103, 224]]));
+      dash(arrow(s, [[258, 100 + D], [103, 100 + D], [103, 146 + D]]));
+      box(s, 40, 148 + D, 126, 40, ['Send Mission', 'Ready']);
+      dash(arrow(s, [[103, 188 + D], [103, 224 + D]]));
     }
-    final(103, 233);
-    dash(arrow(s, [[274, 116], [274, 146]]));
-    signal(s, 210, 148, 140, 40, ['FlightPlan', 'Check Failed']);
-    dash(arrow(s, [[274, 188], [274, 224]]));
-    final(274, 233);
+    final(103, 233 + D);
+    dash(arrow(s, [[274, 116 + D], [274, 146 + D]]));
+    signal(s, 210, 148 + D, 140, 40, ['FlightPlan', 'Check Failed']);
+    dash(arrow(s, [[274, 188 + D], [274, 224 + D]]));
+    final(274, 233 + D);
     root.appendChild(s);
     const p = document.createElement('p');
     p.className = 'w-caption';
@@ -1604,6 +1660,86 @@
         lbl(s, x + 14, 40, ['Off', 'Config', 'Ready'][i]);
       });
     } },
+    /* mission steps with their functions: each state runs one (do / ...), a signal moves from one to the next */
+    stmFn: { lv: 'fn', draw(s) {
+      el('circle', { cx: 8, cy: 6, r: 2.6, class: 's-dot' }, s);
+      el('path', { d: 'M10.6,6 H16 V14', class: 's-line' }, s);
+      [[4, 'State 1', 'function 1'], [68, 'State 2', 'function 2']].forEach((c, i) => {
+        el('rect', { x: c[0], y: 14, width: 48, height: 46, rx: 8, class: 'pf-st', style: `--i:${i}` }, s);
+        lbl(s, c[0] + 24, 24, c[1]);
+        el('path', { d: `M${c[0]},29 h48`, class: 's-line' }, s);
+        txt(s, c[0] + 5, 38, 'do /', 'pf-lbl').setAttribute('style', 'font-size:5.5px;font-weight:400');
+        const g = el('g', { class: 'a-pop', style: `--d:${0.4 + i * 0.5}s` }, s);
+        el('rect', { x: c[0] + 3, y: 41, width: 42, height: 13, rx: 6.5, class: 'pf-fn' }, g);
+        lbl(g, c[0] + 24, 50, c[2]).setAttribute('style', 'font-size:6px');
+      });
+      arrow(s, [[52, 37], [67, 37]], 'pf-msg a-draw').setAttribute('style', '--d:1.2s');
+      lbl(s, 60, 72, 'signal');
+      el('path', { d: 'M60,66 V40', class: 's-line s-dash' }, s);
+      return runner(s, 'M52,37 H67', 2.4);
+    } },
+    /* the activity behind a do / function: what it does, in which order, and the signals it sends */
+    actFn: { lv: 'fn', draw(s) {
+      el('rect', { x: 2, y: 4, width: 116, height: 70, rx: 3, class: 's-box' }, s);
+      el('path', { d: 'M2,14 H44 L50,8 V4', class: 's-line' }, s);
+      txt(s, 6, 12, 'act function 1', 'pf-lbl').setAttribute('style', 'font-size:6px');
+      el('path', { d: 'M15,42 H20 M46,42 H52 M58,36 V25 H66 M58,48 V59 H66 M98,25 H108 V38 M96,59 H108 V46', class: 's-line' }, s);
+      el('circle', { cx: 12, cy: 42, r: 3.4, class: 's-dot' }, s);
+      const a1 = el('g', { class: 'a-pop', style: '--d:.2s' }, s);
+      el('rect', { x: 20, y: 34, width: 26, height: 16, rx: 5, class: 'pf-hot' }, a1);
+      lbl(a1, 33, 44.5, 'action').setAttribute('style', 'font-size:6px');
+      el('path', { d: 'M58,36 L64,42 L58,48 L52,42 Z', class: 's-box a-pop', style: '--d:.5s' }, s);
+      const sg = el('g', { class: 'a-pop', style: '--d:.8s' }, s);
+      el('path', { d: 'M66,18 H91 L98,25 L91,32 H66 Z', class: 'pf-fn' }, sg);
+      lbl(sg, 80, 27.5, 'signal').setAttribute('style', 'font-size:6px');
+      const a2 = el('g', { class: 'a-pop', style: '--d:1s' }, s);
+      el('rect', { x: 66, y: 51, width: 30, height: 16, rx: 5, class: 'pf-hot' }, a2);
+      lbl(a2, 81, 61.5, 'action').setAttribute('style', 'font-size:6px');
+      el('circle', { cx: 108, cy: 42, r: 4.6, class: 's-box' }, s);
+      el('circle', { cx: 108, cy: 42, r: 2.4, class: 's-dot' }, s);
+      return runner(s, 'M12,42 H58 V25 H108 V42', 2.8);
+    } },
+    /* simulation: the scenario sends its signals, the state machine moves and each state runs its function */
+    simRun: { lv: 'fn', draw(s) {
+      el('rect', { x: 1, y: 2, width: 26, height: 10, rx: 2, class: 's-box' }, s);
+      lbl(s, 14, 9.5, 'Scenario').setAttribute('style', 'font-size:5.5px');
+      el('path', { d: 'M14,12 V74', class: 's-line s-dash' }, s);
+      el('circle', { cx: 38, cy: 6, r: 2.4, class: 's-dot' }, s);
+      el('path', { d: 'M40.4,6 H44 V12', class: 's-line' }, s);
+      const box = [], pill = [];
+      [[34, 'State 1', 'function 1'], [78, 'State 2', 'function 2']].forEach((c) => {
+        box.push(el('rect', { x: c[0], y: 12, width: 40, height: 40, rx: 7, class: 's-box' }, s));
+        lbl(s, c[0] + 20, 21, c[1]).setAttribute('style', 'font-size:6px');
+        el('path', { d: `M${c[0]},25 h40`, class: 's-line' }, s);
+        txt(s, c[0] + 4, 32, 'do /', 'pf-lbl').setAttribute('style', 'font-size:5px;font-weight:400');
+        pill.push(el('rect', { x: c[0] + 3, y: 35, width: 34, height: 12, rx: 6, class: 'pf-fn' }, s));
+        lbl(s, c[0] + 20, 43.2, c[2]).setAttribute('style', 'font-size:5.5px');
+      });
+      arrow(s, [[54, 52], [54, 64], [98, 64], [98, 53]], 'pf-arrow');
+      arrow(s, [[14, 64], [52, 64]], 'pf-msg');
+      lbl(s, 33, 60, 'signal').setAttribute('style', 'font-size:5.5px');
+      const tok = el('circle', { r: 3.2, class: 'pf-token', opacity: 0 }, s);
+      const ok = el('g', { class: 'pf-check', opacity: 0 }, s);
+      el('circle', { cx: 110, cy: 68, r: 6.5 }, ok);
+      el('path', { d: 'M107,68 l2.2,2.3 l4,-4.4' }, ok);
+      const ON = 'fill:color-mix(in srgb, var(--pc) 22%, var(--surface));stroke:var(--pc);stroke-width:2.2';
+      const route = 'M14,64 H98 V53'.match(/-?\d+(\.\d+)?/g).map(Number); // x0,y0,x1,(y),y2
+      return (t) => {
+        const k = t % 3.4;
+        const at = k < 1.5 ? 0 : k < 2.1 ? -1 : 1; // which state is active (-1: the signal is on its way)
+        box.forEach((b, i) => b.setAttribute('style', i === at || (at === -1 && i === 0) ? ON : ''));
+        pill.forEach((p, i) => p.setAttribute('opacity', i === at ? (0.55 + 0.45 * Math.abs(Math.sin(k * 5))).toFixed(2) : i === 0 && at === -1 ? 0.5 : 0.35));
+        if (k >= 1.3 && k < 2.1) {
+          const q = (k - 1.3) / 0.8;
+          const len1 = route[2] - route[0], len2 = route[1] - route[3];
+          const d = q * (len1 + len2);
+          tok.setAttribute('cx', d < len1 ? route[0] + d : route[2]);
+          tok.setAttribute('cy', d < len1 ? route[1] : route[1] - (d - len1));
+          tok.setAttribute('opacity', 1);
+        } else tok.setAttribute('opacity', 0);
+        ok.setAttribute('opacity', k > 2.6 ? 1 : 0);
+      };
+    } },
     functions: { lv: 'fn', draw(s) {
       [[10, 8], [30, 29], [50, 50]].forEach((p, i) => {
         const g = el('g', { class: 'a-pop', style: `--d:${0.2 + i * 0.35}s` }, s);
@@ -1732,9 +1868,17 @@
       const s = svg('0 0 120 76', st.title);
       s.setAttribute('aria-hidden', 'true');
       runs.push(pic.draw(s) || null);
+      // a guide may rename the labels of a picture, to tell its own story: { rename: { Operator: 'Bear' } }
+      if (st.rename) s.querySelectorAll('text').forEach((n) => {
+        const to = st.rename[n.textContent];
+        if (to == null) return;
+        const room = Math.max(n.textContent.length, 7); // a box holds about seven letters of a label
+        n.textContent = to;
+        if (to.length > room) n.style.fontSize = (7 * room / to.length).toFixed(1) + 'px';
+      });
       const box = li.firstElementChild;
       box.appendChild(s);
-      if (opts.done) box.insertAdjacentHTML('beforeend', '<i class="pstep-ok" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></i>');
+      if (opts.done || st.done) box.insertAdjacentHTML('beforeend', '<i class="pstep-ok" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></i>');
       list.appendChild(li);
     });
     const live = document.createElement('p');
@@ -1757,11 +1901,12 @@
     items.forEach((li, i) => li.firstElementChild.addEventListener('click', () => light(i)));
 
     if (reduced()) {
-      if (opts.done) items.forEach((li) => li.classList.add('ok'));
+      items.forEach((li, i) => { if (opts.done || steps[i].done) li.classList.add('ok'); });
       live.innerHTML = steps.map((st, i) => `<b>${i + 1} · ${api.inline(st.title)}</b> ${api.inline(st.text || '')}`).join('<br>');
       return () => L.end();
     }
     if (opts.done) items.forEach((li, i) => L.wait(() => li.classList.add('ok'), 500 + i * 380));
+    else steps.forEach((st, i) => { if (st.done) L.wait(() => items[i].classList.add('ok'), 500); });
     L.wait(() => {
       light(0);
       L.loop((dt) => {
@@ -1841,7 +1986,7 @@
         <div class="pe-top"><span class="pe-dots"><i></i><i></i><i></i></span>
           <div class="pe-addr"><span class="pe-bar">${api_esc(path)}</span></div></div>
         <div class="pe-body">
-          <div class="pe-row pe-zip"><span class="pe-ic zip"></span>com.elliades.isae.mbseShepherd_1.2.0.zip<em class="pe-tag">Extract here</em></div>
+          <div class="pe-row pe-zip"><span class="pe-ic zip"></span>com.elliades.mbseShepherd_1.7.0.zip<em class="pe-tag">Extract here</em></div>
           <div class="pe-row pe-d1"><span class="pe-ic dir"></span>data</div>
           <div class="pe-row pe-d2 key"><span class="pe-ic dir"></span>plugins</div>
           <div class="pe-row pe-d3"><span class="pe-ic dir"></span>profiles</div>
@@ -1851,6 +1996,154 @@
     </figure>`;
   };
   const api_esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+  /* ───────── pairing: Cameo ⇄ relay ⇄ guide, in four stages that loop (scene of js/pairing-scene.js) ─────────
+     opts.mode: "pc" (the guide on the PC of Cameo) or "phone" (through the browser bridge).
+     An element shows from stage data-from on, or until stage data-until; data-hl lights it at that stage.
+     The chips stop on one stage; Auto plays them again. Reduced motion: it waits on the last stage. */
+  W.pairFlow = function (root, opts) {
+    const phone = opts.mode === 'phone';
+    const CODE = 'KFTRQM';
+    const ONLINE = 'WMPZDA';
+    const spaced = (c) => c.split('').join(' ');
+    const dot = (from) => `<i class="pf-dot" data-ok="${from}"></i>`;
+    const swap = (a, b, at) => `<span class="pf-swap"><span data-until="${at - 1}">${a}</span><span data-from="${at}">${b}</span></span>`;
+    const cameo = `<div class="pf-app pf-app-cameo">
+        <div class="pf-tb"><i class="pf-logo">C</i>Cameo Systems Modeler</div>
+        <div class="pf-app-body pf-cameo-body">
+          <div class="pf-tree" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
+          <div class="pf-win pf-cameo">
+            <div class="pf-bar">Relay pairing code</div>
+            <div class="pf-body">
+              <div class="pf-state"><i class="pf-dot ok"></i><b>Connected</b></div>
+              <div class="pf-code"><span>${spaced(CODE)}</span><span class="pf-copy" data-hl="${phone ? -1 : 1}">⧉<em data-only="1">Copied</em></span></div>
+              <div class="pf-line">${phone ? 'Inside this Cameo: <code>ws://127.0.0.1:8787</code>' : 'Relay: <code>wss://…/relay</code>'}</div>
+              ${phone ? '<div class="pf-btn" data-hl="0">Open the browser bridge</div>' : ''}
+              <div class="pf-line pf-muted">${swap('No guide follows this Cameo yet', '<b class="pf-good">1 guide follows this Cameo</b>', 3)}</div>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    const web = (url, body, extra) => `<div class="pf-app pf-app-web"${extra || ''}>
+        <div class="pf-tb"><span class="pf-lights" aria-hidden="true"><i></i><i></i><i></i></span><span class="pf-url">${url}</span></div>
+        <div class="pf-app-body">${body}</div>
+      </div>`;
+    const guideHead = `<div class="pf-ghead"><b>MBSE Shepherd</b><span class="pf-cbtn">${dot(3)}Cameo</span></div>`;
+    const guide = web('mbse-shepherd · guide', `${guideHead}
+          <div class="pf-win pf-guide">
+            <div class="pf-bar">Cameo</div>
+            <div class="pf-body">
+              <div class="pf-input" data-hl="2"><span data-until="1" class="pf-ph">ABCDEF</span><span data-from="2" class="pf-typed">${CODE}</span></div>
+              <div class="pf-btn" data-hl="2">Connect</div>
+              <div class="pf-state">${swap('Not connected', '<b class="pf-good">Following Cameo</b>', 3)}</div>
+            </div>
+          </div>`);
+    const bridge = web('mbse-shepherd · bridge', `<div class="pf-win pf-bridge">
+            <div class="pf-bar">Cameo browser bridge</div>
+            <div class="pf-body">
+              <div class="pf-state">${dot(1)}<b>Bridge is up</b></div>
+              <div class="pf-cells" data-hl="2">${ONLINE.split('').map((c) => `<span>${c}</span>`).join('')}</div>
+              <div class="pf-qr" data-hl="2" aria-hidden="true"></div>
+              <div class="pf-line pf-muted">Guides ${swap('0', '<b class="pf-good">1</b>', 3)}</div>
+              <div class="pf-keep">Keep this tab open</div>
+            </div>
+          </div>`, ' data-from="1"');
+    const handset = `<div class="pf-app pf-app-web pf-app-phone">
+        ${guideHead}
+        <div class="pf-app-body">
+          <span class="pf-swap pf-pscreen">
+            <span data-until="1" class="pf-pidle"><span class="pf-muted">Not connected</span></span>
+            <span data-only="2" class="pf-pscan">
+              <span class="pf-cam"><span class="pf-qr" aria-hidden="true"></span><i></i></span>
+              <span class="pf-muted">Scan the QR code</span>
+              <span class="pf-or">or type the online code</span>
+              <span class="pf-cells">${ONLINE.split('').map((c) => `<span>${c}</span>`).join('')}</span>
+            </span>
+            <span data-from="3" class="pf-pdone"><b class="pf-good">Following Cameo</b><span class="pf-muted">Open in Cameo works from here</span></span>
+          </span>
+        </div>
+      </div>`;
+    const device = (kind, label, screen) => `<div class="pf-dev pf-${kind}"><div class="pf-screen">${screen}</div>${kind === 'laptop' ? '<div class="pf-base"></div>' : kind === 'monitor' ? '<div class="pf-stand"></div>' : ''}<div class="pf-dev-lbl">${label}</div></div>`;
+    const link = (label, from) => `<div class="pf-link" data-on="${from}"><span>${label}</span></div>`;
+    const travel = phone ? '' : `<span class="pf-token" data-only="1">${spaced(CODE)}</span>`;
+    const row = phone
+      ? device('laptop', 'Computer with Cameo', cameo + bridge) + link('online relay', 3) + device('handset', 'Phone or laptop', handset)
+      : device('monitor', 'One computer: Cameo and the guide', cameo + guide + travel);
+    const S = phone ? [
+      'In Cameo, the relay runs <b>inside this Cameo</b>: another device cannot reach it. Click <b>Open the browser bridge</b>.',
+      'A browser tab on the same computer joins Cameo and the online relay: <b>Bridge is up</b>. It shows an online code and a QR code.',
+      'The phone scans the QR code, or the other device types the <b>online</b> code in its <b>Cameo</b> button.',
+      'Check: green on the other device, and <b>Guides 1</b> on the bridge page. The link lasts while the bridge tab stays open.'
+    ] : [
+      'In Cameo, <b>Webapp Relay > Relay pairing code</b> shows a code of 6 letters.',
+      'Copy it with the copy icon.',
+      'Paste it in the <b>Cameo</b> button of this guide, then <b>Connect</b>. The spaces go away by themselves.',
+      'Check: <b>Following Cameo</b> in the guide, <b>1 guide follows this Cameo</b> in Cameo.'
+    ];
+    const watch = '<p class="watch-tag pf-watch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.8"/></svg>Explanation: watch, the steps below are yours</p>';
+    root.innerHTML = `${watch}<figure class="pf${phone ? ' pf-ext' : ''}" aria-label="How the guide pairs with Cameo">
+        <div class="pf-row">${row}</div>
+        <div class="chips pf-chips">${S.map((_, i) => `<button type="button" class="chip" aria-pressed="false" data-st="${i}">${i + 1}</button>`).join('')}<button type="button" class="chip" aria-pressed="true" data-auto>▶ Auto</button></div>
+        <p class="w-live pf-cap" aria-live="polite"></p>
+      </figure>`;
+    const fig = root.querySelector('.pf');
+    const cap = root.querySelector('.pf-cap');
+    const L = life();
+    let stage = -1;
+    let auto = !reduced();
+    let timer = 0;
+    const show = (n) => {
+      stage = n;
+      fig.dataset.stage = n;
+      fig.querySelectorAll('[data-from]').forEach((e) => e.classList.toggle('on', n >= +e.dataset.from));
+      fig.querySelectorAll('[data-until]').forEach((e) => e.classList.toggle('on', n <= +e.dataset.until));
+      fig.querySelectorAll('[data-only]').forEach((e) => e.classList.toggle('on', n === +e.dataset.only));
+      fig.querySelectorAll('[data-hl]').forEach((e) => e.classList.toggle('hl', n === +e.dataset.hl));
+      fig.querySelectorAll('[data-on]').forEach((e) => e.classList.toggle('live', n >= +e.dataset.on));
+      fig.querySelectorAll('[data-ok]').forEach((e) => e.classList.toggle('ok', n >= +e.dataset.ok));
+      cap.innerHTML = `<b>${n + 1} / ${S.length}</b> · ${S[n]}`;
+      cap.classList.toggle('ok', n === S.length - 1);
+      root.querySelectorAll('[data-st]').forEach((b) => b.setAttribute('aria-pressed', String(!auto && +b.dataset.st === n)));
+      root.querySelector('[data-auto]').setAttribute('aria-pressed', String(auto));
+    };
+    const tick = () => {
+      clearTimeout(timer);
+      if (!auto || !root.isConnected) return;
+      show((stage + 1) % S.length);
+      timer = setTimeout(tick, stage === S.length - 1 ? 4200 : 2800);
+    };
+    root.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-st]');
+      if (b) { auto = false; clearTimeout(timer); show(+b.dataset.st); return; }
+      if (e.target.closest('[data-auto]')) { auto = true; stage = -1; tick(); }
+    });
+    if (auto) tick(); else show(S.length - 1);
+    return () => { clearTimeout(timer); L.end(); };
+  };
+
+  /* ───────── pairing, live: what this page sees of the link (window.Bridge) ───────── */
+  W.pairCheck = function (root) {
+    const row = (tone, text) => `<li class="pc-${tone}"><i></i><span>${text}</span></li>`;
+    const paint = () => {
+      if (!root.isConnected) return;
+      const B = window.Bridge;
+      const st = B ? B.state() : { status: 'off' };
+      const onRelay = st.status === 'connected' || (st.status === 'waiting' && st.problem === 'cameo');
+      const relayRow = onRelay
+        ? row('ok', `This page reaches the relay ${st.relayLocal || /127\.0\.0\.1/.test(st.relay || '') ? 'inside Cameo, on this computer' : 'online'}, with the code <b>${api_esc(st.code)}</b>.`)
+        : st.status === 'connecting' ? row('wait', 'Connecting to the relay…')
+          : st.status === 'waiting' ? row('bad', api_esc(st.error || 'Cannot reach the relay.'))
+            : row('idle', st.error ? api_esc(st.error) : 'Not paired yet: no code typed in this page.');
+      const cameoRow = st.status === 'connected'
+        ? row('ok', 'Cameo is on the same relay, with the same code: <b>linked</b>.')
+        : onRelay ? row('wait', 'Waiting for Cameo: is its pairing window on <b>Connected</b>?')
+          : row('idle', 'Cameo: not seen yet.');
+      root.innerHTML = `<div class="pc${st.status === 'connected' ? ' pc-done' : ''}"><ul>${relayRow}${cameoRow}</ul>${st.status === 'connected' ? '' : '<button type="button" class="btn small" data-pair>Open the Cameo dialog</button>'}</div>`;
+    };
+    root.addEventListener('click', (e) => { if (e.target.closest('[data-pair]')) document.getElementById('cameo-btn').click(); });
+    if (window.Bridge) window.Bridge.onChange(paint);
+    paint();
+  };
 
   /* ───────── recap ───────── */
   let celebrated = false;

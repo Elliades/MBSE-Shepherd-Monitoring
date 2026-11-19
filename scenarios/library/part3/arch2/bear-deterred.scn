@@ -1,0 +1,23 @@
+scenario: The bear comes too close, then backs off
+id: arch2.bear-deterred
+kind: nominal
+version: 1.0
+status: in use
+goal: The bear enters the safe perimeter: light and sound scare it off; it backs off and the drone tracks it again.
+description: 2 - Patch, decentralized. One moment of the mission; what leads there is in its preconditions.
+author: MBSE Shepherd, Part 3
+date: 2026-11-04
+tags: part3, architecture 2
+given: arch2.bear-enters
+
+phase Predator response
+
+  step too-close: pasture sends Predator entering safe perimiter
+    note: Deterrence inside the safe perimeter.
+    then soi.pm is Predator counteraction
+    then message Light burst
+    then message Sound burst
+
+  step backs-off: pasture sends Predator leaving safe perimiter
+    note: The bear backs off: back to tracking.
+    then soi.pm is Predator tracking

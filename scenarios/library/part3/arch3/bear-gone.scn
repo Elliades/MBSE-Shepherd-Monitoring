@@ -1,0 +1,22 @@
+scenario: The bear leaves: back to patrol
+id: arch3.bear-gone
+kind: nominal
+version: 1.0
+status: in use
+goal: The bear leaves the tracking perimeter: predator defense hands control back and the patrol resumes.
+description: 3 - Centralized orchestrator. One moment of the mission; what leads there is in its preconditions.
+author: MBSE Shepherd, Part 3
+date: 2026-11-04
+tags: part3, architecture 3
+given: arch3.bear-enters
+
+phase Predator response
+
+  step bear-gone: pasture sends Predator leaving tracking perimiter
+    note: End of tracking: the orchestrator restarts patrol and guard, the path takes priority again.
+    then soi.orch is Patrolling
+    then soi.zp is Perimeter watch
+    then soi.sm is Sheep Monitoring
+    then soi.trk is Tracking Idle
+    then soi.ap is Following Watch Path
+    then message Predator Cleared

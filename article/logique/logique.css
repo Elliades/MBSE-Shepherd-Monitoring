@@ -1,0 +1,74 @@
+/* The figures of article/logique/: on top of ../article.css (palette, column, figures, the incremental replay) and
+   ../tp/tp.css (the phone, the gallery, the series, the teaser). */
+
+.series li a { color: inherit; text-decoration: none; }
+.series li a:hover span { text-decoration: underline; }
+
+/* the colours of the subsystems, shared by the bill and the method */
+.c-mc { --c: var(--ink-3); }
+.c-orch { --c: var(--route); }
+.c-zp { --c: var(--sky); }
+.c-sm { --c: var(--grass); }
+.c-pm { --c: var(--amber); }
+.c-trk { --c: #7b55c7; }
+:root[data-theme="dark"] .c-trk { --c: #b9a0f0; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .c-trk { --c: #b9a0f0; } }
+
+/* ───────── figure 1: the bill ───────── */
+.kinds.bill { margin: 0; }
+.bill div { min-height: 86px; }
+.bill b { font-variant-numeric: tabular-nums; }
+.bill .bill-msgs { grid-column: span 2; background: var(--sky-soft); border-color: var(--sky); }
+.bill .bill-msgs b { color: var(--sky); }
+.bill-note { min-height: 3em; }
+.bill-note b { color: var(--ink); }
+@media (max-width: 640px) { .bill .bill-msgs { grid-column: span 2; } }
+
+/* ───────── figure 2: the method ───────── */
+.dm .seg button { flex: 1 1 0; }
+.dm-say { margin-bottom: 12px; min-height: 4.6em; }
+.dm-art { margin-bottom: 12px; }
+.dm .btn-row { align-items: center; }
+@media (max-width: 560px) {
+  .dm .seg { flex-wrap: nowrap; width: 100%; }
+  .dm .seg button { padding: 5px 4px; font-size: 12px; text-align: center; }
+  .dm .seg button small { font-size: 9.5px; }
+}
+
+.dm-tag { font: 700 10.5px var(--font-mono); letter-spacing: .08em; fill: var(--ink-3); }
+.dm-frame { fill: var(--surface-2); stroke: var(--line); }
+.dm-frame2 { fill: none; stroke: var(--ink-3); stroke-width: 1.1; }
+.dm-name { font: 700 12.5px var(--font-display); }
+.dm-sub { font-size: 10.5px; fill: var(--ink-3); }
+.dm-do { font: 600 10px var(--font-mono); fill: var(--ink-2); }
+.dm-states { font: 600 10.5px var(--font-body); fill: var(--ink-2); }
+.dm-dash { stroke: var(--ink-3); stroke-dasharray: 5 4; }
+.dm-box { fill: var(--surface); stroke: var(--ink-3); stroke-width: 1.1; transition: fill .3s, stroke .3s, stroke-width .3s; }
+.dm-fr > .dm-box { fill: none; }
+.dm-band { fill: var(--c); }
+.dm-st.hl > .dm-box { stroke: var(--c); stroke-width: 2.6; fill: color-mix(in srgb, var(--c) 14%, var(--surface)); }
+.dm-fr.hl > .dm-box { fill: color-mix(in srgb, var(--c) 7%, transparent); }
+.dm-badge { font: 700 10px var(--font-mono); fill: var(--lg); }
+
+.dm-ghost { fill: none; stroke: var(--ink-3); stroke-width: 1.1; stroke-dasharray: 4 3; opacity: .7; }
+.dm-solid { fill: var(--surface); stroke: var(--c); stroke-width: 1.6; }
+.dm-comp.hl .dm-ghost { stroke: var(--c); stroke-width: 2.6; stroke-dasharray: none; opacity: 1; }
+.dm-comp.hl .dm-solid { stroke-width: 2.6; }
+.dm-mini { fill: var(--surface-2); stroke: var(--lg); stroke-width: 1.1; }
+.dm-mini-t { font: 700 9.5px var(--font-display); }
+.dm-arrow, .dm-con { fill: none; stroke: var(--ink-3); stroke-width: 1.2; }
+.dm-loop { fill: none; stroke: var(--lg); stroke-width: 1.4; stroke-dasharray: 4 3; }
+.dm-sig { font: 600 9.5px var(--font-mono); fill: var(--ink-2); }
+.dm-pill { fill: var(--amber-soft); stroke: var(--amber); }
+.dm-port { fill: var(--surface); stroke: var(--ink); stroke-width: 1.3; }
+.dm-link { fill: none; stroke: var(--c); stroke-width: 2; stroke-dasharray: 5 4; animation: dm-flow 1s linear infinite; }
+@keyframes dm-flow { to { stroke-dashoffset: -18; } }
+.dm-route { fill: none; stroke: none; }
+.dm-tok circle { fill: var(--route); filter: drop-shadow(0 0 4px var(--route)); }
+.dm-tok text { font: 700 10px var(--font-mono); fill: var(--route); paint-order: stroke; stroke: var(--surface); stroke-width: 3px; }
+.dm-chip rect { fill: var(--grass-soft); stroke: var(--grass); }
+.dm-chip text { font: 700 10.5px var(--font-body); fill: var(--grass); }
+
+.dm [data-from] { opacity: 0; transition: opacity .45s; }
+.dm [data-from].in { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .dm-link { animation: none; } }

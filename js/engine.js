@@ -55,6 +55,7 @@
     activity: '<rect x="3.5" y="6.5" width="17" height="11" rx="5.5"/>',
     state: '<rect x="3.5" y="6.5" width="17" height="11" rx="3"/><path d="M3.5 10.5h17"/>',
     signal: '<path d="M4 6h12l4.5 6-4.5 6H4z"/>',
+    part: '<rect x="3.5" y="5" width="17" height="14" rx="1.5" stroke-dasharray="3 2"/><rect x="7.5" y="9.5" width="9" height="5"/>',
     ucd: '<rect x="3" y="4" width="18" height="16" rx="1.5"/><ellipse cx="13.5" cy="12" rx="5" ry="3"/><path d="M6 10v4"/>',
     ibd: '<rect x="3" y="4" width="18" height="16" rx="1.5"/><rect x="6" y="9" width="4.5" height="6"/><rect x="13.5" y="9" width="4.5" height="6"/><path d="M10.5 12h3"/>',
     sd: '<rect x="3" y="4" width="18" height="16" rx="1.5"/><path d="M8 7v10M16 7v10M8 10.5h8M16 14h-8"/>',
@@ -80,8 +81,21 @@
   const TYPE_LABEL = {
     package: 'package', block: 'block', ucd: 'use case diagram', ibd: 'internal block diagram',
     sd: 'sequence diagram', ad: 'activity diagram', stm: 'state machine', bdd: 'block definition diagram', matrix: 'allocation matrix',
-    usecase: 'use case', actor: 'actor', activity: 'activity', state: 'state', signal: 'signal', iface: 'interface block'
+    usecase: 'use case', actor: 'actor', activity: 'activity', state: 'state', signal: 'signal', iface: 'interface block', part: 'part'
   };
+  /* Diagrams, and the elements Cameo draws as a shape of their own on one. When the text names such an element
+     after a diagram (a chip or a path card of that diagram, earlier in the same scene), or the link says
+     diagram: "<key>", or the chip is written [[key@diagram]], or the scene says diagram: "<key>", the guide shows it
+     there: it opens the diagram, selects the shape and frames it in amber (diagram/highlight). Not drawn there: it
+     stays selected in the Model Browser. An activity is drawn as an action, a signal or a package rarely: those need
+     diagram: or @. */
+  const DIAGRAM_TYPES = new Set(['ucd', 'ibd', 'sd', 'ad', 'stm', 'bdd', 'req']);
+  const ON_DIAGRAM = new Set(['block', 'part', 'usecase', 'actor', 'state', 'choice']);
+  let diagramCtx = null;
+  function diagramOf(L, at) {
+    const k = at || L.diagram || (ON_DIAGRAM.has(L.type) ? diagramCtx : null);
+    return k && LINKS[k] && DIAGRAM_TYPES.has(LINKS[k].type) ? k : null;
+  }
   const PH = {
     screenshot: { tag: 'Screenshot to add', icon: 'image' },
     gif: { tag: 'GIF to record', icon: 'film' },
@@ -146,6 +160,12 @@
   }
   function stepId(scene, path, i) { return scene.id + '/' + path + '/' + i; }
   function todoId(sceneId, path, i) { return sceneId + '/' + path + '/t' + i; }
+
+  /* ───────── embedded in an article: ?embed=nodock | scene | widget  (&w=<widget>) ─────────
+     The article quotes a piece of the guide; the reader must not be able to leave it (no Next, no swipe, no arrow keys). */
+  const EMBED = (/[?&]embed=([a-z]+)/.exec(location.search) || [])[1] || '';
+  const EMBED_W = (/[?&]w=([A-Za-z0-9_]+)/.exec(location.search) || [])[1] || '';
+  if (EMBED) document.documentElement.classList.add('embed', 'embed-' + EMBED);
 
   /* ───────── state ───────── */
   const DEFAULTS = { v: 1, scene: null, last: null, seen: {}, steps: {}, answers: {}, syncT: {}, widgets: {}, todos: {}, author: !!CFG.authorMode, theme: null };
@@ -242,11 +262,16 @@
     return `<img class="ico" src="${esc(i.src)}" alt="${esc(i.alt)}">`;
   }
   function linkChip(spec) {
-    const [key, label] = spec.split('|');
+    const [ref, label] = spec.split('|');
+    const [key, at] = ref.split('@');
     const L = LINKS[key];
     if (!L) return `<mark>[[${esc(spec)}]]</mark>`;
     const unset = !L.url && !L.id && !L.made && !L.path ? '<span class="unset author-only">no link</span>' : '';
-    return `<button type="button" class="mlink" data-link="${esc(key)}" title="Where is it in the model?">${ic(L.type)}<span>${esc(label || L.name)}</span>${unset}</button>`;
+    if (DIAGRAM_TYPES.has(L.type)) diagramCtx = key;
+    const inKey = diagramOf(L, at);
+    const where = inKey ? ` data-in="${esc(inKey)}"` : '';
+    const title = inKey ? `Show it in ${LINKS[inKey].name}` : 'Where is it in the model?';
+    return `<button type="button" class="mlink" data-link="${esc(key)}"${where} title="${esc(title)}">${ic(L.type)}<span>${esc(label || L.name)}</span>${unset}</button>`;
   }
 
   /* ───────── model links ───────── */
@@ -257,14 +282,15 @@
       return `<li style="--d:${i}"${last ? ' class="target"' : ''}>${ic(kinds[i])}<span>${esc(name)}</span>${last ? `<i class="tkind">${esc(TYPE_LABEL[L.type] || '')}</i>` : ''}</li>`;
     }).join('') + '</ol>';
   }
-  function linkActions(key) {
+  function linkActions(key, inKey) {
     const L = LINKS[key];
     let h = '';
     if (L.note) h += `<p class="path-note">${esc(L.note)}</p>`;
     if (L.made) h += '<p class="path-note"><strong>You create this element</strong> during the exercise. Once it exists, the button below finds it in Cameo by its name, so type the name exactly as written.</p>';
     h += '<div class="btn-row">';
     /* An element with an id is opened by its id. One without (the ones you create) is looked up by its name. */
-    h += `<button type="button" class="btn small" data-cameo-open="${esc(key)}">${ic("open")}${L.id ? 'Open in Cameo' : 'Find in Cameo'}</button>`;
+    if (inKey) h += `<button type="button" class="btn small" data-cameo-show="${esc(key)}" data-in="${esc(inKey)}">${ic(LINKS[inKey].type)}Show in ${esc(LINKS[inKey].name)}</button>`;
+    h += `<button type="button" class="btn ${inKey ? 'ghost ' : ''}small" data-cameo-open="${esc(key)}">${ic("open")}${inKey ? 'In the Model Browser' : L.id ? 'Open in Cameo' : 'Find in Cameo'}</button>`;
     if (L.url) {
       h += `<a class="btn small" href="${esc(L.url)}">${ic('open')}Open in Cameo</a>`;
       h += `<button type="button" class="btn ghost small" data-copy="${esc(L.url)}">${ic('chain')}Copy link</button>`;
@@ -304,23 +330,41 @@
     'not-found': (L) => `Cameo cannot find “${L.path[L.path.length - 1]}”${L.strict ? ` in ${L.path.slice(0, -1).join(' / ')}` : ''}. Is it created, and is it named exactly like this?`,
     ambiguous: (L) => `Several elements in Cameo are named “${L.path[L.path.length - 1]}”. Look in: ${L.path.slice(0, -1).join(' / ')}.`
   };
+  function findFailed(L) {
+    return (err) => (FIND_ERROR[err && err.message] ? toast(FIND_ERROR[err.message](L), 8000, 'bad') : toast("Cameo could not show it", 6000, 'bad'));
+  }
   function openInCameo(key, btn) {
     const L = LINKS[key];
     if (!B || B.state().status !== "connected") { openCameo(); return; }
     if (btn) btn.disabled = true;
     const done = L.id ? B.open(L.id, L.type, nameSpec(L)) : B.openByName(nameSpec(L));
-    done.then(
-      () => toast("Shown in Cameo"),
-      (err) => (FIND_ERROR[err && err.message] ? toast(FIND_ERROR[err.message](L), 8000, 'bad') : toast("Cameo could not show it", 6000, 'bad'))
+    done.then(() => toast("Shown in Cameo"), findFailed(L)).then(() => { if (btn) btn.disabled = false; });
+  }
+  /* The element is first selected in the Model Browser (that also finds its id when the guide has none), then
+     shown on the diagram the text is talking about (Bridge.highlight). */
+  function showInDiagram(key, inKey, btn) {
+    const L = LINKS[key];
+    const D = LINKS[inKey];
+    if (!B || B.state().status !== "connected") { openCameo(); return; }
+    if (btn) btn.disabled = true;
+    const found = L.id ? B.open(L.id, L.type, nameSpec(L)) : B.openByName(nameSpec(L));
+    found.then(
+      (info) => B.highlight((info && info.id) || L.id, D.id, nameSpec(D)).then(
+        (r) => (r && r.symbols && r.symbols.length ? toast(`Shown in ${D.name}`) : toast(`Not drawn in ${D.name}: selected in the Model Browser`, 6000)),
+        () => toast(`Selected in the Model Browser (Cameo could not open ${D.name})`, 6000)),
+      findFailed(L)
     ).then(() => { if (btn) btn.disabled = false; });
   }
 
-  function openLink(key) {
+  function openLink(key, inKey) {
     const L = LINKS[key];
     if (!L) return;
-    /* A link marked direct opens the element in Cameo (the diagram or matrix itself) instead of the tree. */
-    if (L.direct && B && B.state().status === "connected") { openInCameo(key, null); return; }
-    openOverlay({ kind: 'dialog', label: 'In the Model Browser', title: L.name, body: `<div style="display:grid;gap:.9rem">${treeHTML(L)}${linkActions(key)}</div>` });
+    const live = B && B.state().status === "connected";
+    /* Named in a diagram: shown there at once. A link marked direct opens the element in Cameo (the diagram or
+       matrix itself) instead of the tree. */
+    if (inKey && live) { showInDiagram(key, inKey, null); return; }
+    if (L.direct && live) { openInCameo(key, null); return; }
+    openOverlay({ kind: 'dialog', label: 'In the Model Browser', title: L.name, body: `<div style="display:grid;gap:.9rem">${treeHTML(L)}${linkActions(key, inKey)}</div>` });
   }
 
   /* ───────── block renderers ───────── */
@@ -579,7 +623,8 @@
     if (b.path) {
       const L = LINKS[b.path];
       if (!L) return '';
-      return `<div class="pathcard"><div class="pathcard-head"><span class="mono-label">${L.made ? 'Where you create it' : 'Where to go in the Model Browser'}</span></div>${treeHTML(L)}${linkActions(b.path)}</div>`;
+      if (DIAGRAM_TYPES.has(L.type)) diagramCtx = b.path;
+      return `<div class="pathcard"><div class="pathcard-head"><span class="mono-label">${L.made ? 'Where you create it' : 'Where to go in the Model Browser'}</span></div>${treeHTML(L)}${linkActions(b.path, diagramOf(L))}</div>`;
     }
     if (b.copy) {
       // With fromAnswer, one line per function named in that question; an empty row keeps "fct N".
@@ -623,7 +668,7 @@
       const label = typeof b.pair === 'string' ? b.pair : 'Reminder: pair this guide with Cameo';
       const how = [
         'Cameo is open, with the plugin installed and a project open.',
-        'In Cameo, open the menu {{OMF > Relay pairing code}}: it shows a code of 6 letters.',
+        'In Cameo, open the menu {{Webapp Relay > Relay pairing code}}: it shows a code of 6 letters.',
         'In this guide, click the **Cameo** button at the top right, type the code, and confirm.',
         'Its dot turns green once linked. Still waiting? In the same dialog, open **Relay**: Cameo and the guide must use the same relay address.'
       ];
@@ -702,12 +747,13 @@
   function phaseOf(scene) { return phById[chById[scene.ch].phase] || null; }
 
   function sceneHTML(scene) {
+    diagramCtx = scene.diagram || null;
     const k = KINDS[scene.kind] || KINDS.read;
     const done = sceneStatus(scene) === 'done' && stepIds(scene).length;
     const head = scene.bare ? '' : `<header class="scene-head">
         <div class="stamp-row">
           <span class="kind kind-${scene.kind}">${ic(k.icon)}${k.label}</span>
-          ${scene.mark && phaseOf(scene) ? `<span class="phase-chip">${esc(phaseOf(scene).title)} · ${scene.mark === 'intro' ? 'Start' : 'Wrap-up'}</span>` : ''}
+          ${scene.mark && phaseOf(scene) ? `<span class="phase-chip">${esc(phaseOf(scene).title)} · ${scene.mark === 'intro' ? 'Start' : scene.mark === 'link' ? 'Next diagram' : 'Wrap-up'}</span>` : ''}
           ${scene.ref && !/^Question/.test(scene.ref) ? `<span class="ref" title="Section of the handout">§ ${esc(scene.ref)}</span>` : ''}
           ${scene.pts != null ? `<span class="pts${scene.bonus ? ' bonus' : ''}" title="Points of this question">${esc(ptsLabel(scene))}</span>` : ''}
           <span class="done-stamp"${done ? '' : ' hidden'}>Done</span>
@@ -755,6 +801,7 @@
     if (!same && !opts.quiet) art.classList.add('enter');
     $$('.scene-head, .blocks > *', art).forEach((el, i) => el.style.setProperty('--i', Math.min(i, 8)));
     mountWidgets(art, scene);
+    if (EMBED === 'widget') focusWidget(art);
     refreshChrome();
     if (!same) syncPeer();
     if (!same && window.Track) window.Track.scene();
@@ -763,6 +810,17 @@
       window.scrollTo(0, 0);
       if (opts.focus !== false) stage.focus({ preventScroll: true });
     }
+  }
+
+  /* Embedded view: only the interactive piece of the scene, with the one-line call to action just above it. */
+  function focusWidget(art) {
+    const head = $('.scene-head', art);
+    if (head) head.style.display = 'none';
+    const w = (EMBED_W && $(`[data-widget="${EMBED_W}"]`, art)) || $('[data-widget]', art);
+    const keep = w && w.closest('.blocks > *');
+    if (!keep) return;
+    const prev = keep.previousElementSibling;
+    $$('.blocks > *', art).forEach((b) => { if (b !== keep && !(b === prev && b.matches('.b-p'))) b.style.display = 'none'; });
   }
 
   function mountWidgets(root, scene) {
@@ -1066,11 +1124,13 @@
 
     const cameoOpen = t.closest('[data-cameo-open]');
     if (cameoOpen) { openInCameo(cameoOpen.dataset.cameoOpen, cameoOpen); return; }
+    const cameoShow = t.closest('[data-cameo-show]');
+    if (cameoShow) { showInDiagram(cameoShow.dataset.cameoShow, cameoShow.dataset.in, cameoShow); return; }
     if (t.closest('[data-cameo-leave]')) { B.disconnect(); return; }
     if (t.closest('#cameo-btn')) { openCameo(); return; }
 
     const link = t.closest('[data-link]');
-    if (link) { openLink(link.dataset.link); return; }
+    if (link) { openLink(link.dataset.link, link.dataset.in); return; }
 
     const copy = t.closest('[data-copy]');
     if (copy) { copyText(copy.dataset.copy, copy); return; }
@@ -1171,7 +1231,7 @@
     const t = e.target;
     if (e.key === 'Escape' && ovRoot.firstChild) { closeOverlay(); return; }
     if (t instanceof Element && t.matches('.step') && (e.key === ' ' || e.key === 'Enter')) { e.preventDefault(); toggleStep(t); return; }
-    if (ovRoot.firstChild || e.altKey || e.ctrlKey || e.metaKey) return;
+    if (EMBED || ovRoot.firstChild || e.altKey || e.ctrlKey || e.metaKey) return;
     if (t instanceof Element && t.closest('input, textarea, select, [contenteditable]')) return;
     if (e.key === 'ArrowRight' || e.key === 'PageDown') { e.preventDefault(); step(1); }
     if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); step(-1); }
@@ -1180,7 +1240,7 @@
   /* swipe between scenes on touch screens */
   let touch = null;
   stage.addEventListener('touchstart', (e) => {
-    if (e.touches.length !== 1 || (e.target instanceof Element && e.target.closest('input, textarea, [data-noswipe], .fig-frame'))) { touch = null; return; }
+    if (EMBED || e.touches.length !== 1 || (e.target instanceof Element && e.target.closest('input, textarea, [data-noswipe], .fig-frame'))) { touch = null; return; }
     touch = { x: e.touches[0].clientX, y: e.touches[0].clientY, t: Date.now() };
   }, { passive: true });
   stage.addEventListener('touchend', (e) => {

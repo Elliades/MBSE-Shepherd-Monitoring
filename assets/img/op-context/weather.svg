@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240">
+  <!-- Weather : sun behind a cloud -->
+  <rect x="8" y="8" width="224" height="224" rx="48" fill="#3b8fd0"/>
+  <g stroke="#ffd24a" stroke-width="8" stroke-linecap="round">
+    <path d="M92 28v14M92 122v-6M44 75h14M126 75h-6M58 41l10 10M126 41l-10 10M58 109l10-10"/>
+  </g>
+  <circle cx="92" cy="75" r="26" fill="#ffd24a"/>
+  <g fill="#fff">
+    <circle cx="96" cy="150" r="28"/>
+    <circle cx="136" cy="134" r="38"/>
+    <circle cx="178" cy="156" r="26"/>
+    <rect x="96" y="150" width="82" height="32" rx="2"/>
+  </g>
+</svg>

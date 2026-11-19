@@ -12,7 +12,10 @@
    made   true when the student creates this element during the exercise. It has no id: the button
           "Find in Cameo" sends its name, type and path, and Cameo looks it up (README, "Links by name").
           Spell name and path exactly as the steps tell the student to type them.
-   note   optional remark shown in the sheet */
+   note   optional remark shown in the sheet
+   diagram  optional key of the diagram this element is shown in when its chip is clicked (diagram/highlight).
+          Without it, an element drawn as a shape (block, part, use case, actor, state) is shown in the last
+          diagram named before it in the scene, or in the scene's own diagram: (README, "Show in a diagram"). */
 /* op-context points at the diagram (ibd), not at its owner block. */
 window.MODEL_LINKS = {
   "op-context": {
@@ -51,10 +54,10 @@ window.MODEL_LINKS = {
     url: ""
   },
   "actors": {
-    name: "Actors",
+    name: "Operational Elements",
     type: "package",
-    id: "_2022x_2_302b0611_1731013244413_470286_18335",
-    path: ["1 - Operational Analysis", "C - Use Cases and Scenarios", "Actors"],
+    id: "_18_5_1_150503da_1507202146685_601880_29270",
+    path: ["1 - Operational Analysis", "B - Operational Breakdown", "Operational Elements"],
     url: ""
   },
   "if-pkg": {
@@ -155,7 +158,7 @@ window.MODEL_LINKS = {
     name: "SOI - Pasture Sentinel",
     type: "block",
     id: "_18_5_1_150503da_1507561671339_882422_50880",
-    path: ["3 - Physical Analysis", "A - Physical architecture", "SOI - Pasture Sentinel"],
+    path: ["SOI - Pasture Sentinel"],
     url: ""
   },
   "soi-stm": {
@@ -173,7 +176,46 @@ window.MODEL_LINKS = {
     path: ["3 - Physical Analysis", "A - Physical architecture", "SOI - Pasture Sentinel", "SOI - Pasture Sentinel", "Undeployed", "Configured"],
     kinds: ["package", "package", "block", "stm", "state", "state"],
     made: true,
+    diagram: "soi-stm",
     note: "A state lives in the state machine, not in the diagram. Cameo may show a region between the state machine and its states.",
+    url: ""
+  },
+  "op-uav-operator": {
+    name: "uAV operator",
+    type: "part",
+    id: "_18_5_1_150503da_1505482325515_600953_38367",
+    path: ["1 - Operational Analysis", "B - Operational Breakdown", "Operational Context", "uAV operator"],
+    kinds: ["package", "package", "block", "part"],
+    diagram: "op-context",
+    strict: true,
+    url: ""
+  },
+  "op-ground-station": {
+    name: "groundStation",
+    type: "part",
+    id: "_18_5_1_150503da_1505404746423_141863_30984",
+    path: ["1 - Operational Analysis", "B - Operational Breakdown", "Operational Context", "groundStation"],
+    kinds: ["package", "package", "block", "part"],
+    diagram: "op-context",
+    strict: true,
+    url: ""
+  },
+  "soi-unconfigured": {
+    name: "Unconfigured",
+    type: "state",
+    id: "_2022x_2_302b0611_1731014601922_182454_18844",
+    path: ["3 - Physical Analysis", "A - Physical architecture", "SOI - Pasture Sentinel", "SOI - Pasture Sentinel", "Undeployed", "Unconfigured"],
+    kinds: ["package", "package", "block", "stm", "state", "state"],
+    diagram: "soi-stm",
+    url: ""
+  },
+  "soi-ready": {
+    name: "Ready for Mission",
+    type: "state",
+    id: "_2022x_2_302b0611_1731443078975_697364_18188",
+    path: ["3 - Physical Analysis", "A - Physical architecture", "SOI - Pasture Sentinel", "SOI - Pasture Sentinel", "Undeployed", "Ready for Mission"],
+    kinds: ["package", "package", "block", "stm", "state", "state"],
+    diagram: "soi-stm",
     url: ""
   },
   "uav-data": {

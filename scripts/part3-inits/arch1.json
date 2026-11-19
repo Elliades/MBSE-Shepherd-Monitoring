@@ -97,7 +97,7 @@
    "stereotypes": [
     "Logical Component"
    ],
-   "doc": "Mission manager: receives the flight plan, correct or incorrect, as the input of Load Flight Plan, whose validity check plays the right scenario: Ready for mission (the drone becomes Ready for Mission) or FlightPlan Check Failed (back to Unconfigured), delegated to the base station. Hands the guard mission over to the Mission Orchestrator only once the drone is Ready for Mission.",
+   "doc": "Mission manager: receives the flight plan, correct or incorrect, as the input of Parameter Mission, whose validity check plays the right scenario: Ready for mission (the drone becomes Ready for Mission) or FlightPlan Check Failed (back to Unconfigured), delegated to the base station. Hands the guard mission over to the Mission Orchestrator only once the drone is Ready for Mission.",
    "ports": [
     {
      "name": "init",
@@ -148,9 +148,13 @@
        },
        {
         "name": "Configured",
-        "do": "Load Flight Plan",
+        "do": "Parameter Mission",
         "cloneDo": {
          "elementId": "_2022x_2_302b0611_1731444876357_158908_18227"
+        },
+        "outcomes": {
+         "FlightPlan Correct": "Ready for mission",
+         "FlightPlan Incorrect": "FlightPlan Check Failed"
         }
        },
        {

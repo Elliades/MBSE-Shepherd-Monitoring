@@ -1,0 +1,79 @@
+/* The download page (/support/). Nav, type and footer come from home/home.css. */
+
+:root { --ph-lg: #0f7a6c; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --ph-lg: #5fd4c0; }
+}
+:root[data-theme="dark"] { --ph-lg: #5fd4c0; }
+
+.s-main { padding: clamp(1.6rem, 4vw, 3rem) 0 3.2rem; }
+.s-head h1 {
+  font-size: clamp(2.1rem, 5vw, 3.4rem);
+  font-weight: 800;
+  letter-spacing: -.02em;
+  line-height: 1.05;
+  margin: .15rem 0 .7rem;
+}
+.s-lead { margin: 0; max-width: 40rem; font-size: 1.15rem; line-height: 1.45; color: var(--ink-2); font-weight: 600; }
+.s-note {
+  margin: 1rem 0 0;
+  max-width: 42rem;
+  padding: .85rem 1rem;
+  border-radius: 12px;
+  background: var(--amber-soft);
+  color: var(--ink);
+  line-height: 1.45;
+}
+.s-note code, .s-file code {
+  font-family: var(--font-mono);
+  font-size: .86em;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.s-note code { background: color-mix(in srgb, var(--surface) 70%, transparent); padding: .05em .35em; border-radius: 4px; }
+
+.s-jumps { display: flex; flex-wrap: wrap; gap: .45rem; margin-top: 1.3rem; }
+.s-jumps a {
+  display: inline-flex; align-items: center; gap: .4rem;
+  min-height: 2.4rem; padding: 0 .85rem; border-radius: 999px;
+  border: 1.5px solid var(--line); background: var(--surface);
+  font-weight: 700; font-size: .92rem;
+}
+.s-jumps a:hover, .s-jumps a:focus-visible { border-color: var(--c, var(--route)); transform: translateY(-2px); }
+.s-jumps b {
+  display: grid; place-items: center; width: 1.2rem; height: 1.2rem; border-radius: 50%;
+  background: var(--c); color: var(--surface); font-size: .72rem;
+}
+
+.s-sec { margin-top: 2.6rem; scroll-margin-top: 7.4rem; }
+.s-sec h2 {
+  display: flex; align-items: center; gap: .65rem;
+  font-size: clamp(1.45rem, 3vw, 2rem); font-weight: 800; line-height: 1.1;
+}
+.s-sec h2 i {
+  display: grid; place-items: center; width: 1.7rem; height: 1.7rem; border-radius: 50%;
+  background: var(--c, var(--route)); color: var(--surface);
+  font-style: normal; font-size: .85rem; flex: none;
+}
+.s-sec > p { margin: .55rem 0 0; max-width: 40rem; color: var(--ink-2); line-height: 1.45; }
+.s-guide { display: inline-flex; margin-top: .7rem; font-weight: 700; color: var(--c, var(--route)); text-decoration: underline; text-underline-offset: 3px; }
+.s-guide:hover { color: var(--ink); }
+
+.s-list { display: grid; gap: .7rem; margin-top: 1rem; }
+.s-file {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .35rem 1.2rem; align-items: center;
+  padding: .95rem 1rem .95rem 1.15rem;
+  background: var(--surface); border: 1.5px solid var(--line); border-radius: var(--r);
+}
+.s-file h3 { font-size: 1.12rem; font-weight: 800; line-height: 1.2; }
+.s-file p { margin: .2rem 0 0; color: var(--ink-2); line-height: 1.4; font-size: .98rem; }
+.s-file code { display: block; margin-top: .35rem; color: var(--ink-3); font-size: .82rem; }
+.s-file .h-btn { white-space: nowrap; }
+.support .s-file .h-btn.primary { color: var(--on-route); text-decoration: none; }
+@media (max-width: 720px) {
+  .s-file { grid-template-columns: minmax(0, 1fr); }
+  .s-file .h-btn { justify-self: start; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .s-jumps a:hover, .s-jumps a:focus-visible { transform: none; }
+}

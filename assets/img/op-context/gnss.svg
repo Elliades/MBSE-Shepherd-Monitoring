@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240">
+  <!-- GNSS : satellite with solar panels, signal arcs below -->
+  <rect x="8" y="8" width="224" height="224" rx="48" fill="#3b4a8f"/>
+  <g transform="rotate(-30 120 90)">
+    <rect x="30" y="70" width="58" height="40" rx="4" fill="#fff"/>
+    <rect x="152" y="70" width="58" height="40" rx="4" fill="#fff"/>
+    <path d="M49 70v40M69 70v40M30 90h58M171 70v40M191 70v40M152 90h58" stroke="#3b4a8f" stroke-width="4"/>
+    <path d="M88 90h12M140 90h12" stroke="#fff" stroke-width="8"/>
+    <rect x="100" y="64" width="40" height="52" rx="10" fill="#fff"/>
+    <circle cx="120" cy="90" r="11" fill="#f2b632"/>
+  </g>
+  <g fill="none" stroke="#f2b632" stroke-width="9" stroke-linecap="round">
+    <path d="M96 168a34 34 0 0 0 48 0"/>
+    <path d="M80 186a58 58 0 0 0 80 0"/>
+  </g>
+  <circle cx="120" cy="156" r="7" fill="#f2b632"/>
+</svg>

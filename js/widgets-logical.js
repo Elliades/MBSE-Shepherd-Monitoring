@@ -1035,7 +1035,7 @@
      operator; the operator then answers with the start order, which is passed on to the decider. */
   W.behaviourAB = function (root) {
     root.className = 'w lg-mc lg-ab';
-    const s = svg('0 0 440 300', 'Left, in the functional mission: the state Configured runs Load Flight Plan, which acquires and checks the plan, decides, and sends Ready for mission to itself, on no port; that signal fires its transition to Ready for Mission. Right, in the subsystem Mission Configuration: from Unconfigured, FlightPlan comes in from the base station, the state becomes Configured. Load Flight Plan still sends Ready for mission to itself, the state becomes Ready for Mission, and its effect tells the operator through the base station, on Ready for mission_ext. The operator then sends Start Sheep Guard Mission: the state becomes Deployed and its effect passes the order on to the orchestrator.');
+    const s = svg('0 0 440 300', 'Left, in the functional mission: the state Configured runs Parameter Mission, which acquires, loads and checks the plan, decides, and sends Ready for mission to itself, on no port; that signal fires its transition to Ready for Mission. Right, in the subsystem Mission Configuration: from Unconfigured, FlightPlan comes in from the base station, the state becomes Configured. Parameter Mission still sends Ready for mission to itself, the state becomes Ready for Mission, and its effect tells the operator through the base station, on Ready for mission_ext. The operator then sends Start Sheep Guard Mission: the state becomes Deployed and its effect passes the order on to the orchestrator.');
     root.appendChild(s);
     txt(s, 108, 14, 'A · FUNCTIONAL MISSION', 'lg-tag lg-tag-fn', 'middle');
     txt(s, 331, 14, 'B · LOGICAL SUBSYSTEM', 'lg-tag lg-tag-lg', 'middle');
@@ -1044,17 +1044,19 @@
     const a = el('g', { class: 'lg-ab-a' }, s);
     el('rect', { x: 6, y: 22, width: 204, height: 272, rx: 8, class: 's-frame lg-ab-fr' }, a);
     txt(a, 14, 36, 'SOI - Pasture Sentinel', 's-name');
-    const aConf = mstate(a, 20, 46, 176, 'Configured', 'Load Flight Plan', 'lg-mst-fn');
+    const aConf = mstate(a, 20, 46, 176, 'Configured', 'Parameter Mission', 'lg-mst-fn');
     const flow = el('g', {}, a);
     const node = (x, y, w, t, cls) => { el('rect', { x, y, width: w, height: 20, rx: 5, class: 'lg-act ' + (cls || '') }, flow); txt(flow, x + w / 2, y + 14, t, 'lg-act-t', 'middle'); };
-    node(22, 94, 62, 'Acquire');
-    node(96, 94, 56, 'Check');
-    el('path', { d: 'M168,94 l10,10 l-10,10 l-10,-10 Z', class: 'lg-act' }, flow);
-    arrow(flow, [[84, 104], [96, 104]]);
-    arrow(flow, [[152, 104], [158, 104]]);
+    node(20, 94, 46, 'Acquire');
+    node(74, 94, 34, 'Load');
+    node(116, 94, 40, 'Check');
+    el('path', { d: 'M172,94 l10,10 l-10,10 l-10,-10 Z', class: 'lg-act' }, flow);
+    arrow(flow, [[66, 104], [74, 104]]);
+    arrow(flow, [[108, 104], [116, 104]]);
+    arrow(flow, [[156, 104], [162, 104]]);
     el('path', { d: 'M74,134 h86 l10,10 l-10,10 h-86 Z', class: 'lg-act lg-act-send' }, flow);
     txt(flow, 118, 148, 'send Ready for mission', 'lg-act-t', 'middle');
-    arrow(flow, [[168, 114], [168, 124], [130, 124], [130, 134]]);
+    arrow(flow, [[172, 114], [172, 124], [130, 124], [130, 134]]);
     txt(flow, 176, 166, 'to itself', 'lg-trig lg-red', 'end');
     const aReady = mstate(a, 40, 222, 140, 'Ready for Mission', 'Start subsystems', 'lg-mst-fn');
     arrow(a, [[110, 170], [110, 222]]);
@@ -1067,7 +1069,7 @@
     el('rect', { x: 228, y: 22, width: 206, height: 214, rx: 6, class: 's-box lg-box lg-ab-b' }, b);
     txt(b, 236, 36, 'Mission Configuration', 's-name');
     const bUnc = mstate(b, 272, 40, 120, 'Unconfigured', null, 'lg-mst-lg');
-    const bConf = mstate(b, 272, 76, 150, 'Configured', 'Load Flight Plan', 'lg-mst-lg');
+    const bConf = mstate(b, 272, 76, 150, 'Configured', 'Parameter Mission', 'lg-mst-lg');
     const bReady = mstate(b, 272, 146, 150, 'Ready for Mission', 'Start subsystems', 'lg-mst-lg');
     const bDep = mstate(b, 272, 208, 90, 'Deployed', null, 'lg-mst-lg');
     arrow(b, [[300, 64], [300, 76]]);
@@ -1107,9 +1109,9 @@
     const nowIs = (g, on) => g.classList.toggle('now', on);
     const PER = 1.8;
     const stages = [
-      { label: 'In the mission', text: 'Load Flight Plan acquires the plan, checks it, decides, and sends **Ready for mission to itself**. That signal fires its own transition. Everything happens inside the drone.', dwell: 4 },
+      { label: 'In the mission', text: 'Parameter Mission acquires the plan, loads it, checks it, decides, and sends **Ready for mission to itself**. That signal fires its own transition. Everything happens inside the drone.', dwell: 4 },
       { label: 'Who gives the plan?', text: 'In the subsystem the plan is not there: **FlightPlan Correct comes in** from the operator, through the base station. The state goes from Unconfigured to **Configured**.', dwell: 3.6 },
-      { label: 'Who fires the transition?', text: 'Load Flight Plan still decides, and **still tells itself**: this is internal, it stays as it is. The state becomes **Ready for Mission**.', dwell: 3.6 },
+      { label: 'Who fires the transition?', text: 'Parameter Mission still decides, and **still tells itself**: this is internal, it stays as it is. The state becomes **Ready for Mission**.', dwell: 3.6 },
       { label: 'Who else wants to know?', text: 'The **operator** must know the plan is good. So the effect of that transition also sends a signal out, **Ready for mission_ext**, through the base station.', dwell: 3.6 },
       { label: 'Who starts the mission?', text: 'A new message, not the same one: the operator now answers **Start Sheep Guard Mission**. The state becomes **Deployed**, and the effect of that transition passes the order on to the decider.', dwell: 4.4 }
     ].map((x) => Object.assign(x, { text: x.text.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/`([^`]+)`/g, '<code>$1</code>') }));
@@ -1141,7 +1143,7 @@
   /* Guided example, part 1: Logical Transition of Undeployed into Mission Configuration, then the rework. */
   W.mcTransition = function (root) {
     root.className = 'w lg-mc';
-    const s = svg('0 0 440 300', 'First, a logical component named Mission Configuration is created, right. Left, the composite state Undeployed of the functional mission: Off, Unconfigured, Configured (do Load Flight Plan), Ready for Mission (do Start subsystems), and Start Sheep Guard Mission towards Deployed. It is selected and sent with MBSE Shepherd, Logical Transition, to the block Mission Configuration, right. The clone points to off-TO RENAME, which becomes Deployed; initial states are added by hand, the effects by Delegate to external systems.');
+    const s = svg('0 0 440 300', 'First, a logical component named Mission Configuration is created, right. Left, the composite state Undeployed of the functional mission: Off, Unconfigured, Configured (do Parameter Mission), Ready for Mission (do Start subsystems), and Start Sheep Guard Mission towards Deployed. It is selected and sent with MBSE Shepherd, Logical Transition, to the block Mission Configuration, right. The clone points to off-TO RENAME, which becomes Deployed; initial states are added by hand, the effects by Delegate to external systems.');
     root.appendChild(s);
     txt(s, 108, 14, 'FUNCTIONAL MISSION', 'lg-tag', 'middle');
     txt(s, 332, 14, 'LOGICAL · Mission Configuration', 'lg-tag', 'middle');
@@ -1151,7 +1153,7 @@
     txt(src, 14, 36, 'Undeployed', 's-name');
     mstate(src, 16, 46, 80, 'Off');
     mstate(src, 110, 46, 94, 'Unconfigured');
-    mstate(src, 104, 96, 100, 'Configured', 'Load Flight Plan');
+    mstate(src, 104, 96, 100, 'Configured', 'Parameter Mission');
     mstate(src, 64, 170, 132, 'Ready for Mission', 'Start subsystems');
     arrow(src, [[96, 58], [110, 58]]);
     arrow(src, [[157, 70], [157, 96]]);
@@ -1161,26 +1163,30 @@
     txt(src, 124, 254, 'Start Sheep Guard Mission', 'lg-trig', 'end');
     el('rect', { x: 84, y: 262, width: 92, height: 24, rx: 8, class: 'lg-st-box lg-ghosted' }, src);
     txt(src, 130, 278, 'Deployed', 'lg-st-t', 'middle');
-    el('rect', { x: 2, y: 18, width: 212, height: 226, rx: 10, class: 'lg-select lg-fade', 'data-from': 2 }, s);
+    const pick = el('rect', { x: 2, y: 18, width: 212, height: 226, rx: 10, class: 'lg-select lg-fade', 'data-from': 2 }, s);
     /* target */
     el('rect', { x: 228, y: 22, width: 206, height: 272, rx: 6, class: 's-box lg-box' }, s);
     const fresh = el('g', { class: 'lg-fade' }, s);
     el('rect', { x: 252, y: 118, width: 158, height: 52, rx: 5, class: 's-box lg-box lg-new' }, fresh);
     txt(fresh, 331, 138, '«Logical Component»', 'lg-do', 'middle');
     txt(fresh, 331, 156, 'Mission Configuration', 's-name', 'middle');
-    pointer(el('g', { class: 'lg-fade', 'data-only': 1 }, s), 396, 156);
     const clone = el('g', { class: 'lg-fade', 'data-from': 4 }, s);
-    el('rect', { x: 236, y: 30, width: 190, height: 172, rx: 8, class: 's-frame' }, clone);
-    txt(clone, 244, 44, 'Undeployed', 's-name');
-    mstate(clone, 244, 52, 74, 'Off');
-    mstate(clone, 330, 52, 92, 'Unconfigured');
-    mstate(clone, 322, 94, 100, 'Configured', 'Load Flight Plan');
-    mstate(clone, 280, 152, 140, 'Ready for Mission', 'Start subsystems');
-    arrow(clone, [[318, 64], [330, 64]]);
-    arrow(clone, [[372, 76], [372, 94]]);
-    arrow(clone, [[372, 130], [372, 152]]);
-    txt(clone, 366, 141, 'Ready for mission', 'lg-trig', 'end');
-    arrow(clone, [[300, 188], [300, 222]]);
+    const cFrame = el('g', {}, clone);
+    el('rect', { x: 236, y: 30, width: 190, height: 172, rx: 8, class: 's-frame' }, cFrame);
+    txt(cFrame, 244, 44, 'Undeployed', 's-name');
+    /* each copy, and how far it is from its original on the left: it flies across */
+    const copies = [
+      [mstate(clone, 244, 52, 74, 'Off'), -228, -6],
+      [mstate(clone, 330, 52, 92, 'Unconfigured'), -220, -6],
+      [mstate(clone, 322, 94, 100, 'Configured', 'Parameter Mission'), -218, 2],
+      [mstate(clone, 280, 152, 140, 'Ready for Mission', 'Start subsystems'), -216, 18]
+    ];
+    const cLinks = el('g', {}, clone);
+    arrow(cLinks, [[318, 64], [330, 64]]);
+    arrow(cLinks, [[372, 76], [372, 94]]);
+    arrow(cLinks, [[372, 130], [372, 152]]);
+    txt(cLinks, 366, 141, 'Ready for mission', 'lg-trig', 'end');
+    arrow(cLinks, [[300, 188], [300, 222]]);
     const old = el('g', { class: 'lg-fade', 'data-only': 4 }, s);
     el('rect', { x: 250, y: 222, width: 108, height: 24, rx: 8, class: 'lg-st-box lg-rename' }, old);
     txt(old, 304, 238, 'off-TO RENAME', 'lg-st-t lg-red', 'middle');
@@ -1200,17 +1206,42 @@
     const menu = el('g', { class: 'lg-fade lg-menu', 'data-only': 3 }, s);
     el('rect', { x: 110, y: 110, width: 214, height: 72, rx: 6, class: 'lg-menu-box' }, menu);
     txt(menu, 120, 128, 'MBSE Shepherd ▸', 's-name');
-    el('rect', { x: 114, y: 135, width: 206, height: 18, rx: 3, class: 'lg-menu-hl' }, menu);
-    txt(menu, 122, 148, 'Logical Transition… → Mission Configuration', 's-name');
-    txt(menu, 122, 172, 'Delegate to external systems', 'lg-do');
+    const fly = el('g', {}, menu);
+    el('rect', { x: 114, y: 135, width: 206, height: 18, rx: 3, class: 'lg-menu-hl' }, fly);
+    txt(fly, 122, 148, 'Logical Transition… → Mission Configuration', 's-name');
+    txt(fly, 122, 172, 'Delegate to external systems', 'lg-do');
+    const click = clicker(menu);
+    const reset = (n) => { n.style.transform = ''; n.style.opacity = ''; };
     return stager(root, s, [
       { label: 'Create logical component', text: 'In the package <b>Components</b> of <b>TP - Logical Architecture</b>, create a <b>logical component</b> (a block with the stereotype «Logical Component»), named <b>Mission Configuration</b>. Logical Transition needs a target.', dwell: 5 },
       { label: 'Select', text: 'In the functional mission, select the composite <b>Undeployed</b>. One state is enough: its sub-states come with it.' },
       { label: 'Logical Transition', text: 'Right-click <b>MBSE Shepherd ▸ Logical Transition</b>, and pick the block <b>Mission Configuration</b>.' },
       { label: 'Cloned', text: 'The composite, its 4 sub-states and their transitions are copied into the state machine of the block, with the functions they run. Each copy gets a <b>«refine»</b> to its original, and the original is <b>allocated</b> to the block. The transition that left towards Deployed points to <b>off-TO RENAME</b>. The mission is never changed.', dwell: 5.4 },
-      { label: 'Rework the states', text: 'By hand: <b>off-TO RENAME</b> becomes <b>Deployed</b>; add the two initial states. Nothing else moves: the transitions fired by Load Flight Plan stay as they are.', dwell: 5 },
-      { label: 'Add what others need', text: 'The self-sends of <b>Load Flight Plan</b> stay: they fire this subsystem\'s own transitions. New <b>effects</b> tell the others, on ports, each with a signal of its own: <b>Ready for mission_ext</b>, <b>FlightPlan Check Failed_ext</b>, <b>Start Sheep Guard Mission_ext</b>.', dwell: 5 }
-    ], { onStage(k) { fresh.classList.toggle('on', k < 4); } });
+      { label: 'Rework the states', text: 'By hand: <b>off-TO RENAME</b> becomes <b>Deployed</b>; add the two initial states. Nothing else moves: the transitions fired by Parameter Mission stay as they are.', dwell: 5 },
+      { label: 'Add what others need', text: 'The self-sends of <b>Parameter Mission</b> stay: they fire this subsystem\'s own transitions. New <b>effects</b> tell the others, on ports, each with a signal of its own: <b>Ready for mission_ext</b>, <b>FlightPlan Check Failed_ext</b>, <b>Start Sheep Guard Mission_ext</b>.', dwell: 5 }
+    ], {
+      onStage(k) { fresh.classList.toggle('on', k < 4); },
+      onTick(at, t) {
+        const still = reduced();
+        /* 1: the new component pops in */
+        grow(fresh, at === 1 && !still ? 0.3 + 0.7 * back(span(t, 0.2, 0.75)) : 1);
+        /* 2: the selection runs round the composite */
+        pick.style.strokeDashoffset = at === 2 && !still ? (-t * 22).toFixed(1) : '';
+        /* 3: the command, clicked */
+        playMenu(menu, { fly, hit: [290, 144] }, click, t, at === 3);
+        /* 4: the copies fly from the mission to the component, one after the other, then their transitions */
+        const fly4 = at === 4 && !still;
+        cFrame.style.opacity = fly4 ? span(t, 0, 0.35).toFixed(2) : '';
+        copies.forEach(([g, dx, dy], i) => {
+          if (!fly4) { reset(g); return; }
+          const k = ease(span(t, 0.25 + i * 0.3, 0.95 + i * 0.3));
+          g.style.opacity = span(t, 0.25 + i * 0.3, 0.4 + i * 0.3).toFixed(2);
+          g.style.transform = `translate(${(dx * (1 - k)).toFixed(1)}px,${(dy * (1 - k)).toFixed(1)}px)`;
+        });
+        cLinks.style.opacity = fly4 ? span(t, 1.9, 2.3).toFixed(2) : '';
+        old.style.opacity = fly4 ? span(t, 2.3, 2.7).toFixed(2) : '';
+      }
+    });
   };
 
   /* A plain table: { head: [...], rows: [[...]] }, inline marks allowed in the cells. */
@@ -1225,8 +1256,6 @@
     root.className = 'w lg-mcp';
     const s = svg('0 0 380 270', 'A part typed Mission Configuration has one port per signal: start_soi, flight_plan, flightplan_correct, flightplan_incorrect, start_sheep_guard in, and ready_mission_ext, flightplan_check_failed_ext, start_sheep_guard_mission_ext out. Once merged, Cameo shows the part with its state machine inside, and fewer ports: start_soi, flight_plan, ready_mission_ext. Then each port of an exchange is renamed: p_Init with Manual Initialization, p_BaseStation for what comes from the base station link, p_Verdict for what goes to it, p_StartOrder for who starts the mission. Connectors join them to their partners.');
     root.appendChild(s);
-    /* stage 2: what Cameo shows once merged */
-    el('image', { href: 'assets/img/mc-ibd-merged.png', x: 0, y: 30, width: 380, height: 210, class: 'lg-fade', 'data-only': 2 }, s);
     const base = el('g', { class: 'lg-fade' }, s);
     /* partners */
     const partner = (x, y, w, name, type, cls) => {
@@ -1243,14 +1272,33 @@
     el('rect', { x: 140, y: 30, width: 160, height: 190, rx: 6, class: 's-box lg-box lg-mcp-mc' }, base);
     txt(base, 220, 47, ': Mission Configuration', 's-name', 'middle');
     /* stage 1: one port per signal */
-    const one = el('g', { class: 'lg-fade', 'data-only': 1 }, s);
+    const one = el('g', { class: 'lg-fade' }, s);
     const sig = [['start_soi', 'in', 'L', 62], ['flight_plan', 'in', 'L', 84], ['flightplan_correct', 'in', 'L', 106], ['flightplan_incorrect', 'in', 'L', 128], ['start_sheep_guard', 'in', 'L', 150], ['ready_mission_ext', 'out', 'L', 172], ['flightplan_check_failed_ext', 'out', 'L', 194], ['start_sheep_guard_mission_ext', 'out', 'R', 110]];
-    sig.forEach(([n, dir, side, y]) => {
+    /* each signal port slides to the y of the merged port of its exchange (stage 2) */
+    const target = [72, 106, 106, 106, 106, 172, 172, 72];
+    const groupOf = [0, 1, 1, 1, 1, 2, 2, 3];
+    const sel = [[130, 54, 20, 16], [130, 78, 20, 78], [130, 166, 20, 34], [290, 102, 20, 16]];
+    const picks = sel.map(([x, y, width, height]) => el('rect', { x, y, width, height, rx: 4, class: 'lg-select', style: 'opacity:0' }, one));
+    const moving = sig.map(([n, dir, side, y], i) => {
       const x = side === 'L' ? 140 : 300;
-      el('rect', { x: x - 5, y: y - 5, width: 10, height: 10, class: 'lg-port-sq' }, one);
-      txt(one, side === 'L' ? x - 9 : x - 9, y + 3, `${n} ${dir === 'in' ? '◂' : '▸'}`, 'lg-mcp-t', 'end');
+      const g = el('g', {}, one);
+      el('rect', { x: x - 5, y: y - 5, width: 10, height: 10, class: 'lg-port-sq' }, g);
+      const lab = txt(g, x - 9, y + 3, `${n} ${dir === 'in' ? '◂' : '▸'}`, 'lg-mcp-t', 'end');
+      return { g, lab, dy: target[i] - y, last: groupOf.indexOf(groupOf[i]) !== i };
     });
-    txt(one, 220, 262, '8 ports: one per signal', 'lg-do', 'middle');
+    const cap = txt(one, 220, 262, '8 ports: one per signal', 'lg-do', 'middle');
+    const capMerged = txt(one, 220, 262, '4 ports: one per exchange', 'lg-do', 'middle');
+    capMerged.style.opacity = 0;
+    one.classList.add('on');
+    const drawMerge = (p, selOp) => {
+      moving.forEach((m) => {
+        m.g.style.transform = `translateY(${(m.dy * p).toFixed(1)}px)`;
+        m.lab.style.opacity = (1 - span(p, 0, 0.55)).toFixed(2);
+      });
+      picks.forEach((r) => { r.style.opacity = selOp.toFixed(2); });
+      cap.style.opacity = (1 - span(p, 0.6, 1)).toFixed(2);
+      capMerged.style.opacity = span(p, 0.6, 1).toFixed(2);
+    };
     /* stage 3+: merged */
     const grp = el('g', { class: 'lg-fade', 'data-from': 3 }, s);
     const gp = (x, y, name, lines, side) => {
@@ -1272,16 +1320,53 @@
     el('path', { d: 'M306,72 H338 V226', class: 's-line lg-ghosted' }, con);
     return stager(root, s, [
       { label: 'One port per signal', text: 'Where you stand: <b>Create All Missing Signal Ports</b> made one port per signal coming in, <b>Delegate to external systems</b> one per signal going out. A self-send has no port: it stays inside.' },
-      { label: 'Merge what belongs together', text: 'One port = one <b>exchange with one partner, one way</b>. Select the ports, <b>Merge Ports</b>: one port remains, with one of their names, and it carries all their signals. In Cameo, with <b>Show STM Overview in Parts</b>, it looks like this.', dwell: 5.2 },
+      { label: 'Merge what belongs together', text: 'One port = one <b>exchange with one partner, one way</b>. Select the ports, <b>Merge Ports</b>: one port remains, with one of their names, and it carries all their signals.', dwell: 5.2 },
       { label: 'Rename', text: 'Give each port the name of its exchange: what comes from the base station is <b>p_BaseStation</b>, what goes back to it is <b>p_Verdict</b>. Power-on is <b>p_Init</b>; the start order is <b>p_StartOrder</b>.', dwell: 5 },
       { label: 'Connect', text: 'Connect each port to its partner. <b>p_StartOrder</b> waits: who starts the mission depends on the architecture you will choose.', dwell: 5 }
-    ], { onStage(k) { base.classList.toggle('on', k !== 2); } });
+    ], {
+      onStage(k) {
+        base.classList.add('on');
+        one.classList.toggle('on', k <= 2);
+        if (k === 1) drawMerge(0, 0);
+      },
+      onTick(at, t) {
+        if (at !== 2) return;
+        const selOp = span(t, 0.2, 0.5) * (1 - span(t, 1.9, 2.3));
+        drawMerge(ease(span(t, 0.8, 2.4)), selOp);
+      }
+    });
   };
 
   /* A mouse pointer, for the animations that show a gesture. */
   const pointer = (g, x, y) => el('path', { d: `M${x},${y} l0,14 l3.6,-3.2 l2.6,6.2 l2.6,-1.2 l-2.6,-6 l4.8,-0.4 Z`, class: 'lg-pointer' }, g);
 
-  /* A context menu: first level with MBSE Shepherd lit, then its flyout with one command lit. */
+  /* The gesture animations of the guided examples: t is the time in the stage, in seconds. */
+  const span = (t, a, b) => Math.max(0, Math.min(1, (t - a) / (b - a)));
+  const back = (x) => { const c = 1.7; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
+  /* scale an SVG group about its own centre; k = 1 is its drawn size */
+  function grow(g, k) {
+    g.style.transformBox = 'fill-box';
+    g.style.transformOrigin = 'center';
+    g.style.transform = k >= 1 ? '' : `scale(${Math.max(0.001, k).toFixed(3)})`;
+  }
+  /* A pointer that comes in from below right and clicks at (x, y): it travels from a to b, the ring grows after b. */
+  function clicker(g) {
+    const p = el('g', {}, g);
+    pointer(p, 0, 0);
+    const ring = el('circle', { r: 0, class: 'lg-click' }, g);
+    return function (t, x, y, a, b, show) {
+      p.style.display = show ? '' : 'none';
+      const k = ease(span(t, a, b));
+      p.setAttribute('transform', `translate(${(x + 34 * (1 - k)).toFixed(1)},${(y + 26 * (1 - k)).toFixed(1)})`);
+      const r = span(t, b, b + 0.5);
+      const on = show && r > 0 && r < 1;
+      ring.style.display = on ? '' : 'none';
+      if (on) { ring.setAttribute('cx', x); ring.setAttribute('cy', y); ring.setAttribute('r', (2 + 13 * r).toFixed(1)); ring.style.opacity = (1 - r).toFixed(2); }
+    };
+  }
+
+  /* A context menu: first level with MBSE Shepherd lit, then its flyout with one command lit. Returns the flyout
+     and the point of the lit command, for a pointer to click it. */
   function pluginMenu(g, x, y, items, lit) {
     const w1 = 92;
     el('rect', { x, y, width: w1, height: 56, rx: 5, class: 'lg-menu-box' }, g);
@@ -1292,11 +1377,27 @@
     const w2 = 158;
     const x2 = x + w1 - 2;
     const y2 = y + 30;
-    el('rect', { x: x2, y: y2, width: w2, height: 8 + items.length * 17, rx: 5, class: 'lg-menu-box' }, g);
+    const fly = el('g', {}, g);
+    el('rect', { x: x2, y: y2, width: w2, height: 8 + items.length * 17, rx: 5, class: 'lg-menu-box' }, fly);
+    let hit = null;
     items.forEach((t, i) => {
-      if (t === lit) el('rect', { x: x2 + 3, y: y2 + 4 + i * 17, width: w2 - 6, height: 17, rx: 3, class: 'lg-menu-hl' }, g);
-      txt(g, x2 + 8, y2 + 16 + i * 17, t, t === lit ? 'lg-act-t' : 'lg-do');
+      if (t === lit) {
+        el('rect', { x: x2 + 3, y: y2 + 4 + i * 17, width: w2 - 6, height: 17, rx: 3, class: 'lg-menu-hl' }, fly);
+        hit = [x2 + w2 - 40, y2 + 12 + i * 17];
+      }
+      txt(fly, x2 + 8, y2 + 16 + i * 17, t, t === lit ? 'lg-act-t' : 'lg-do');
     });
+    return { fly, hit };
+  }
+  /* the menu opens, the flyout follows, the pointer comes and clicks the command */
+  function playMenu(menu, m, click, t, on) {
+    if (!on) { menu.style.transform = ''; m.fly.style.opacity = ''; click(0, 0, 0, 0, 1, false); return; }
+    const k = reduced() ? 1 : ease(span(t, 0, 0.3));
+    menu.style.transformBox = 'fill-box';
+    menu.style.transformOrigin = '0 0';
+    menu.style.transform = k >= 1 ? '' : `scale(${(0.85 + 0.15 * k).toFixed(3)})`;
+    m.fly.style.opacity = reduced() ? '' : span(t, 0.45, 0.7).toFixed(2);
+    click(t, m.hit[0], m.hit[1], 0.5, 1.1, !reduced());
   }
 
   /* Guided example: the two gestures left on the states, small, under the steps. */
@@ -1363,12 +1464,14 @@
     /* the gesture */
     const pick = el('g', { class: 'lg-fade', 'data-only': 2 }, s);
     el('rect', { x: 146, y: 18, width: 270, height: 138, rx: 8, class: 'lg-select' }, pick);
-    pointer(pick, 300, 112);
+    const rclick = clicker(pick);
     /* the ports */
     const ports = el('g', { class: 'lg-fade', 'data-from': 4 }, s);
-    ROWS.forEach(([n, , , y]) => {
-      el('rect', { x: 145, y: y - 5, width: 10, height: 10, class: 'lg-port-sq' }, ports);
-      txt(ports, 139, y + 3, `${n} ◂`, 'lg-mcp-t', 'end');
+    const portRows = ROWS.map(([n, , , y]) => {
+      const g = el('g', {}, ports);
+      el('rect', { x: 145, y: y - 5, width: 10, height: 10, class: 'lg-port-sq' }, g);
+      txt(g, 139, y + 3, `${n} ◂`, 'lg-mcp-t', 'end');
+      return g;
     });
     /* everything linked, on one port */
     const chain = el('g', { class: 'lg-fade', 'data-only': 5 }, s);
@@ -1391,7 +1494,8 @@
     txt(miss, 18, 214, 'Sent and consumed inside the subsystem. They are for the next scene.', 'lg-do');
     /* the menu, over everything */
     const menu = el('g', { class: 'lg-fade', 'data-only': 3 }, s);
-    pluginMenu(menu, 120, 72, ['Logical Transition', 'Create All Missing Signal Ports', 'Create Signal Proxy Ports', 'Delegate to external systems'], 'Create All Missing Signal Ports');
+    const m = pluginMenu(menu, 120, 72, ['Logical Transition', 'Create All Missing Signal Ports', 'Create Signal Proxy Ports', 'Delegate to external systems'], 'Create All Missing Signal Ports');
+    const click = clicker(menu);
     return stager(root, s, [
       { label: 'Drag it in', text: 'From the Model Browser, drag the block <b>Mission Configuration</b> and drop it on the IBD. The drop makes the part: do not create one by hand.' },
       { label: 'Right-click the part', text: 'On the IBD, right-click the part <b>Mission Configuration</b>.' },
@@ -1403,6 +1507,15 @@
       onTick(at, t) {
         const k = reduced() ? 1 : ease(Math.min(1, t / 2.4));
         chip.setAttribute('transform', `translate(${6 + 210 * k},${52 + 28 * k})`);
+        rclick(t, 300, 112, 0.1, 0.7, at === 2 && !reduced());
+        playMenu(menu, m, click, t, at === 3);
+        /* 4: the ports come out one after the other */
+        portRows.forEach((g, i) => {
+          const on = at === 4 && !reduced();
+          const p = span(t, 0.2 + i * 0.28, 0.5 + i * 0.28);
+          g.style.opacity = on ? p.toFixed(2) : '';
+          g.style.transform = on ? `translateX(${(-14 * (1 - ease(p))).toFixed(1)}px)` : '';
+        });
         rows.forEach((r, i) => r.classList.toggle('lg-mp-on', at === 5 && i === 2));
         const on = at === 5 && !reduced();
         tok.style.display = on ? '' : 'none';
@@ -1415,13 +1528,13 @@
      systems gives it a twin for the outside: a signal, a send in the effect, a port with its interface. */
   W.mcDelegate = function (root) {
     root.className = 'w lg-mc';
-    const s = svg('0 0 440 250', 'Left, in the state machine: Configured runs Load Flight Plan, which sends Ready for mission to itself; that signal fires the transition to Ready for Mission, so it is internal and has no port. The transition is right-clicked, then MBSE Shepherd, Delegate to external systems. The effect now sends Ready for mission_ext. Right, the part Mission Configuration then has an output port ready_mission_ext, towards the base station and the operator.');
+    const s = svg('0 0 440 250', 'Left, in the state machine: Configured runs Parameter Mission, which sends Ready for mission to itself; that signal fires the transition to Ready for Mission, so it is internal and has no port. The transition is right-clicked, then MBSE Shepherd, Delegate to external systems. The effect now sends Ready for mission_ext. Right, the part Mission Configuration then has an output port ready_mission_ext, towards the base station and the operator.');
     root.appendChild(s);
     txt(s, 108, 13, 'STATE MACHINE', 'lg-tag', 'middle');
     txt(s, 352, 13, 'THE COMPONENT', 'lg-tag', 'middle');
     /* the state machine */
     el('rect', { x: 6, y: 20, width: 204, height: 172, rx: 8, class: 's-frame' }, s);
-    mstate(s, 24, 30, 150, 'Configured', 'Load Flight Plan');
+    mstate(s, 24, 30, 150, 'Configured', 'Parameter Mission');
     mstate(s, 24, 146, 150, 'Ready for Mission', 'Start subsystems');
     arrow(s, [[70, 66], [70, 146]]);
     txt(s, 76, 92, 'Ready for mission', 'lg-trig');
@@ -1449,21 +1562,22 @@
     /* what the command makes */
     const made = el('g', { class: 'lg-fade', 'data-only': 4 }, s);
     el('rect', { x: 6, y: 198, width: 272, height: 48, rx: 6, class: 'lg-ab-note' }, made);
-    txt(made, 16, 212, '✓ signal Ready for mission_ext', 'lg-act-t');
-    txt(made, 16, 226, '✓ send in the effect, On Port set', 'lg-act-t');
-    txt(made, 16, 240, '✓ port, interface, flow property', 'lg-act-t');
+    const madeLines = ['✓ signal Ready for mission_ext', '✓ send in the effect, On Port set', '✓ port, interface, flow property']
+      .map((l, i) => txt(made, 16, 212 + i * 14, l, 'lg-act-t'));
     const port = el('g', { class: 'lg-fade', 'data-from': 5 }, s);
     el('rect', { x: 347, y: 133, width: 10, height: 10, class: 'lg-port-sq lg-new' }, port);
     txt(port, 352, 126, 'ready_mission_ext ▸', 'lg-mcp-t', 'middle');
     const out = el('path', { d: 'M352,143 V206', class: 's-line lg-mcp-c lg-fade', 'data-from': 5 }, s);
     const tok = el('circle', { r: 5, class: 'lg-token' }, s);
     /* the gesture and the menu, over everything */
+    const rgest = el('g', { class: 'lg-fade', 'data-only': 3 }, s);
+    const rclick = clicker(rgest);
     const menu = el('g', { class: 'lg-fade', 'data-only': 3 }, s);
-    pointer(menu, 112, 90);
-    pluginMenu(menu, 96, 96, ['Logical Transition', 'Delegate to external systems'], 'Delegate to external systems');
+    const m = pluginMenu(menu, 96, 96, ['Logical Transition', 'Delegate to external systems'], 'Delegate to external systems');
+    const click = clicker(menu);
     return stager(root, s, [
       { label: 'Expected', text: 'The operator expects <b>Ready for mission</b>, through the base station. But Mission Configuration has no port for it: only the three that come in.' },
-      { label: 'Why', text: 'Load Flight Plan sends it, and the state machine of the same subsystem consumes it. It starts and ends inside: an <b>internal signal</b>. So no port, and rightly so.' },
+      { label: 'Why', text: 'Parameter Mission sends it, and the state machine of the same subsystem consumes it. It starts and ends inside: an <b>internal signal</b>. So no port, and rightly so.' },
       { label: 'Delegate', text: 'No panic, another magic button. Right-click the transition, <b>MBSE Shepherd ▸ Delegate to external systems</b>.' },
       { label: 'What it makes', text: 'A <b>new signal</b>, dedicated to the outside, <b>Ready for mission_ext</b>. The transition sends it in its effect. The port, the interface and the flow property come with it.', dwell: 5 },
       { label: 'Back on the component', text: 'This time there is an <b>output port</b>, with the signal <b>_ext</b>. The original signal still fires the transition inside; the new one goes to the base station.', dwell: 5 }
@@ -1473,6 +1587,14 @@
         const going = at === 5 && !reduced();
         tok.style.display = inside || going ? '' : 'none';
         if (inside || going) { const p = along(inside ? loop : out, ease(Math.min(1, (t % 2.4) / 1.8))); tok.setAttribute('cx', p[0]); tok.setAttribute('cy', p[1]); }
+        /* 3: right-click on the transition, then the command */
+        const g3 = at === 3 && !reduced();
+        rclick(t, 112, 90, 0.05, 0.55, g3 && t < 0.7);
+        menu.style.opacity = g3 ? span(t, 0.6, 0.75).toFixed(2) : '';
+        playMenu(menu, m, click, t - 0.7, g3);
+        /* 4: what the command made, line by line; 5: the port pops out */
+        madeLines.forEach((n, i) => { n.style.opacity = at === 4 && !reduced() ? span(t, 0.3 + i * 0.45, 0.6 + i * 0.45).toFixed(2) : ''; });
+        grow(port, at === 5 && !reduced() ? 0.2 + 0.8 * back(span(t, 0.1, 0.6)) : 1);
       }
     });
   };
@@ -2044,8 +2166,10 @@
     el('rect', { x: 90, y: 20, width: 220, height: 180, rx: 10, class: 'lg-field' }, s);
     const zone = el('rect', { x: 150, y: 70, width: 100, height: 80, rx: 40, class: 'lg-flock' }, s);
     [[175, 95], [200, 110], [225, 98], [190, 125], [214, 130]].forEach((p) => el('image', { href: ASSET + 'sheep.svg', x: p[0] - 9, y: p[1] - 9, width: 18, height: 18 }, s));
-    const stray = el('image', { href: ASSET + 'sheep.svg', x: 140, y: 150, width: 18, height: 18 }, s);
-    const bear = el('image', { href: ASSET + 'bear.svg', x: 380, y: 40, width: 30, height: 30 }, s);
+    const stray = el('image', { href: ASSET + 'sheep.svg', x: 140, y: 150, width: 18, height: 18, class: 'lg-stray' }, s);
+    /* the bear is dark: off the field it needs a halo to be seen on a dark theme */
+    const halo = el('circle', { cx: 395, cy: 55, r: 21, class: 'lg-bear-halo' }, s);
+    const bear = el('image', { href: ASSET + 'bear.svg', x: 380, y: 40, width: 30, height: 30, class: 'lg-bear' }, s);
     const dr = [0, 1, 2].map(() => drone(s, 1));
     const live = root.querySelector('.w-live');
     const L = life();
@@ -2075,7 +2199,9 @@
       const bearOn = ev === 'bear' || ev === 'both';
       const k = Math.min(1, t / 2.5);
       stray.setAttribute('x', (140 - (strayOn ? k * 120 : 0)).toFixed(1));
-      bear.setAttribute('x', (bearOn ? 380 - k * 40 : 420).toFixed(1));
+      const bx = bearOn ? 380 - k * 40 : 420;
+      bear.setAttribute('x', bx.toFixed(1));
+      halo.setAttribute('cx', (bx + 15).toFixed(1));
       const jobs = [];
       if (strayOn) jobs.push([28 + 10, 152]);
       if (bearOn) jobs.push([350, 48]);

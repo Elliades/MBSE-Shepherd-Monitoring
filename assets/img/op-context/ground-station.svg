@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240">
+  <!-- Ground Station : satellite dish on a pedestal -->
+  <rect x="8" y="8" width="224" height="224" rx="48" fill="#2a7f8e"/>
+  <g fill="#fff" stroke="#fff" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M58 82A68 68 0 0 0 152 176Z" stroke-width="6"/>
+    <path d="M106 128L152 82" stroke-width="8" fill="none"/>
+    <circle cx="156" cy="78" r="9" stroke="none"/>
+    <path d="M104 150V178" stroke-width="10" fill="none"/>
+    <path d="M70 196L88 176H138L156 196Z" stroke-width="4"/>
+  </g>
+  <g fill="none" stroke="#bfe6ec" stroke-width="7" stroke-linecap="round">
+    <path d="M170 58a26 26 0 0 1 12 24"/>
+    <path d="M184 44a44 44 0 0 1 20 40"/>
+  </g>
+</svg>

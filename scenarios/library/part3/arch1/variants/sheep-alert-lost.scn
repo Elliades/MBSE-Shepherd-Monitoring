@@ -1,0 +1,20 @@
+# Written by hand: a dysfunctional variant of arch1.sheep-out. The plugin cannot break a connector yet:
+# to run it, delete the connector sg.bsrc in a copy of the model, then play this scenario on that copy.
+scenario: The sheep alert is lost on the way
+id: arch1.sheep-alert-lost
+kind: dysfunctional
+version: 0.1
+status: draft
+goal: Without the link from Sheep Guard to the base station, a stray sheep is still counted, but the operator is never told.
+description: Shows what a broken connector does, and what the nominal scenario would have caught: the missing message, not the states.
+author: MBSE Shepherd, to review
+date: 2026-11-04
+tags: part3, architecture 1, fault
+from: arch1.sheep-out
+
+instead of sheep-out:
+  step sheep-out-lost: pasture sends Sheep Out Of Zone
+    note: A sheep leaves the zone; the connector from Sheep Guard to the base station is broken.
+    fault: connector sg.bsrc broken
+    then soi.sg is Sheep Counting
+    then no message Sheep Exit Alert

@@ -213,7 +213,7 @@
   // ── Start, stop ─────────────────────────────────────────────────────────
 
   function start() {
-    const code = $('local-code').value.replace(/[\s-]/g, '').toUpperCase();
+    const code = $('local-code').value.replace(/[^a-z]/gi, '').toUpperCase();
     if (!/^[A-Z]{6}$/.test(code)) { show('local', 'fail', 'A code is 6 letters, as shown by Cameo.'); return; }
     localCode = code;
     running = true;
@@ -249,5 +249,10 @@
   $('setup').addEventListener('submit', (e) => { e.preventDefault(); start(); });
   $('stop').addEventListener('click', stop);
   $('gear').addEventListener('click', () => { const open = $('conf').hidden; $('conf').hidden = !open; $('gear').setAttribute('aria-expanded', String(open)); });
+  /* Letters only, 6 at most: a code pasted from Cameo comes as "A B C D E F". */
+  $('local-code').addEventListener('input', (e) => {
+    const v = e.target.value.replace(/[^a-z]/gi, '').toUpperCase().slice(0, 6);
+    if (e.target.value !== v) e.target.value = v;
+  });
   window.addEventListener('beforeunload', () => { if (running) stop(); });
 })();

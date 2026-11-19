@@ -1,0 +1,563 @@
+<!doctype html>
+<!-- Article 2 of the series: the logical layer (docs/articles/02-note-article-2-couche-logique.md). Page of the site,
+     styled by ../article.css, ../tp/tp.css (the phone, the gallery, the series) and logique.css. Its figures are the
+     site's own pieces: the guide of Part 3 in a phone, the specs of the three correction architectures
+     (part3/content/archs.js) and the simulator js/logical-engine.js. The bill and the method are in logique.js; the
+     incremental replay, the table of contents and the theme are those of ../article.js. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title data-title-en="Taming the Logical Layer · MBSE Shepherd" data-title-fr="Dompter la couche logique · MBSE Shepherd">Taming the Logical Layer · MBSE Shepherd</title>
+<meta name="description" content="A simulatable logical architecture requires hundreds of SysML elements wired by hand. Building several candidates for a real trade-off is something almost no one attempts. A clear method, three right-clicks in the tool, and mission scenarios replayed at zero cost.">
+<meta property="og:title" content="Taming the Logical Layer in MBSE: Method, Automation, Simulation">
+<meta property="og:description" content="MBSE Shepherd (2/3): constructing and comparing simulatable logical architectures without drowning in SysML plumbing.">
+<meta property="og:image" content="../../assets/img/promo-parts34-poster.jpg">
+<meta name="theme-color" content="#e8eee1" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0e1814" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2315221a'/%3E%3Crect x='11' y='11' width='10' height='10' rx='2' fill='%23fbfdf8'/%3E%3Cg fill='none' stroke='%23fbfdf8' stroke-width='2.4'%3E%3Ccircle cx='9' cy='9' r='4'/%3E%3Ccircle cx='23' cy='9' r='4'/%3E%3Ccircle cx='9' cy='23' r='4'/%3E%3Ccircle cx='23' cy='23' r='4'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:ital,wght@0,400;0,600;0,700;1,400&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:wght@400;700&display=swap">
+<link rel="stylesheet" href="../article.css">
+<link rel="stylesheet" href="../tp/tp.css">
+<link rel="stylesheet" href="logique.css">
+<script>
+(function () {
+  var KEY = 'mbse-shepherd-article-lang', p = null;
+  try { p = new URLSearchParams(location.search).get('lang'); } catch (e) {}
+  var lang = p === 'fr' || p === 'en' ? p : null;
+  if (!lang) { try { lang = localStorage.getItem(KEY); } catch (e) {} }
+  if (lang !== 'fr') lang = 'en';
+  document.documentElement.lang = lang;
+}());
+</script>
+</head>
+<body>
+
+<div class="passer" aria-hidden="true"><img src="../../home/lamb.svg" alt="" draggable="false"></div>
+
+<header class="masthead">
+  <a class="brand" href="../../">MBSE Shepherd</a>
+  <div class="masthead-tools">
+    <div class="lang-switch" role="group" aria-label="Language / Langue">
+      <button type="button" class="lang-btn" data-lang-choice="en" aria-pressed="true">EN</button>
+      <button type="button" class="lang-btn" data-lang-choice="fr" aria-pressed="false">FR</button>
+    </div>
+    <button class="theme" id="theme-btn" type="button" aria-label="Theme">◐</button>
+  </div>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="Table of contents / Sommaire">
+  <div data-lang="en">
+    <p class="toc-title">Contents</p>
+    <ol>
+      <li><a href="#plomberie">The plumbing</a></li>
+      <li><a href="#triptyque">The watchword</a></li>
+      <li><a href="#demarche">The method</a></li>
+      <li><a href="#automatisation">Three right-clicks</a></li>
+      <li><a href="#simulation">Replaying the mission</a></li>
+      <li><a href="#tradeoffs">Trade-offs</a></li>
+      <li><a href="#bilan">Takeaways & next</a></li>
+      <li><a href="#capot">Under the hood</a></li>
+    </ol>
+  </div>
+  <div data-lang="fr">
+    <p class="toc-title">Sommaire</p>
+    <ol>
+      <li><a href="#plomberie">La plomberie</a></li>
+      <li><a href="#triptyque">Le mot d’ordre</a></li>
+      <li><a href="#demarche">La démarche</a></li>
+      <li><a href="#automatisation">Trois clics droits</a></li>
+      <li><a href="#simulation">Rejouer la mission</a></li>
+      <li><a href="#tradeoffs">Les trade-offs</a></li>
+      <li><a href="#bilan">Bilan et suite</a></li>
+      <li><a href="#capot">Sous le capot</a></li>
+    </ol>
+  </div>
+</nav>
+
+<article class="post">
+  <header class="post-head">
+    <p class="kicker" data-lang="en">MBSE Shepherd · 2/3 · architecture</p>
+    <p class="kicker" data-lang="fr">MBSE Shepherd · 2/3 · architecture</p>
+    <h1 data-lang="en">Taming the Logical Layer: Method, Automation, Simulation</h1>
+    <h1 data-lang="fr">Dompter la couche logique : démarche, automatisation, simulation</h1>
+    <p class="lede" data-lang="en">A simulatable logical architecture requires hundreds of SysML elements wired by hand. Building several candidates for a real trade-off is something almost no one attempts. A clear method, three right-clicks in the tool, and mission scenarios replayed at zero cost.</p>
+    <p class="lede" data-lang="fr">Une architecture logique simulable, c’est des centaines d’éléments SysML à câbler à la main. Alors en concevoir plusieurs pour faire un vrai trade-off, personne ne s’y risque. Une démarche, trois clics droits dans l’outil, et les scénarios de la mission rejoués à coût zéro.</p>
+    <p class="byline" data-lang="en">Quentin Cespédès · November 2026</p>
+    <p class="byline" data-lang="fr">Quentin Cespédès · novembre 2026</p>
+  </header>
+
+  <!-- ───────── accroche ───────── -->
+  <section id="plomberie">
+    <div data-lang="en">
+      <p>In the <a href="../tp/">first article</a>, students modeled the sheepdog drone's mission: an executable state machine, and a drone that flies around the pasture or stays grounded. Then comes the true systems engineering question: <b>which subsystems perform all of this, and what do they exchange?</b> That is the logical layer.</p>
+      <p>The concept fits in a single sentence. The execution, far less so. For a logical architecture to be simulable, each component must have its state machine and functions; each signal must originate from a port wired to the right recipient; each port must be typed by an interface whose flow properties carry the right signals in the right direction; and each duplicated function must preserve its traceability to the mission. Do the math on our lab's drone:</p>
+    </div>
+    <div data-lang="fr">
+      <p>Dans le <a href="../tp/">premier article</a>, les étudiants modélisaient la mission du drone berger : une machine d’états qui s’exécute, et un drone qui vole dans le pâturage, ou qui reste au sol. Vient alors la vraie question de l’ingénieur système : <b>quels sous-systèmes font tout ça, et qu’est-ce qu’ils s’échangent ?</b> C’est la couche logique.</p>
+      <p>Le concept tient en une phrase. La réalisation, beaucoup moins. Pour qu’une architecture logique soit simulable, chaque composant doit avoir sa machine d’états et ses fonctions ; chaque signal doit partir d’un port relié au bon destinataire ; chaque port doit être typé par une interface dont les propriétés de flux portent les bons signaux, dans le bon sens ; et chaque fonction copiée doit garder sa traçabilité vers la mission. Faites le compte, sur le drone du TP :</p>
+    </div>
+
+    <figure class="fig wide" data-fig="bill"></figure>
+    <p class="fig-cap">
+      <span data-lang="en">Figure 1. What the lab's three correction logical architectures contain, measured from their formal specifications. Message counts are obtained by replaying the complete scenario with the site's simulator.</span>
+      <span data-lang="fr">Figure 1. Ce que contiennent les trois architectures logiques de correction du TP, comptées sur leurs spécifications. Les messages sont comptés en rejouant le scénario complet avec le simulateur du site.</span>
+    </p>
+
+    <div data-lang="en">
+      <p>And that is just <b>one</b> candidate architecture. In the logical layer, the job isn't to wire a single box: it's to propose multiple candidates, then decide through a <i>trade-off</i>. When wiring just one candidate already takes hours, no one builds three.</p>
+      <p>Whether training students or industry professionals, I observed the exact same pattern: all cognitive bandwidth evaporated in plumbing, leaving no energy left to design. The verdict is clear: <b>the logical layer takes far too long to build in the tool.</b> This article explains how we tooled it.</p>
+    </div>
+    <div data-lang="fr">
+      <p>Et ce n’est qu’<b>une</b> architecture. En couche logique, le métier n’est pas de câbler une boîte : c’est de proposer plusieurs architectures candidates, puis de trancher par un <i>trade-off</i>. Quand câbler une seule candidate prend déjà des heures, personne n’en fait trois.</p>
+      <p>Que je forme des étudiants ou des professionnels, j’observais la même chose : tout le temps passait dans la plomberie, et il ne restait plus d’énergie pour concevoir. Le constat est simple : <b>la couche logique est trop longue à faire faire dans l’outil.</b> Cet article raconte comment on l’a outillée.</p>
+    </div>
+
+    <figure class="fig wide">
+      <video controls preload="none" playsinline poster="../../assets/img/promo-parts34-poster.jpg" src="../../assets/video/promo-parts34-en.mp4"></video>
+      <figcaption>
+        <span data-lang="en">Figure 2. Parts 3 and 4 of the lab in motion (in English): the 3D pasture scene driven by the tool’s simulation.</span>
+        <span data-lang="fr">Figure 2. Les parties 3 et 4 du TP en film (en anglais) : la scène 3D du pâturage pilotée par la simulation de l’outil.</span>
+      </figcaption>
+    </figure>
+
+    <div class="series" data-lang="en">
+      <b>A three-act series</b>
+      <ol>
+        <li><a href="../tp/"><span>Learn by doing</span></a> hands-on learning, connected live to the tool</li>
+        <li class="now"><span>Design without the plumbing</span> the logical layer: method, automation, simulation (this article)</li>
+        <li><span>Delegate to AI</span> the same method, the same tools, the same judge</li>
+      </ol>
+    </div>
+    <div class="series" data-lang="fr">
+      <b>Une série en trois actes</b>
+      <ol>
+        <li><a href="../tp/"><span>Apprendre par la pratique</span></a> un TP vivant, connecté à l’outil</li>
+        <li class="now"><span>Concevoir sans la plomberie</span> la couche logique : démarche, automatisation, simulation (cet article)</li>
+        <li><span>Déléguer à l’IA</span> la même méthode, les mêmes outils, le même juge</li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ───────── 1 ───────── -->
+  <section id="triptyque" class="orn">
+    <img class="sit flip" src="../../home/lamb.svg" alt="" aria-hidden="true" draggable="false">
+    <h2 data-lang="en"><span class="n">1</span> The watchword: Method, Automation, Simulation</h2>
+    <h2 data-lang="fr"><span class="n">1</span> Le mot d’ordre : démarche, automatisation, simulation</h2>
+    <div data-lang="en">
+      <p>Memorizing fUML syntax and SysML plumbing is not a systems engineer's core mission. Their mission is to decide <b>who does what, who notifies whom, and whether the collective whole fulfills the mission</b>. Everything else should cost as little as possible.</p>
+      <p>The entire logical layer of the lab thus boils down to three words, which also form the roadmap of this article:</p>
+      <div class="cards">
+        <div class="card"><b>Method</b><span>Start from the mission state machine, one subsystem at a time: inside first, outside next, then feature by feature.</span></div>
+        <div class="card"><b>Automation</b><span>Three right-clicks in the tool that absorb SysML and fUML plumbing. The architectural decision stays front and center.</span></div>
+        <div class="card"><b>Simulation</b><span>At each feature, replay the scenarios already written for the mission: validation costs nothing extra.</span></div>
+      </div>
+    </div>
+    <div data-lang="fr">
+      <p>Connaître la syntaxe fUML et la plomberie SysML ne fait pas partie de la mission d’un ingénieur système. Sa mission, c’est de décider <b>qui fait quoi, qui prévient qui, et si l’ensemble tient la mission</b>. Tout le reste devrait coûter le moins possible.</p>
+      <p>Toute la couche logique du TP tient donc en trois mots, qui sont aussi le plan de cet article :</p>
+      <div class="cards">
+        <div class="card"><b>Démarche</b><span>Partir de la machine d’états de la mission, un sous-système à la fois : l’interne d’abord, l’externe ensuite, puis fonctionnalité par fonctionnalité.</span></div>
+        <div class="card"><b>Automatisation</b><span>Trois clics droits dans l’outil qui absorbent la plomberie SysML et fUML. La décision d’architecture reste visible.</span></div>
+        <div class="card"><b>Simulation</b><span>À chaque fonctionnalité, rejouer les scénarios déjà écrits pour la mission : la validation ne coûte rien de plus.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────── 2 ───────── -->
+  <section id="demarche" class="orn">
+    <img class="sit small flip" src="../../home/lamb.svg" alt="" aria-hidden="true" draggable="false">
+    <h2 data-lang="en"><span class="n">2</span> The method: from mission to subsystems</h2>
+    <h2 data-lang="fr"><span class="n">2</span> La démarche : de la mission aux sous-systèmes</h2>
+    <div data-lang="en">
+      <p>We don't start from a blank slate. We start from what already flies: the mission state machine, validated at the functional layer. In this mission, the drone <b>talks to itself</b>: each decision is an internal signal sent by an action that drives the mission forward. Moving to the logical layer means <b>distributing its states and functions across subsystems</b>. Inside a subsystem, talking to oneself remains allowed. As soon as another box needs to know, it must pass through a port.</p>
+      <p>The workflow follows four steps:</p>
+      <ol>
+        <li><b>Identify subsystems and their states.</b> We look for patterns in the mission. A parallel orthogonal region is often a subsystem: the three regions of <i>Patrolling</i> yield perimeter watch, flock monitoring, and predator defense. It works in both directions: create a component and allocate states to it, or let a coherent cluster of states reveal the component. All pre-flight prep, <i>Undeployed</i>, thus becomes <i>Mission Configuration</i>.</li>
+        <li><b>Make the inside work first.</b> Once states are allocated and their functions cloned, we work on the subsystem's state machine (or the orchestrator's) and its internal functions until it advances cleanly.</li>
+        <li><b>Settle the outside next.</b> The inside is running; we then address external interactions: <i>what must I receive, what must I send, and to whom?</i></li>
+        <li><b>Iterate.</b> Second subsystem, third. Then, on this foundation, primary features one by one; at each testable feature, wire and validate.</li>
+      </ol>
+    </div>
+    <div data-lang="fr">
+      <p>On ne part pas d’une feuille blanche. On part de ce qui vole déjà : la machine d’états de la mission, validée en couche fonctionnelle. Dans cette mission, le drone <b>se parle à lui-même</b> : chaque décision est un signal qu’une fonction s’envoie, et qui fait avancer la mission. Passer au logique, c’est <b>répartir ses états et ses fonctions entre des sous-systèmes</b>. À l’intérieur d’un sous-système, se parler à soi-même reste permis. Dès qu’un autre doit savoir, ça passe par un port.</p>
+      <p>La séquence de travail tient en quatre étapes :</p>
+      <ol>
+        <li><b>Identifier les sous-systèmes et leurs états.</b> On cherche des motifs dans la mission. Une région parallèle est souvent un sous-système : les trois régions de <i>Patrolling</i> donnent la patrouille, les moutons, le prédateur. Ça marche dans les deux sens : on crée un composant et on lui alloue des états, ou un groupe d’états cohérents fait émerger le composant. Toute la préparation, <i>Undeployed</i>, devient ainsi <i>Mission Configuration</i>.</li>
+        <li><b>Faire tourner l’interne d’abord.</b> Une fois les états alloués et leurs fonctions dupliquées, on travaille la machine d’états du sous-système, ou celle de l’orchestrateur, et ses fonctions, jusqu’à ce qu’elle avance proprement.</li>
+        <li><b>Régler ensuite l’externe.</b> L’intérieur tourne ; on se pose alors la question du dehors : <i>qu’est-ce que je dois recevoir, qu’est-ce que je dois envoyer, et à qui ?</i></li>
+        <li><b>Itérer.</b> Deuxième sous-système, troisième. Puis, sur cette base, les fonctionnalités principales une par une ; à chaque fonctionnalité testable, on connecte et on valide.</li>
+      </ol>
+    </div>
+
+    <figure class="fig wide dm" data-fig="method"></figure>
+    <p class="fig-cap">
+      <span data-lang="en">Figure 3. The four steps, illustrated on the lab mission and the central orchestrator architecture (simplified). Choose a step, or let it play through.</span>
+      <span data-lang="fr">Figure 3. Les quatre étapes, sur la mission du TP et l’architecture à orchestrateur central (simplifiées). Choisissez une étape, ou laissez défiler.</span>
+    </p>
+
+    <h3 data-lang="en">Two questions per signal</h3>
+    <h3 data-lang="fr">Deux questions par signal</h3>
+    <p data-lang="en">The external step reduces to two questions asked for every signal in the subsystem: <b>who triggers the transition, and who else needs to know?</b> On <i>Mission Configuration</i>:</p>
+    <p data-lang="fr">L’étape externe se réduit à deux questions, posées pour chaque signal du sous-système : <b>qui déclenche la transition, et qui d’autre doit savoir ?</b> Sur <i>Mission Configuration</i> :</p>
+
+    <table data-lang="en">
+      <thead><tr><th>Signal</th><th>Who triggers the transition?</th><th>Who else needs to know?</th><th>Resulting architecture</th></tr></thead>
+      <tbody>
+        <tr><td><code>Start SOI</code></td><td>External: system power-on</td><td>Nobody</td><td>An incoming port (<code>p_Init</code>)</td></tr>
+        <tr><td><code>FlightPlan</code> (transmit flight plan)</td><td>External: operator, via ground station</td><td>Nobody else initially</td><td>An incoming port (<code>p_BaseStation</code>)</td></tr>
+        <tr><td><code>Ready for mission</code> / <code>FlightPlan Correct</code></td><td>Itself: <i>Load Flight Plan</i></td><td><b>The operator</b>: confirm that flight plan is valid</td><td>An internal send, plus an outgoing <code>_ext</code> signal (<code>p_Verdict</code>)</td></tr>
+        <tr><td><code>FlightPlan Check Failed</code> / <code>FlightPlan Incorrect</code></td><td>Itself: <i>Load Flight Plan</i></td><td><b>The operator</b>: notify flight plan rejection</td><td>An internal send, plus an outgoing <code>_ext</code> signal (<code>p_Verdict</code>)</td></tr>
+        <tr><td><code>Start Sheep Guard Mission</code></td><td>External: operator</td><td>The decider component, which launches mission</td><td>An incoming port, plus an outgoing <code>_ext</code> signal</td></tr>
+      </tbody>
+    </table>
+    <table data-lang="fr">
+      <thead><tr><th>Signal</th><th>Qui déclenche la transition ?</th><th>Qui d’autre doit savoir ?</th><th>Ce que ça donne</th></tr></thead>
+      <tbody>
+        <tr><td><code>Start SOI</code></td><td>L’extérieur : la mise sous tension</td><td>Personne</td><td>Un port entrant (<code>p_Init</code>)</td></tr>
+        <tr><td><code>FlightPlan</code> (envoi du plan de vol)</td><td>L’extérieur : l’opérateur, via la base sol</td><td>Personne d’autre au départ</td><td>Un port entrant (<code>p_BaseStation</code>)</td></tr>
+        <tr><td><code>Ready for mission</code> / <code>FlightPlan Correct</code></td><td>Lui-même : <i>Load Flight Plan</i></td><td><b>L’opérateur</b> : confirmer que le plan est valide</td><td>Un envoi à soi-même, plus un signal sortant <code>_ext</code> (<code>p_Verdict</code>)</td></tr>
+        <tr><td><code>FlightPlan Check Failed</code> / <code>FlightPlan Incorrect</code></td><td>Lui-même : <i>Load Flight Plan</i></td><td><b>L’opérateur</b> : signaler le rejet du plan</td><td>Un envoi à soi-même, plus un signal sortant <code>_ext</code> (<code>p_Verdict</code>)</td></tr>
+        <tr><td><code>Start Sheep Guard Mission</code></td><td>L’extérieur : l’opérateur</td><td>Le décideur, qui lance la mission</td><td>Un port entrant, plus un signal sortant <code>_ext</code></td></tr>
+      </tbody>
+    </table>
+
+    <div data-lang="en">
+      <p>Watch out for the classic trap: when the operator transmits a flight plan, they cannot be left without an acknowledgement. The internal verdict — whether the plan is valid (<code>FlightPlan Correct</code> / <code>Ready for mission</code>) or rejected (<code>FlightPlan Incorrect</code> / <code>FlightPlan Check Failed</code>) — <b>must imperatively be communicated back to the operator</b>. That is why these internal signals are duplicated to an outgoing port (<code>p_Verdict</code>), so the ground station knows whether the drone is cleared for takeoff or if the flight plan needs correction.</p>
+      <p>The golden rule remains crystal clear: triggered by itself and nobody else concerned: a simple internal send. Triggered from the outside: an incoming port. Someone else needs to know (like the operator awaiting plan confirmation): an outgoing port with its own dedicated signal. These two questions cannot be automated; this is precisely where systems engineering happens. Everything that follows, however, automates beautifully.</p>
+    </div>
+    <div data-lang="fr">
+      <p>Attention au piège classique : quand l’opérateur transmet un plan de vol, il ne peut évidemment pas rester sans acquittement. Le verdict interne — que le plan de vol soit correct (<code>FlightPlan Correct</code> / <code>Ready for mission</code>) ou incorrect (<code>FlightPlan Incorrect</code> / <code>FlightPlan Check Failed</code>) — <b>doit impérativement être recommuniqué vers l’opérateur</b>. C’est pour cela que ces signaux internes sont dupliqués vers un port sortant (<code>p_Verdict</code>), pour que la station sol sache si le drone est prêt à partir ou si le plan doit être corrigé.</p>
+      <p>La règle générale reste limpide : déclenché par lui-même et personne d’autre concerné : un simple envoi interne. Déclenché du dehors : un port entrant. Quelqu’un d’autre doit savoir (comme l’opérateur attendant la confirmation de son plan) : un port sortant, avec un signal à lui. Ces deux questions ne s’automatisent pas ; c’est exactement là que l’ingénieur système travaille. Tout ce qui vient après, en revanche, s’automatise très bien.</p>
+    </div>
+  </section>
+
+  <!-- ───────── 3 ───────── -->
+  <section id="automatisation">
+    <h2 data-lang="en"><span class="n">3</span> Automation: three right-clicks</h2>
+    <h2 data-lang="fr"><span class="n">3</span> L’automatisation : trois clics droits</h2>
+    <div data-lang="en">
+      <p>Consider <i>Mission Configuration</i> alone, the smallest of subsystems. By hand, you have to redraw its five states and their transitions, copy every function they invoke, link each copy to its original via <code>«refine»</code>, allocate the originals to the block. Then, for every incoming signal, create a port, an interface, and a flow property typed by that signal in the correct direction. Next, for every outgoing signal, create a dedicated signal, an invocation in the transition's effect, configured with the right target port. None of this is difficult. On the other hand, it is tedious and grueling, and a single typo silently breaks simulation.</p>
+      <p>The MBSE Shepherd plugin turns all of this into three right-clicks:</p>
+      <ul>
+        <li><b>Logical Transition.</b> Select states from the mission, pick the component: states are cloned into its state machine, along with their substates, internal transitions, and all invoked functions. Each copy receives a <code>«refine»</code> link to its original, the original is allocated to the block, and the mission model is never altered. Any transition leaving the selection points to a freshly generated <code>off-TO RENAME</code> state: the subsystem boundary, made visible.</li>
+        <li><b>Create All Missing Signal Ports.</b> Right-clicking a part analyzes its behavioral model and creates all missing ports at once: an <b>incoming</b> port for every signal advancing its state machine from the outside, and an <b>outgoing</b> port for every signal fired by its functions that its own state machine does not consume. Every port comes typed by its interface, with properly oriented flow properties. On <i>Mission Configuration</i>: five ports in one click.</li>
+        <li><b>Delegate to external systems.</b> Right-click a transition whose trigger is internal, but which an external entity must know about: the command creates its external twin, <code>Ready for mission_ext</code>, attaches the send action to the transition effect, and provisions the accompanying port.</li>
+      </ul>
+    </div>
+    <div data-lang="fr">
+      <p>Prenons le seul <i>Mission Configuration</i>, le plus petit des sous-systèmes. À la main, il faut redessiner ses cinq états et leurs transitions, copier chaque fonction qu’ils appellent, lier chaque copie à son original par <code>«refine»</code>, allouer les originaux au bloc. Puis, pour chaque signal qui arrive du dehors, créer un port, une interface, une propriété de flux typée par le signal, dans le bon sens. Puis, pour chaque signal qui sort, un signal dédié, son envoi dans l’effet de la transition, avec le bon port renseigné. Rien de tout cela n’est difficile. En revanche, tout est long, et une seule faute de frappe casse la simulation.</p>
+      <p>Le plugin MBSE Shepherd transforme le tout en trois clics droits :</p>
+      <ul>
+        <li><b>Logical Transition.</b> On sélectionne des états de la mission, on choisit le composant : les états sont copiés dans sa machine d’états, avec leurs sous-états, leurs transitions et toutes les fonctions qu’ils appellent. Chaque copie reçoit un <code>«refine»</code> vers son original, l’original est alloué au bloc, et la mission n’est jamais modifiée. Une transition qui sortait de la sélection pointe vers un état <code>off-TO RENAME</code>, à renommer : c’est la frontière du sous-système, rendue visible.</li>
+        <li><b>Create All Missing Signal Ports.</b> Un clic droit sur la part analyse son comportement et crée tous les ports manquants : un port <b>entrant</b> pour chaque signal qui fait avancer sa machine d’états et vient du dehors, un port <b>sortant</b> pour chaque signal envoyé par ses fonctions et que sa machine d’états ne consomme pas. Chaque port vient typé par son interface, avec sa propriété de flux orientée. Sur <i>Mission Configuration</i> : cinq ports d’un coup.</li>
+        <li><b>Delegate to external systems.</b> Un clic droit sur une transition dont le signal est interne, mais que quelqu’un dehors doit connaître : la commande crée son jumeau pour l’extérieur, <code>Ready for mission_ext</code>, l’envoi dans l’effet de la transition, et le port qui va avec.</li>
+      </ul>
+    </div>
+
+    <figure class="fig wide gallery" data-fig="gallery">
+      <div class="gal">
+        <div class="focus-slot" data-focus></div>
+        <ol class="gal-list">
+          <li><button type="button" data-scene="mc-tool" data-widget="mcTransition" aria-pressed="true">
+            <b data-lang="en">Logical Transition</b>
+            <b data-lang="fr">Logical Transition</b>
+            <span data-lang="en">Undeployed cloned into Mission Configuration: states, transitions, functions, «refine». The mission remains untouched.</span>
+            <span data-lang="fr">Undeployed copié dans Mission Configuration : états, transitions, fonctions, «refine». La mission ne bouge pas.</span>
+          </button></li>
+          <li><button type="button" data-scene="mc-magic" data-widget="mcPortsMagic" aria-pressed="false">
+            <b data-lang="en">Create All Missing Signal Ports</b>
+            <b data-lang="fr">Create All Missing Signal Ports</b>
+            <span data-lang="en">The magic button: one port per expected signal, typed, wired to the transition that expects it.</span>
+            <span data-lang="fr">Le bouton magique : un port par signal attendu, typé, relié à la transition qui l’attend.</span>
+          </button></li>
+          <li><button type="button" data-scene="mc-delegate" data-widget="mcDelegate" aria-pressed="false">
+            <b data-lang="en">Delegate to external systems</b>
+            <b data-lang="fr">Delegate to external systems</b>
+            <span data-lang="en">The verdict has no port: it is internal. A right-click gives it an external twin for the operator.</span>
+            <span data-lang="fr">Le verdict n’a pas de port : il est interne. Un clic droit lui donne un jumeau pour l’opérateur.</span>
+          </button></li>
+          <li><button type="button" data-scene="mc-ports" data-widget="mcPorts" aria-pressed="false">
+            <b data-lang="en">Then, consolidate</b>
+            <b data-lang="fr">Puis, regrouper</b>
+            <span data-lang="en">One port per signal is too much. Merge what forms a coherent exchange: <i>p_BaseStation</i>, <i>p_Verdict</i>. That is an engineering decision.</span>
+            <span data-lang="fr">Un port par signal, c’est trop. On fusionne ce qui forme un échange : <i>p_BaseStation</i>, <i>p_Verdict</i>. Ça, c’est une décision.</span>
+          </button></li>
+        </ol>
+      </div>
+      <figcaption>
+        <span data-lang="en">Figure 4. The three right-clicks, as shown to students in Part 3’s guide (in English, just like the actual lab). Pick a command, then play it directly in the figure.</span>
+        <span data-lang="fr">Figure 4. Les trois clics droits, tels que le guide de la partie 3 les montre aux étudiants (en anglais, comme le TP). Choisissez une commande, puis jouez-la directement dans la figure.</span>
+      </figcaption>
+    </figure>
+
+    <div data-lang="en">
+      <p>The division of labor is crisp: <b>syntax is hidden, the engineering decision stays visible.</b> Choosing subsystem states, deciding who needs to know what, grouping signals into an exchange: that is the engineer's role. Transcribing, typing, orienting, and wiring: that is the plugin's job.</p>
+      <p><b>This is not "magic allocation".</b> A right-click does not conjure a finished logical architecture out of thin air: it plants the seed. It allows you to <b>initialize</b> a component without drowning in boilerplate, to <b>connect it cleanly</b> to other systems through coherent ports and signals, and to provide a sound starting point. But beyond this foundation, true modeling resumes: you must subsequently <b>refine functional and logical behaviors for each system</b> — tuning their state machines, detailing internal activities, and handling local edge cases.</p>
+      <p class="aside">A simplified method with custom tooling: these commands were developed specifically for this course. Each generates only standard SysML elements that an engineer would build by hand: blocks, states, activities, ports, interfaces, connectors, <code>«refine»</code>, <code>«allocate»</code>. The model remains fully readable and modifiable without the plugin.</p>
+    </div>
+    <div data-lang="fr">
+      <p>Le partage des rôles est net : <b>la syntaxe est cachée, la décision reste visible.</b> Choisir les états d’un sous-système, décider qui doit savoir quoi, regrouper des signaux en un échange : c’est l’ingénieur. Recopier, typer, orienter, renseigner : c’est le plugin.</p>
+      <p><b>Ce n’est pas de l’« allocation magique ».</b> Un clic droit ne produit pas une architecture logique achevée d’un coup de baguette : il en pose l’amorce. Il permet d’<b>initier</b> le composant sans se noyer dans la plomberie, de le <b>connecter facilement</b> avec les autres systèmes grâce à des ports et des signaux cohérents, et de donner un point de départ propre. Mais derrière cette amorce, le travail de modélisation reprend ses droits : il faut ensuite <b>retravailler le comportement fonctionnel et logique pour chacun des systèmes</b> — adapter leur machine d’états, affiner leurs activités internes et gérer leurs règles propres.</p>
+      <p class="aside">Une méthode simplifiée, avec des outils maison : ces commandes ont été écrites pour ce cours. Chacune ne crée que des éléments SysML standard, ceux qu’on ferait à la main : blocs, états, activités, ports, interfaces, connecteurs, <code>«refine»</code>, <code>«allocate»</code>. Le modèle reste lisible, et modifiable, sans le plugin.</p>
+    </div>
+  </section>
+
+  <!-- ───────── 4 ───────── -->
+  <section id="simulation" class="orn">
+    <img class="sit bear" src="../../assets/sim/bear.svg" alt="" aria-hidden="true" draggable="false">
+    <h2 data-lang="en"><span class="n">4</span> Simulation: replaying the mission at zero cost</h2>
+    <h2 data-lang="fr"><span class="n">4</span> La simulation : rejouer la mission, à coût zéro</h2>
+    <div data-lang="en">
+      <p>Once internal logic and external interfaces for a feature are hooked up, how do you verify correctness? You don't squint at static diagrams: <b>you replay the mission scenarios.</b> They already exist, written and validated at the functional layer. If the scenario executes on the logical architecture and advances the mission to the exact same states as before, the feature is validated.</p>
+      <p>Hence an incremental build. First, establish <b>a core base</b> of technical components without architectural dilemma: power-on, configuration, ground link, autopilot. Then add <b>features</b> one by one: departure, patrol, flock, bear, deterrence. At each increment, replay the relevant phase of the scenario; earlier increments are replayed as preconditions. Try it:</p>
+    </div>
+    <div data-lang="fr">
+      <p>Une fois l’interne et l’externe d’une fonctionnalité branchés, comment savoir qu’on est bon ? On ne relit pas des diagrammes : <b>on rejoue les scénarios de la mission.</b> Ils existent déjà, écrits et validés en couche fonctionnelle. Si le scénario passe sur l’architecture, et fait avancer la mission au même endroit qu’avant, la fonctionnalité est validée.</p>
+      <p>D’où une construction par incréments. On pose d’abord <b>un socle</b>, les composants techniques sans enjeu d’architecture : mise sous tension, configuration, liaison sol, autopilote. Puis on ajoute <b>les fonctionnalités</b> une à une : le départ, la patrouille, les moutons, l’ours, la dissuasion. À chaque incrément, on rejoue la phase du scénario qui le concerne ; les incréments précédents sont rejoués en précondition. Essayez :</p>
+    </div>
+
+    <figure class="fig wide" data-fig="build"></figure>
+    <p class="fig-cap">
+      <span data-lang="en">Figure 5. Incremental construction of the logical architecture, replayed using the site's simulator over the formal specifications of the correction models.</span>
+      <span data-lang="fr">Figure 5. La construction de l’architecture logique, incrément par incrément, rejouée avec le simulateur du site sur les spécifications des modèles de correction.</span>
+    </p>
+
+    <div data-lang="en">
+      <p><b>Replaying uncovers genuine architectural flaws.</b> Switch to the leaderless architecture and replay “Bear, without patch”: predator management is wired, but nobody suspends sheep monitoring or yields autopilot control to perimeter watch. Two steps fail in red. Apply the patch, replay “Bear”: all green. The flaw was not a poorly drawn diagram; it was an architectural bug, and it was the mission scenario that caught it.</p>
+
+      <h3>Why “zero cost”</h3>
+      <p>Because you don't need to write a single new test to start. Nominal, alternative, and dysfunctional scenarios were defined once, on the mission: a bear passes by, a bear approaches then retreats, a sheep wanders off. The logical layer replays them verbatim; only the expected states change ownership across parts.</p>
+      <p class="aside"><b>An acknowledged pedagogical simplification:</b> in this lab, replaying the mission directly closes the loop and validates overall integration without exceeding the allocated lab time. In a rigorous systems engineering process, however, <b>one should normally author dedicated logical test scenarios for each subsystem</b>. Each box has its own operational boundary, incoming/outgoing flows, and degraded modes: defining unit test scenarios per subsystem is essential to validate logical behavior in isolation prior to or alongside assembly.</p>
+
+      <h3>And in the tool</h3>
+      <p>The in-guide simulator is a fast scratchpad. The ultimate judge is the student's model: under each scenario, <b>Validate in the tool</b> initiates simulation in their model, injects the same signals, reads back the active state of each part, and highlights any discrepancy in red.</p>
+    </div>
+    <div data-lang="fr">
+      <p><b>Le rejeu débusque de vraies failles d’architecture.</b> Passez sur l’architecture sans chef et rejouez « Ours, sans patch » : la gestion du prédateur est branchée, mais personne ne suspend la surveillance des moutons ni ne rend l’autopilote à la patrouille. Deux étapes passent au rouge. On ajoute le patch, on rejoue « Ours » : c’est vert. L’erreur n’est pas dans un diagramme mal dessiné ; elle est dans l’architecture, et c’est la mission qui la trouve.</p>
+
+      <h3>Pourquoi « coût zéro »</h3>
+      <p>Parce que rien n’est à écrire pour démarrer. Les scénarios nominaux, alternatifs et dysfonctionnels ont été décrits une fois, sur la mission : un ours passe, un ours approche puis recule, un mouton s’échappe. La couche logique les rejoue tels quels ; seuls les états attendus changent de propriétaire.</p>
+      <p class="aside"><b>Une simplification assumée :</b> dans le TP, rejouer directement la mission permet de boucler la boucle et de valider l’intégration globale sans déborder du temps imparti. Mais dans une démarche d’ingénierie système rigoureuse, <b>il faut normalement décrire des scénarios logiques pour chacun des systèmes</b>. Chaque sous-système a son périmètre, ses flux entrants/sortants et ses modes dégradés : spécifier des scénarios de test propres à chaque boîte est indispensable pour valider son comportement logique en isolation avant ou pendant l’assemblage.</p>
+
+      <h3>Et dans l’outil</h3>
+      <p>Le simulateur du guide est un banc d’essai rapide. Le juge, c’est le modèle de l’étudiant : sous chaque scénario, <b>Validate in the tool</b> démarre la simulation dans son modèle, envoie les mêmes signaux, relit l’état de chaque part, et affiche en rouge ce qui diffère de l’attendu.</p>
+    </div>
+
+    <figure class="fig wide gallery" data-fig="gallery">
+      <div class="gal">
+        <div class="focus-slot" data-focus></div>
+        <ol class="gal-list">
+          <li><button type="button" data-scene="mc-check" data-widget="archSim" aria-pressed="true">
+            <b data-lang="en">A bad plan, a good plan</b>
+            <b data-lang="fr">Un mauvais plan, un bon plan</b>
+            <span data-lang="en">The first increment: a rejected flight plan loops back to <i>Unconfigured</i>, a valid plan leads to <i>Ready for Mission</i>. Play it, then test <i>Validate in the tool</i>.</span>
+            <span data-lang="fr">Le premier incrément : un plan de vol refusé renvoie à <i>Unconfigured</i>, un bon plan mène à <i>Ready for Mission</i>. Jouez-le, puis <i>Validate in the tool</i>.</span>
+          </button></li>
+          <li><button type="button" data-scene="bear-check" data-widget="archSim" aria-pressed="false">
+            <b data-lang="en">A bear: validate</b>
+            <b data-lang="fr">Un ours : valider</b>
+            <span data-lang="en">The predator increment on the selected architecture: track the bear, then resume patrolling.</span>
+            <span data-lang="fr">L’incrément du prédateur, sur l’architecture choisie : suivre l’ours, puis reprendre la patrouille.</span>
+          </button></li>
+          <li><button type="button" data-scene="scenario" data-widget="archSim" aria-pressed="false">
+            <b data-lang="en">Full scenario</b>
+            <b data-lang="fr">Le scénario complet</b>
+            <span data-lang="en">Pre-flight, patrol, flock, bear, return to patrol: replay everything at the end.</span>
+            <span data-lang="fr">Préparation, patrouille, moutons, ours, retour à la patrouille : tout rejouer à la fin.</span>
+          </button></li>
+        </ol>
+      </div>
+      <figcaption>
+        <span data-lang="en">Figure 6. Validation in Part 3’s guide. Here, the guide is not paired with the tool: <i>Validate in the tool</i> prompts to pair the guide and offers to download the scenario. In-page simulation runs immediately.</span>
+        <span data-lang="fr">Figure 6. La validation, dans le guide de la partie 3. Ici, l’outil n’est pas relié : <i>Validate in the tool</i> invite à relier le guide et propose de télécharger le scénario. La simulation dans la page, elle, tourne.</span>
+      </figcaption>
+    </figure>
+  </section>
+
+  <!-- ───────── 5 ───────── -->
+  <section id="tradeoffs">
+    <h2 data-lang="en"><span class="n">5</span> Finally: multiple candidates and a real trade-off</h2>
+    <h2 data-lang="fr"><span class="n">5</span> Enfin : plusieurs candidates, et un vrai trade-off</h2>
+    <div data-lang="en">
+      <p>With this method and tooling, modeling an additional candidate no longer costs entire working days. We start from the same mission, group or decouple responsibilities, reconnect, and replay. But an architectural <i>trade-off</i> isn't about counting ports or boxes on a diagram: the real question centers on <b>orchestration and decision locus</b>. Where does arbitration logic reside, with what degree of inter-subsystem coupling, and at what cost of future evolution?</p>
+      <p>The lab pits three very concrete orchestration philosophies against each other:</p>
+      <ul>
+        <li><b>Decentralized patch (peer-to-peer):</b> Start from an existing patrol drone and splice on predator defense via the shortest path. A direct link between bear and sheep subsystems to suspend flock monitoring, and you're done.
+          <br><i>Advantage:</i> Minimal implementation effort when building on an existing legacy baseline (two transitions, one signal, remainder of model untouched).
+          <br><i>Downside:</i> Heavy point-to-point coupling. The mission governance rule is invisible: buried inside the predator component. In terms of scalability, every new feature (e.g. battery alerts, obstacle avoidance) will demand new cross-cutting patches until you get a bowl of spaghetti.</li>
+        <li><b>Centralized orchestrator (star):</b> A single hub receives all sensor observations, resolves priority arbitration (bear &gt; sheep &gt; patrol), and redistributes commands.
+          <br><i>Advantage:</i> Crystal-clear mission readability (all governance rules consolidated in one place) and very simple peripheral components.
+          <br><i>Downside:</i> Massive coupling toward the orchestrator, throughput bottleneck, single point of failure (SPOF), and explosion in transient message traffic.</li>
+        <li><b>Autonomous-feature orchestrator:</b> The orchestrator only manages high-level modes (who holds flight authority); each functional subsystem carries its internal logic and commands flight directly.
+          <br><i>Advantage:</i> Outstanding scalability (adding a feature reduces to adding an authority mode without touching existing ones) and controlled coupling.
+          <br><i>Downside:</i> Heavier individual components and distributed decision logic.</li>
+      </ul>
+      <p><b>Deciding demands real metrics.</b> We don't guess: we lay down a multi-criteria grid (rule clarity, refactoring cost on legacy, scalability, SPOF immunity, local component simplicity) and cross-reference these axes with empirical simulation metrics (message volume generated across the scenario, states actually reached, fault tolerance). That is where MBSE fulfills its true promise:</p>
+    </div>
+    <div data-lang="fr">
+      <p>Avec la démarche et les outils, modéliser une candidate de plus ne coûte plus des journées entières. On repart de la même mission, on regroupe ou on scinde des responsabilités, on reconnecte et on rejoue. Mais un <i>trade-off</i> d’architecture ne consiste pas à compter des ports ou des boîtes sur un diagramme : la vraie question porte sur <b>l’orchestration et la localisation de la décision</b>. Où vit la logique d’arbitrage, avec quel couplage entre les sous-systèmes, et pour quel coût d’évolution ?</p>
+      <p>Le TP met en concurrence trois philosophies d’orchestration très concrètes :</p>
+      <ul>
+        <li><b>Le patch décentralisé (peer-to-peer) :</b> on part d’un drone qui patrouille déjà, et on greffe la défense prédateur au plus court. Un lien direct entre l’ours et les moutons pour suspendre la surveillance, et le tour est joué.
+          <br><i>Avantage :</i> complexité d’implémentation minimale en repartant d’un système existant (deux transitions, un signal, le reste du modèle est intact).
+          <br><i>Revers :</i> fort couplage point-à-point. La règle de mission n’est visible nulle part : elle est enfouie dans le composant prédateur. Côté scalabilité, chaque nouvelle fonctionnalité (ex. alerte batterie, évitement d’obstacle) exigera de nouveaux patchs croisés, jusqu’au plat de spaghettis.</li>
+        <li><b>L’orchestrateur centralisé (étoile) :</b> un hub unique reçoit toutes les observations, tranche les priorités (ours &gt; moutons &gt; patrouille) et redistribue chaque consigne.
+          <br><i>Avantage :</i> lisibilité parfaite de la mission (toutes les règles sont réunies au même endroit) et composants périphériques très simples.
+          <br><i>Revers :</i> couplage massif vers le chef, goulot d’étranglement, point unique de défaillance (SPOF) et explosion du trafic de messages en transit.</li>
+        <li><b>L’orchestrateur à fonctionnalités autonomes :</b> l’orchestrateur ne gère que les modes de haut niveau (qui a la main) ; chaque fonctionnalité porte sa logique interne et pilote directement le vol.
+          <br><i>Avantage :</i> excellente scalabilité (ajouter une fonctionnalité se résume à ajouter un mode, sans toucher aux autres) et couplage maîtrisé.
+          <br><i>Revers :</i> composants plus chargés et logique décisionnelle distribuée.</li>
+      </ul>
+      <p><b>Trancher exige de vraies métriques.</b> On ne choisit pas au doigt mouillé : on pose une grille de critères (lisibilité des règles, coût de refonte sur l’existant, scalabilité, absence de SPOF, complexité locale) et on confronte ces axes aux métriques issues de la simulation (volume de messages générés sur le scénario, états réellement atteints, robustesse aux pannes). C’est là que le MBSE prend tout son sens :</p>
+    </div>
+
+    <figure class="fig wide gallery" data-fig="gallery">
+      <div class="gal">
+        <div class="focus-slot" data-focus></div>
+        <ol class="gal-list">
+          <li><button type="button" data-scene="trade-off" data-widget="tradeOff" aria-pressed="true">
+            <b data-lang="en">The trade-off</b>
+            <b data-lang="fr">Le trade-off</b>
+            <span data-lang="en">Six spider-chart criteria, the internal block diagram of each candidate, and its pros and cons. The further from center, the better.</span>
+            <span data-lang="fr">Six critères en étoile, le diagramme de blocs interne de chaque candidate, ses pour et ses contre. Plus c’est loin du centre, mieux c’est.</span>
+          </button></li>
+          <li><button type="button" data-scene="three-archs" data-widget="archSim" aria-pressed="false">
+            <b data-lang="en">Three ways to partition the drone</b>
+            <b data-lang="fr">Trois façons de découper le drone</b>
+            <span data-lang="en">The same mission replayed on all three architectures. Notice who reacts to each event, and the thick red message: that is the patch.</span>
+            <span data-lang="fr">La même mission jouée sur les trois architectures. Regardez qui réagit à chaque événement, et le message rouge épais : c’est le patch.</span>
+          </button></li>
+          <li><button type="button" data-scene="differences" data-widget="logicSpot" aria-pressed="false">
+            <b data-lang="en">Where logic lives</b>
+            <b data-lang="fr">Où est la logique</b>
+            <span data-lang="en">Each architecture places decisions elsewhere, directly reshaping interfaces.</span>
+            <span data-lang="fr">Chaque architecture met les décisions ailleurs, et ça change les interfaces.</span>
+          </button></li>
+        </ol>
+      </div>
+      <figcaption>
+        <span data-lang="en">Figure 7. Comparison of the three candidate architectures, from Part 3’s guide.</span>
+        <span data-lang="fr">Figure 7. La comparaison des trois candidates, dans le guide de la partie 3.</span>
+      </figcaption>
+    </figure>
+
+    <div data-lang="en">
+      <p>The crucial point: it is not just about tallying points on a scoring matrix, but about testing and proving how each architecture behaves dynamically. These criteria are not arbitrary grades slapped onto boxes drawn on a whiteboard: message counts come directly from replay; reached states, or missed ones, from simulation. <b>We compare architectures that actually run.</b></p>
+    </div>
+    <div data-lang="fr">
+      <p>Le point qui compte : l’important n’est pas seulement de regarder quelle architecture a le plus de points, mais d’éprouver leur comportement en dynamique. Ces critères ne sont pas notés sur des boîtes dessinées au tableau : le nombre de messages sort du rejeu ; les états atteints, ou pas, aussi. <b>On compare des architectures qui tournent.</b></p>
+    </div>
+  </section>
+
+  <!-- ───────── 6 ───────── -->
+  <section id="bilan">
+    <h2 data-lang="en"><span class="n">6</span> Takeaways, and what's next</h2>
+    <h2 data-lang="fr"><span class="n">6</span> Bilan, et la suite</h2>
+    <div data-lang="en">
+      <p>With <i>method, automation, simulation</i>, the logical layer becomes rapid, incremental, and verifiable, for students and practicing engineers alike. In the lab, each student constructs a complete logical architecture, validates it increment by increment in the tool, and devotes the saved time to what truly matters: selecting an architecture, and knowing how to explain why.</p>
+      <div class="cards">
+        <div class="card"><b>A method</b><span>from mission to subsystems: inside, outside, then one feature at a time.</span></div>
+        <div class="card"><b>Three right-clicks</b><span><i>Logical Transition</i>, <i>Create All Missing Signal Ports</i>, <i>Delegate</i>: plumbing disappears.</span></div>
+        <div class="card"><b>A free judge</b><span>mission scenarios, replayed at each increment, then across each candidate.</span></div>
+      </div>
+      <blockquote class="tease">
+        <p>Now we have a step-by-step method, automation tools, and simulation scenarios to test everything. Yet significant mechanical legwork remains: applying the steps, chaining right-clicks, replaying, fixing, repeating. What if we handed this toil to an AI?</p>
+      </blockquote>
+      <p>That will be the subject of the third article: giving an LLM <b>the courseware and the tools</b>. The exact same methodological rules, the exact same automations invoked from a Kotlin script rather than hundreds of manual clicks, and the exact same impartial judge: mission simulation scenarios. All the way to generating and comparing swarm architectures. The complete lab, models, and simulation are online: <a href="../../">shepherd.chaos-art.fr</a>.</p>
+    </div>
+    <div data-lang="fr">
+      <p>Avec <i>démarche, automatisation, simulation</i>, la couche logique devient rapide, incrémentale et vérifiable, pour un étudiant comme pour un professionnel en formation. Dans le TP, chaque étudiant construit une architecture complète, la valide incrément par incrément dans l’outil, et consacre le temps gagné à ce qui compte vraiment : choisir une architecture, et savoir dire pourquoi.</p>
+      <div class="cards">
+        <div class="card"><b>Une démarche</b><span>de la mission aux sous-systèmes : l’interne, puis l’externe, puis une fonctionnalité à la fois.</span></div>
+        <div class="card"><b>Trois clics droits</b><span><i>Logical Transition</i>, <i>Create All Missing Signal Ports</i>, <i>Delegate</i> : la plomberie disparaît.</span></div>
+        <div class="card"><b>Un juge gratuit</b><span>les scénarios de la mission, rejoués à chaque incrément, puis sur chaque candidate.</span></div>
+      </div>
+      <blockquote class="tease">
+        <p>Maintenant, on a une démarche définie pas à pas, des outils d’automatisation, et des scénarios de simulation pour tout tester. Il reste pourtant beaucoup de travail mécanique : appliquer la démarche, enchaîner les clics droits, rejouer, corriger, recommencer. Et si on confiait ce labeur à une IA ?</p>
+      </blockquote>
+      <p>Ce sera l’objet du troisième article : donner à un LLM <b>le cours et les outils</b>. Les mêmes règles de méthode, les mêmes automatisations appelées depuis un script Kotlin plutôt que par des centaines de clics, et le même juge impartial : les scénarios de la mission. Jusqu’à lui faire générer et comparer des architectures d’essaim. Le TP complet, ses modèles et la simulation sont en ligne : <a href="../../">shepherd.chaos-art.fr</a>.</p>
+    </div>
+  </section>
+
+  <section id="refs">
+    <h2 data-lang="en">References</h2>
+    <h2 data-lang="fr">Références</h2>
+    <ul class="refs" data-lang="en">
+      <li>SEBoK, <a href="https://sebokwiki.org/wiki/Logical_Architecture"><i>Logical Architecture</i></a> (a set of concepts and principles, without implementation bias; multiple candidates compared, one selected).</li>
+      <li>J.-L. Voirin, <i>Model-based System and Architecture Engineering with the Arcadia Method</i>, ISTE Press, 2017 (logical architecture and comparison of candidate architectures).</li>
+      <li>OMG, <i>Semantics of a Foundational Subset for Executable UML Models</i> (fUML) and <i>Precise Semantics of UML State Machines</i> (PSSM), the execution semantics that power the simulator.</li>
+      <li>C. Peltz, <a href="https://doi.org/10.1109/MC.2003.1236471"><i>Web Services Orchestration and Choreography</i></a>, IEEE Computer, vol. 36, no. 10, 2003 (central orchestrator versus peer-to-peer coordinating components).</li>
+      <li>ISO/IEC/IEEE 15288:2023, <i>Systems and software engineering — System life cycle processes</i> (architecture definition and model-based validation).</li>
+      <li>J. M. Stecklein et al., <a href="https://ntrs.nasa.gov/citations/20100036670"><i>Error Cost Escalation Through the Project Life Cycle</i></a>, NASA JSC, 2004 (why catching an architectural error on a model precedes physical prototypes).</li>
+    </ul>
+    <ul class="refs" data-lang="fr">
+      <li>SEBoK, <a href="https://sebokwiki.org/wiki/Logical_Architecture"><i>Logical Architecture</i></a> (un ensemble de concepts et de principes techniques, sans choix d’implémentation ; plusieurs candidates comparées, une retenue).</li>
+      <li>J.-L. Voirin, <i>Model-based System and Architecture Engineering with the Arcadia Method</i>, ISTE Press, 2017 (l’architecture logique et la comparaison d’architectures candidates).</li>
+      <li>OMG, <i>Semantics of a Foundational Subset for Executable UML Models</i> (fUML) et <i>Precise Semantics of UML State Machines</i> (PSSM), les sémantiques exécutées par le simulateur.</li>
+      <li>C. Peltz, <a href="https://doi.org/10.1109/MC.2003.1236471"><i>Web Services Orchestration and Choreography</i></a>, IEEE Computer, vol. 36, n° 10, 2003 (orchestrateur central contre composants qui se coordonnent seuls).</li>
+      <li>ISO/IEC/IEEE 15288:2023, <i>Systems and software engineering — System life cycle processes</i> (définition de l’architecture, et validation sur modèles).</li>
+      <li>J. M. Stecklein et al., <a href="https://ntrs.nasa.gov/citations/20100036670"><i>Error Cost Escalation Through the Project Life Cycle</i></a>, NASA JSC, 2004 (pourquoi trouver une erreur d’architecture sur modèle, avant le physique).</li>
+    </ul>
+    <p data-lang="en">For a more formal version of validation via scenarios, from mission through logical architecture: <a href="../draft-logique/">Replaying the mission to validate logical architecture</a>.</p>
+    <p data-lang="fr">Pour une version plus formelle de la validation par scénarios, de la mission jusqu’au logique : <a href="../draft-logique/">Rejouer la mission pour valider l’architecture logique</a>.</p>
+  </section>
+
+  <!-- ───────── sous le capot ───────── -->
+  <section id="capot">
+    <h2 data-lang="en">Under the hood</h2>
+    <h2 data-lang="fr">Sous le capot</h2>
+    <p class="aside" data-lang="en"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align: -2px; margin-right: 6px; display: inline-block;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>For the curious</p>
+    <p class="aside" data-lang="fr"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align: -2px; margin-right: 6px; display: inline-block;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>Pour les curieux</p>
+
+    <div data-lang="en">
+      <details open><summary>What Logical Transition exactly does</summary>
+        <p>The command starts from states selected in the mission state machine. It clones them into the chosen component’s state machine, preserving substates and internal transitions. Each invoked function (<i>do activity</i>, effect) is cloned into the component's package, and the clone receives a <code>«refine»</code> link to the mission function; the original function is allocated (<code>«allocate»</code>) to the component. Signals are reused rather than copied. Any transition leaving the selection leads to a newly created placeholder state, <code>off-TO RENAME</code>: that is where the engineer defines behavior outside this subsystem.</p>
+      </details>
+      <details><summary>The rule of Create All Missing Signal Ports</summary>
+        <p>For a given part, the command inspects its block’s state machine and signal sends within its functions. Any signal that triggers a transition but is not emitted by any internal function originates externally: an incoming port is created. Any signal fired by a function that is not consumed by the block's state machine goes outside: an outgoing port is created, and the send action targets that port (<i>On Port</i>). Each port is typed by an interface whose flow property carries the signal in the direction seen by the block. Existing ports are never duplicated. <i>Merge Ports</i> then bundles related ports into coherent exchanges, and <i>Auto Connect</i> links ports with compatible interfaces.</p>
+      </details>
+      <details><summary>An in-page simulator, from the same specifications</summary>
+        <p>The lab's three architectures are formally specified: blocks, ports, state machines, functions, connectors, scenario. The correction models are built from these specifications, and the website keeps a copy. The interactive figures in this article, like the guide, replay them using a compact event-driven JavaScript engine (<code>js/logical-engine.js</code>): an injected signal traverses connectors, fires transitions, and launches functions that emit downstream signals. Metrics in Figure 1 and the candidate architecture table are computed directly from these specifications and replay engine.</p>
+      </details>
+      <details><summary>Validate in the tool</summary>
+        <p>The guide communicates with the plugin through the same link described in the first article (embedded WebSocket server and pairing code). <i>Validate in the tool</i> searches the student's model for the simulation context block, initiates simulation, replays earlier increments as preconditions, and dispatches each scenario signal to the right actor (operator or pasture). After each signal, it reads the active state of each part and compares it against expectations; any deviation highlights in red under that step.</p>
+      </details>
+    </div>
+    <div data-lang="fr">
+      <details open><summary>Ce que fait exactement Logical Transition</summary>
+        <p>La commande part des états sélectionnés dans la machine d’états de la mission. Elle les clone dans la machine d’états du composant choisi, avec leurs sous-états et les transitions internes à la sélection. Chaque fonction appelée (<i>do activity</i>, effet) est dupliquée dans le paquetage du composant, et la copie reçoit un <code>«refine»</code> vers la fonction de la mission ; la fonction d’origine est allouée (<code>«allocate»</code>) au composant. Les signaux sont réutilisés, pas copiés. Toute transition qui quittait la sélection aboutit à un état créé pour l’occasion, <code>off-TO RENAME</code> : c’est là que l’ingénieur décide ce qui se passe hors du sous-système.</p>
+      </details>
+      <details><summary>La règle de Create All Missing Signal Ports</summary>
+        <p>Pour une part, la commande lit la machine d’états de son bloc et les envois de signaux de ses fonctions. Un signal qui déclenche une transition et qu’aucune de ses fonctions n’envoie vient du dehors : il lui faut un port entrant. Un signal envoyé par une fonction et qu’aucune transition du bloc n’attend part au dehors : il lui faut un port sortant, et l’envoi reçoit ce port (<i>On Port</i>). Chaque port est typé par une interface dont la propriété de flux porte le signal, dans le sens vu du bloc. Les ports existants ne sont pas recréés. <i>Merge Ports</i> regroupe ensuite plusieurs ports en un échange, et <i>Auto Connect</i> relie les ports dont les interfaces sont compatibles.</p>
+      </details>
+      <details><summary>Un simulateur dans la page, à partir des mêmes spécifications</summary>
+        <p>Les trois architectures du TP sont décrites par des spécifications : blocs, ports, machines d’états, fonctions, connecteurs, scénario. Les modèles de correction sont construits à partir de ces spécifications, et le site en garde une copie, que les figures de cet article, comme le guide, rejouent avec un petit simulateur JavaScript à événements (<code>js/logical-engine.js</code>) : un signal injecté traverse les connecteurs, déclenche des transitions, lance des fonctions qui envoient d’autres signaux. Les chiffres de la figure 1 et du tableau des candidates sont comptés sur ces spécifications et ce rejeu.</p>
+      </details>
+      <details><summary>Validate in the tool</summary>
+        <p>Le guide parle au plugin par la même liaison que dans le premier article (un serveur WebSocket embarqué, et un code d’appairage). <i>Validate in the tool</i> cherche dans le modèle de l’étudiant le bloc de contexte de simulation, démarre la simulation, rejoue d’abord les incréments précédents en précondition, puis envoie chaque signal du scénario au bon pilote (l’opérateur ou le pâturage). Après chaque signal, il relit l’état actif de chaque part et le compare à l’attendu ; un écart s’affiche en rouge sous l’étape.</p>
+      </details>
+    </div>
+  </section>
+  <div class="pasture" aria-hidden="true">
+    <span class="walk"><img src="../../home/lamb.svg" alt="" draggable="false"></span>
+    <img class="flip small" src="../../home/lamb.svg" alt="" draggable="false">
+    <img class="bear" src="../../assets/sim/bear.svg" alt="" draggable="false">
+    <img src="../../home/lamb.svg" alt="" draggable="false">
+  </div>
+</article>
+</div>
+
+<script src="../../part3/content/config.js"></script>
+<script src="../../part3/content/archs.js"></script>
+<script src="../../js/logical-engine.js"></script>
+<script src="../article.js"></script>
+<script src="logique.js"></script>
+<script src="../flock.js"></script>
+</body>
+</html>

@@ -22,7 +22,7 @@
   const STR = {
     en: {
       hook1: 'The lab handout:<br><em>pages and pages<br>of .docx</em>',
-      hookWords: ['Long to read.', 'Heavy to follow.', { q: '“Right-click… Create Element… find the package…”' }],
+      hookWords: ['Long to read.', 'Hard to follow.', { q: '“Right-click… Create Element… find the package…”' }],
       hook3: 'So the lab became <b>an app.</b>',
       sub: 'An intro to MBSE, <em>with early validation</em>',
       beats: ['Intro · the MBSE layers', 'The exercise, its concept', 'Guided, step by step', 'One click → open in the MBSE tool', 'From the phone too', 'Early validation, synced with the tool'],

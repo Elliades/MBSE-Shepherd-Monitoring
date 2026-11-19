@@ -1,0 +1,234 @@
+{
+  "title": "The bear comes too close, then backs off",
+  "objective": "The bear enters the safe perimeter: light and sound scare it off; it backs off and the drone tracks it again.",
+  "context": "Logical SOI 3 - Centralized orchestrator Simulation",
+  "cut": "Logical SOI 3 - Centralized orchestrator",
+  "settle": 2,
+  "systems": [
+    {
+      "path": "soi.mi",
+      "label": "Manual Initialization",
+      "type": "Manual Initialization"
+    },
+    {
+      "path": "soi.mc",
+      "label": "Mission Configuration",
+      "type": "Mission Configuration"
+    },
+    {
+      "path": "soi.bsrc",
+      "label": "Base station link",
+      "type": "Base station remote communication"
+    },
+    {
+      "path": "soi.orch",
+      "label": "Mission Orchestrator",
+      "type": "Mission Orchestrator"
+    },
+    {
+      "path": "soi.ap",
+      "label": "AutoPilot",
+      "type": "AutoPilot"
+    },
+    {
+      "path": "soi.zp",
+      "label": "Zone Patrolling",
+      "type": "Zone Patrolling"
+    },
+    {
+      "path": "soi.sm",
+      "label": "SheepMonitoring",
+      "type": "SheepMonitoring"
+    },
+    {
+      "path": "soi.pm",
+      "label": "Predator Management",
+      "type": "Predator Management"
+    },
+    {
+      "path": "soi.trk",
+      "label": "Tracking",
+      "type": "Tracking"
+    }
+  ],
+  "drivers": [
+    {
+      "path": "operator",
+      "label": "Operator",
+      "type": "Operator"
+    },
+    {
+      "path": "pasture",
+      "label": "Pasture Environment",
+      "type": "Pasture Environment"
+    }
+  ],
+  "phases": [
+    {
+      "name": "Preparation",
+      "goal": "",
+      "steps": [
+        {
+          "id": "power",
+          "signal": "Start SOI",
+          "into": "operator",
+          "note": "The operator powers the drone on.",
+          "expect": {
+            "soi.mi": [
+              "Powered On"
+            ],
+            "soi.mc": [
+              "Unconfigured"
+            ]
+          }
+        },
+        {
+          "id": "good-plan",
+          "signal": "FlightPlan Correct",
+          "into": "operator",
+          "note": "The flight plan is loaded and checked.",
+          "expect": {
+            "soi.mc": [
+              "Ready for Mission"
+            ]
+          },
+          "messages": [
+            "Ready for mission"
+          ]
+        }
+      ],
+      "setup": true,
+      "source": [
+        "arch3.power-on",
+        "arch3.plan-accepted"
+      ]
+    },
+    {
+      "name": "Guarding the flock",
+      "goal": "",
+      "steps": [
+        {
+          "id": "start",
+          "signal": "Start Sheep Guard Mission",
+          "into": "operator",
+          "note": "Launch: safe area, then patrol.",
+          "expect": {
+            "soi.mc": [
+              "Deployed"
+            ],
+            "soi.orch": [
+              "Patrolling",
+              "Dispatching"
+            ],
+            "soi.ap": [
+              "Following Watch Path"
+            ],
+            "soi.zp": [
+              "Perimeter watch"
+            ],
+            "soi.sm": [
+              "Sheep Monitoring"
+            ],
+            "soi.pm": [
+              "Monitoring predators"
+            ],
+            "soi.trk": [
+              "Tracking Idle"
+            ]
+          }
+        }
+      ],
+      "setup": true,
+      "source": "arch3.mission-start"
+    },
+    {
+      "name": "Predator response",
+      "goal": "",
+      "steps": [
+        {
+          "id": "bear",
+          "signal": "Predator Detected inside tracking perimeter",
+          "into": "pasture",
+          "note": "Tracking request: the predator takes priority, the orchestrator dispatches the orders.",
+          "expect": {
+            "soi.orch": [
+              "Predator tracking"
+            ],
+            "soi.zp": [
+              "Path Standby"
+            ],
+            "soi.sm": [
+              "Deactivated"
+            ],
+            "soi.trk": [
+              "Tracking Target"
+            ],
+            "soi.ap": [
+              "Following Predator"
+            ]
+          },
+          "messages": [
+            "Predator Alert"
+          ]
+        }
+      ],
+      "setup": true,
+      "source": "arch3.bear-enters"
+    },
+    {
+      "name": "Predator response",
+      "goal": "",
+      "steps": [
+        {
+          "id": "too-close",
+          "signal": "Predator entering safe perimiter",
+          "into": "pasture",
+          "note": "Engage request: the orchestrator orders the deterrence.",
+          "expect": {
+            "soi.orch": [
+              "Predator counteraction"
+            ],
+            "soi.pm": [
+              "Deterring"
+            ]
+          },
+          "messages": [
+            "Light burst",
+            "Sound burst"
+          ]
+        },
+        {
+          "id": "backs-off",
+          "signal": "Predator leaving safe perimiter",
+          "into": "pasture",
+          "note": "Disengage request: back to tracking.",
+          "expect": {
+            "soi.orch": [
+              "Predator tracking"
+            ],
+            "soi.pm": [
+              "Deterrence idle"
+            ]
+          }
+        }
+      ],
+      "source": "arch3.bear-deterred"
+    }
+  ],
+  "meta": {
+    "id": "arch3.bear-deterred",
+    "kind": "nominal",
+    "version": "1.0",
+    "status": "in use",
+    "description": "3 - Centralized orchestrator. One moment of the mission; what leads there is in its preconditions.",
+    "author": "MBSE Shepherd, Part 3",
+    "date": "2026-11-04",
+    "tags": [
+      "part3",
+      "architecture 3"
+    ],
+    "given": [
+      "arch3.bear-enters"
+    ]
+  }
+}
