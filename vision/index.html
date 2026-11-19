@@ -464,115 +464,152 @@
     </div>
   </section>
 
-  <!-- ============ 11. Generating the logical architecture ============ -->
-  <section class="scene" id="generation" data-title="Generate the logical architecture" data-phase="lg" data-phase-label="Step 3 · The logical architecture" data-tick="1000" data-hold="4:1300">
+  <!-- ============ 11. Generating, gate 1: the SysML syntax ============ -->
+  <section class="scene" id="generation" data-title="Gate 1 · SysML syntax" data-phase="lg" data-phase-label="Step 3 · The logical architecture" data-tick="1000" data-hold="4:1400,5:3400">
     <div class="txt">
-      <p class="k">Step 3 · Logical layer</p>
-      <h2>Give the drivers, the AI generates and iterates</h2>
-      <p class="lead">Inputs: <b>the architecture drivers</b>, <b>the mission</b> and <b>the scenarios</b>. On each round, the AI runs the three validators: SysML, behavioural, method.</p>
+      <p class="k">Step 3 · Logical layer · Gate 1</p>
+      <h2>The AI generates, the gates judge</h2>
+      <p class="lead">Inputs: <b>the architecture drivers</b>, <b>the mission</b> and <b>the scenarios</b>. The AI writes the architecture as a <b>.sysml</b> file and sends it through three gates in turn: <b>SysML syntax</b>, <b>method</b>, <b>behaviour</b>. Rejected? It reads why, corrects, and sends it again.</p>
     </div>
     <div class="ill">
-      <svg viewBox="0 0 600 420" role="img" aria-label="Drivers, mission and scenarios go into the AI, which iterates with three validators and produces the logical architecture">
+      <svg viewBox="0 0 600 380" role="img" aria-label="The AI generates a .sysml file from the drivers, the mission and the scenarios; the first gate rejects its syntax, the AI fixes it and the file passes">
         <g class="rise" data-at="1">
-          <rect class="bx2" x="16" y="20" width="194" height="142" rx="14"/><text x="32" y="46" class="b">Drivers</text>
-          <text x="32" y="72" class="s">• An orchestrator</text><text x="32" y="96" class="s">• A communication component</text>
-          <text x="32" y="120" class="s">• A supervisor: systems,</text><text x="44" y="138" class="s">mission, weather</text>
+          <rect class="bx2" x="16" y="16" width="190" height="96" rx="12"/><text x="30" y="40" class="b">Drivers</text>
+          <text x="30" y="62" class="s">• An orchestrator</text><text x="30" y="82" class="s">• A communication component</text><text x="30" y="102" class="s">• A supervisor</text>
+          <rect class="L2" x="16" y="122" width="190" height="32" rx="10"/><text x="111" y="143" class="c s b" style="fill:var(--ink)">Mission: STM + functions</text>
+          <rect class="L2" x="16" y="162" width="190" height="32" rx="10"/><text x="111" y="183" class="c s b" style="fill:var(--ink)">Scenarios: 6 played</text>
+          <circle cx="290" cy="104" r="40" class="ai"/><text x="290" y="100" class="c h" style="fill:var(--ai)">AI</text>
         </g>
-        <g class="rise" data-at="2"><rect class="L2" x="16" y="176" width="194" height="44" rx="12"/><text x="113" y="203" class="c s b" style="fill:var(--ink)">Mission: STM + functions</text></g>
-        <g class="rise" data-at="2"><rect class="L2" x="16" y="232" width="194" height="44" rx="12"/><text x="113" y="259" class="c s b" style="fill:var(--ink)">Scenarios: 5 played</text></g>
-        <g data-at="3">
-          <path class="ln" d="M210,90 L256,128" marker-end="url(#ah)"/><path class="ln" d="M210,198 L252,162" marker-end="url(#ah)"/><path class="ln" d="M210,254 L262,180" marker-end="url(#ah)"/>
-          <circle cx="300" cy="150" r="48" class="ai"/><text x="300" y="146" class="c h" style="fill:var(--ai)">AI</text>
-        </g>
-        <text x="300" y="168" class="c xs" data-at="3" data-off="5">generates</text>
-        <text x="300" y="168" class="c xs b" data-at="5" data-off="6">iteration 1</text>
-        <text x="300" y="168" class="c xs b" data-at="6" data-off="7">iteration 2</text>
-        <text x="300" y="168" class="c xs b" data-at="7" data-off="8">iteration 3</text>
-        <text x="300" y="168" class="c xs b" data-at="8">iteration 4</text>
-        <g data-at="4">
-          <path class="lnai" d="M346,136 L406,62" marker-end="url(#ahai)"/><path class="lnai" d="M348,150 L406,121" marker-end="url(#ahai)"/><path class="lnai" d="M346,164 L406,180" marker-end="url(#ahai)"/>
-          <text x="408" y="30" class="xs b">VALIDATORS</text>
-          <rect class="bx" x="408" y="40" width="178" height="42" rx="10"/><text x="444" y="66" class="s b" style="fill:var(--ink)">SysML</text>
-          <rect class="bx" x="408" y="100" width="178" height="42" rx="10"/><text x="444" y="126" class="s b" style="fill:var(--ink)">Behavioural</text>
-          <rect class="bx" x="408" y="160" width="178" height="42" rx="10"/><text x="444" y="186" class="s b" style="fill:var(--ink)">Method</text>
-          <circle cx="426" cy="61" r="7" class="vdot"/><circle cx="426" cy="121" r="7" class="vdot"/><circle cx="426" cy="181" r="7" class="vdot"/>
-        </g>
-        <circle cx="426" cy="61" r="7" class="badf" data-at="5" data-off="6"/><circle cx="426" cy="61" r="7" class="okf" data-at="6"/>
-        <circle cx="426" cy="121" r="7" class="badf" data-at="5" data-off="8"/><circle cx="426" cy="121" r="7" class="okf" data-at="8"/>
-        <circle cx="426" cy="181" r="7" class="badf" data-at="5" data-off="7"/><circle cx="426" cy="181" r="7" class="okf" data-at="7"/>
-        <g data-at="5"><path class="lnai" d="M497,202 C497,262 330,262 306,202" marker-end="url(#ahai)" style="stroke-dasharray:6 5"/><text x="420" y="256" class="xs b" style="fill:var(--ai)">iterates</text></g>
-        <g data-at="5"><rect class="L3" x="16" y="290" width="568" height="118" rx="16"/><text x="32" y="314" class="b L3t">Logical architecture</text></g>
-        <g class="pop" data-at="5"><rect class="bx" x="30" y="330" width="102" height="44" rx="10"/><text x="81" y="357" class="c xs b" style="fill:var(--ink)">Orchestrator</text></g>
-        <g class="pop" data-at="5"><rect class="bx" x="141" y="330" width="102" height="44" rx="10"/><text x="192" y="357" class="c xs b" style="fill:var(--ink)">Communication</text></g>
-        <g class="pop" data-at="6"><rect class="bx" x="252" y="330" width="102" height="44" rx="10"/><text x="303" y="357" class="c xs b" style="fill:var(--ink)">Supervisor</text></g>
-        <g class="pop" data-at="6"><rect class="bx" x="363" y="330" width="102" height="44" rx="10"/><text x="414" y="357" class="c xs b" style="fill:var(--ink)">Navigation</text></g>
-        <g class="pop" data-at="7"><rect class="bx" x="474" y="330" width="102" height="44" rx="10"/><text x="525" y="357" class="c xs b" style="fill:var(--ink)">Sensors</text></g>
-        <g class="pop" data-at="8"><rect class="ok" x="404" y="296" width="166" height="26" rx="10"/><text x="487" y="314" class="c s b" style="fill:var(--ok)">✓ 3 of 3 validators</text></g>
+        <g data-at="2"><path class="ln" d="M206,64 L250,92 M206,138 L250,112 M206,178 L256,126" marker-end="url(#ah)"/><text x="290" y="120" class="c xs">generates</text></g>
+        <!-- the three gates -->
+        <rect class="bx2" x="30" y="250" width="150" height="80" rx="12"/>
+        <rect class="bad" x="30" y="250" width="150" height="80" rx="12" data-at="4" data-off="7"/>
+        <rect class="ok" x="30" y="250" width="150" height="80" rx="12" data-at="7"/>
+        <text x="44" y="274" class="xs b">GATE 1</text><text x="44" y="300" class="b">SysML syntax</text>
+        <rect class="bx2" x="225" y="250" width="150" height="80" rx="12"/><text x="239" y="274" class="xs b">GATE 2</text><text x="239" y="300" class="b">Method</text>
+        <rect class="bx2" x="420" y="250" width="150" height="80" rx="12"/><text x="434" y="274" class="xs b">GATE 3</text><text x="434" y="300" class="b">Behaviour</text>
+        <circle cx="160" cy="270" r="7" class="vdot"/><circle cx="355" cy="270" r="7" class="vdot"/><circle cx="550" cy="270" r="7" class="vdot"/>
+        <circle cx="160" cy="270" r="7" class="badf" data-at="4" data-off="7"/><circle cx="160" cy="270" r="7" class="okf" data-at="7"/>
+        <text x="105" y="354" class="c xs m b" style="fill:var(--bad)" data-at="4" data-off="7">✗ line 42: expected ';'</text>
+        <text x="105" y="354" class="c xs b" style="fill:var(--ok)" data-at="7">✓ valid SysML</text>
+        <text x="300" y="354" class="c xs b" style="fill:var(--ai)" data-at="8">next: the method</text>
+        <g data-at="4" data-off="6"><path class="lnbad" d="M162,214 C230,214 272,190 284,148" marker-end="url(#ahbad)"/><text x="214" y="226" class="xs b" style="fill:var(--bad)">rejected</text></g>
+        <!-- the .sysml file, travelling -->
+        <g transform="translate(346,86)"><g data-at="2" data-from="0,0" data-path="3:-291,114;5:0,0;6:-291,114;8:-96,114">
+          <rect x="-6" y="0" width="112" height="36" rx="6" class="bx" style="stroke:var(--ai);stroke-width:2"/><text x="50" y="23" class="c m b" style="fill:var(--ai)">logical.sysml</text>
+        </g></g>
       </svg>
-      <button type="button" class="replay">↻ Replay</button>
-    </div>
-  </section>
-
-  <!-- ============ 12. Iterating ============ -->
-  <section class="scene" id="iterate" data-title="Iterate with the validators" data-phase="lg" data-phase-label="Step 3 · The logical architecture" data-tick="1500">
-    <div class="txt">
-      <p class="k">Step 3 · Iterations</p>
-      <h2>Each validator moves the architecture forward</h2>
-      <p class="lead">The SysML is valid: import into SAM, the engineer edits by hand. The method flags something forgotten. The scenarios pass in BEE… <b>except one</b>.</p>
-    </div>
-    <div class="ill">
-      <div class="log">
-        <div class="log-row ko rise" data-at="1"><span class="it">it. 1</span><div><span class="who">✗ SysML validator</span><p>Untyped port on <code>Communication</code>.</p><span class="fix">→ the AI types the port</span></div></div>
-        <div class="log-row ok rise" data-at="2"><span class="it">it. 2</span><div><span class="who">✓ SysML validator</span><p>Valid model: <b>imported into SAM</b>.</p></div></div>
-        <div class="log-row me rise" data-at="3"><span class="it">SAM</span><div><span class="who">Engineer</span><p>I rename a component and move a function, by hand.</p></div></div>
-        <div class="log-row ko rise" data-at="4"><span class="it">it. 3</span><div><span class="who">✗ Method validator</span><p>Function “Monitor the wind” is allocated to no component. <i>Ah, I forgot to fill that in.</i></p><span class="fix">→ allocated to the Supervisor</span></div></div>
-        <div class="log-row ko rise" data-at="5"><span class="it">it. 4</span><div><span class="who">✗ Scenarios in BEE · 4/5</span><p>“Strong wind” fails: the drone does not land.</p><span class="fix">→ next scene</span></div></div>
+      <div class="chat" style="margin:8px 0 0">
+        <div class="msg ia rise" data-at="5"><small>AI</small><span class="type" data-at="5" data-text="Rejected: the syntax is wrong, a missing ';' on line 42. I fix it and send it again."></span></div>
       </div>
       <button type="button" class="replay">↻ Replay</button>
     </div>
   </section>
 
-  <!-- ============ 13. The failing scenario ============ -->
-  <section class="scene" id="strong-wind" data-title="The failing scenario" data-phase="lg" data-phase-label="Step 3 · The logical architecture" data-tick="1100" data-hold="3:1800,4:3800,6:1600">
+  <!-- ============ 12. Gate 2: the method ============ -->
+  <section class="scene" id="method-gate" data-title="Gate 2 · Method" data-phase="lg" data-phase-label="Step 3 · The logical architecture" data-tick="1000" data-hold="3:1400,4:3600">
     <div class="txt">
-      <p class="k">Step 3 · The gap found</p>
-      <h2>Nobody receives “strong wind”</h2>
-      <p class="lead">The supervisor detects the strong wind but passes it to nobody: the drone stays airborne. Add the connection, the scenario passes. Then <b>re-check everything</b> against the method: traceability, consistency of the diagrams.</p>
+      <p class="k">Step 3 · Logical layer · Gate 2</p>
+      <h2>The method finds what is not traced</h2>
+      <p class="lead">The syntax is fine, now the method validator. A function was added but is <b>not traced to the functional layer</b>, an element takes part in <b>no scenario</b>. The AI regenerates the missing part on its own and sends it again.</p>
     </div>
     <div class="ill">
-      <svg viewBox="0 0 600 400" role="img" aria-label="Logical architecture: the strong wind signal stops at the supervisor, then the connection is added">
-        <text x="16" y="28" class="h">“Strong wind” scenario</text>
-        <g data-at="3" data-off="6"><rect class="bad" x="430" y="8" width="150" height="30" rx="15"/><text x="505" y="28" class="c s b" style="fill:var(--bad)">✗ fails</text></g>
-        <g class="pop" data-at="6"><rect class="ok" x="430" y="8" width="150" height="30" rx="15"/><text x="505" y="28" class="c s b" style="fill:var(--ok)">✓ passes</text></g>
-        <g data-at="1">
-          <rect class="L3" x="30" y="60" width="150" height="52" rx="10"/><text x="105" y="91" class="c b">Sensors</text>
-          <rect class="L3" x="225" y="60" width="150" height="52" rx="10"/><text x="300" y="91" class="c b">Supervisor</text>
-          <rect class="L3" x="225" y="210" width="150" height="52" rx="10"/><text x="300" y="241" class="c b">Orchestrator</text>
-          <rect class="L3" x="420" y="210" width="150" height="52" rx="10"/><text x="495" y="241" class="c b">Navigation</text>
-          <rect class="L3" x="30" y="210" width="150" height="52" rx="10"/><text x="105" y="241" class="c b">Communication</text>
-          <path class="ln" d="M180,86 L225,86 M375,236 L420,236 M180,236 L225,236"/>
+      <svg viewBox="0 0 600 290" role="img" aria-label="The file reaches the method gate, is rejected, the AI regenerates the missing part, and the file passes the first two gates">
+        <circle cx="240" cy="60" r="40" class="ai"/><text x="240" y="56" class="c h" style="fill:var(--ai)">AI</text>
+        <text x="240" y="76" class="c xs b" style="fill:var(--ai)" data-at="5">regenerates</text>
+        <rect class="ok" x="30" y="160" width="150" height="80" rx="12"/><text x="44" y="184" class="xs b">GATE 1</text><text x="44" y="210" class="b">SysML syntax</text>
+        <rect class="bx2" x="225" y="160" width="150" height="80" rx="12"/>
+        <rect class="bad" x="225" y="160" width="150" height="80" rx="12" data-at="2" data-off="7"/>
+        <rect class="ok" x="225" y="160" width="150" height="80" rx="12" data-at="7"/>
+        <text x="239" y="184" class="xs b">GATE 2</text><text x="239" y="210" class="b">Method</text>
+        <rect class="bx2" x="420" y="160" width="150" height="80" rx="12"/><text x="434" y="184" class="xs b">GATE 3</text><text x="434" y="210" class="b">Behaviour</text>
+        <circle cx="160" cy="180" r="7" class="okf"/><circle cx="355" cy="180" r="7" class="vdot"/><circle cx="550" cy="180" r="7" class="vdot"/>
+        <circle cx="355" cy="180" r="7" class="badf" data-at="2" data-off="7"/><circle cx="355" cy="180" r="7" class="okf" data-at="7"/>
+        <text x="105" y="264" class="c xs b" style="fill:var(--ok)">✓ valid SysML</text>
+        <text x="300" y="264" class="c xs b" style="fill:var(--bad)" data-at="2" data-off="7">✗ 2 findings</text>
+        <text x="300" y="264" class="c xs b" style="fill:var(--ok)" data-at="7">✓ method rules hold</text>
+        <text x="495" y="264" class="c xs b" style="fill:var(--ai)" data-at="8">next: the behaviour</text>
+        <g transform="translate(296,42)"><g data-at="1" data-from="-46,70" data-path="4:0,0;5:-241,70;6:-46,70;8:149,70">
+          <rect x="-6" y="0" width="112" height="36" rx="6" class="bx" style="stroke:var(--ai);stroke-width:2"/><text x="50" y="23" class="c m b" style="fill:var(--ai)">logical.sysml</text>
+        </g></g>
+      </svg>
+      <div class="panel" style="margin-top:6px">
+        <div class="panel-h"><i></i>Gate 2 · method validator</div>
+        <div class="rule ko rise" data-at="2"><span class="ic">✗</span><span><b>Function not traced:</b> <code>Estimate the flock size</code> was added, but no function of the functional layer leads to it</span></div>
+        <div class="rule ko rise" data-at="3"><span class="ic">✗</span><span><b>Element in no scenario:</b> <code>Data logger</code> takes part in none of the scenarios</span></div>
+      </div>
+      <div class="chat" style="margin:10px 0 0">
+        <div class="msg ia rise" data-at="4"><small>AI</small><span class="type" data-at="4" data-text="Oops: a function I added is not traced, and an element is in no scenario. Never mind: I regenerate the missing part."></span></div>
+      </div>
+      <button type="button" class="replay">↻ Replay</button>
+    </div>
+  </section>
+
+  <!-- ============ 13. Gate 3: the behaviour ============ -->
+  <section class="scene" id="strong-wind" data-title="Gate 3 · Behaviour" data-phase="lg" data-phase-label="Step 3 · The logical architecture" data-tick="1000" data-hold="1:1300,2:300,3:300,4:300,5:300,6:500,7:900,9:1600,10:4600,11:1800,12:1600,13:1500,14:2000">
+    <div class="txt">
+      <p class="k">Step 3 · Logical layer · Gate 3</p>
+      <h2>Every scenario, played at once</h2>
+      <p class="lead">BEE plays all the scenarios in parallel. One fails: <b>nobody receives the strong wind</b>. A modelling slip or a design gap? That one is the engineer's call. The AI asks, takes the answer as <b>a new requirement</b>, updates the architecture and runs every gate again.</p>
+    </div>
+    <div class="ill">
+      <svg viewBox="0 0 600 380" role="img" aria-label="Six scenarios played in parallel, one fails because the strong wind signal reaches nobody; the engineer decides the Ground station orders the emergency landing and every gate passes">
+        <text x="16" y="26" class="h">Gate 3 · scenarios in BEE</text>
+        <rect class="ok" x="392" y="10" width="58" height="24" rx="12"/><text x="421" y="27" class="c xs b" style="fill:var(--ok)">G1 ✓</text>
+        <rect class="ok" x="458" y="10" width="58" height="24" rx="12"/><text x="487" y="27" class="c xs b" style="fill:var(--ok)">G2 ✓</text>
+        <rect class="bx2" x="524" y="10" width="60" height="24" rx="12"/><text x="554" y="27" class="c xs b">G3 …</text>
+        <g data-at="8" data-off="15"><rect class="bad" x="524" y="10" width="60" height="24" rx="12"/><text x="554" y="27" class="c xs b" style="fill:var(--bad)">G3 ✗</text></g>
+        <g class="pop" data-at="15"><rect class="ok" x="524" y="10" width="60" height="24" rx="12"/><text x="554" y="27" class="c xs b" style="fill:var(--ok)">G3 ✓</text></g>
+        <!-- six scenarios in parallel -->
+        <rect class="bx2" x="16" y="48" width="278" height="26" rx="8"/><text x="26" y="65" class="s">Start the mission</text>
+        <rect class="bx2" x="16" y="80" width="278" height="26" rx="8"/><text x="26" y="97" class="s">Reach the zone</text>
+        <rect class="bx2" x="16" y="112" width="278" height="26" rx="8"/><text x="26" y="129" class="s">Count the flock</text>
+        <rect class="bx2" x="306" y="48" width="278" height="26" rx="8"/><text x="316" y="65" class="s">Sheep out</text>
+        <rect class="bx2" x="306" y="80" width="278" height="26" rx="8"/>
+        <rect class="bad" x="306" y="80" width="278" height="26" rx="8" data-at="6" data-off="15"/>
+        <text x="316" y="97" class="s">Strong wind</text>
+        <rect class="bx2" x="306" y="112" width="278" height="26" rx="8"/><text x="316" y="129" class="s">Return home</text>
+        <path class="ln" style="stroke:var(--line);stroke-width:4" d="M156,61 L246,61 M156,93 L246,93 M156,125 L246,125 M446,61 L536,61 M446,93 L536,93 M446,125 L536,125"/>
+        <path class="draw" data-at="1" pathLength="1" style="fill:none;stroke:var(--ai);stroke-width:4" d="M156,61 L246,61"/>
+        <path class="draw" data-at="1" pathLength="1" style="fill:none;stroke:var(--ai);stroke-width:4" d="M156,93 L246,93"/>
+        <path class="draw" data-at="1" pathLength="1" style="fill:none;stroke:var(--ai);stroke-width:4" d="M156,125 L246,125"/>
+        <path class="draw" data-at="1" pathLength="1" style="fill:none;stroke:var(--ai);stroke-width:4" d="M446,61 L536,61"/>
+        <path class="draw" data-at="1" pathLength="1" style="fill:none;stroke:var(--ai);stroke-width:4" d="M446,93 L536,93"/>
+        <path class="draw" data-at="1" pathLength="1" style="fill:none;stroke:var(--ai);stroke-width:4" d="M446,125 L536,125"/>
+        <g class="pop" data-at="2"><circle cx="272" cy="61" r="9" class="okf"/><text x="272" y="65" class="c xs b w">✓</text></g>
+        <g class="pop" data-at="3"><circle cx="272" cy="93" r="9" class="okf"/><text x="272" y="97" class="c xs b w">✓</text></g>
+        <g class="pop" data-at="4"><circle cx="272" cy="125" r="9" class="okf"/><text x="272" y="129" class="c xs b w">✓</text></g>
+        <g class="pop" data-at="5"><circle cx="562" cy="61" r="9" class="okf"/><text x="562" y="65" class="c xs b w">✓</text></g>
+        <g class="pop" data-at="6" data-off="15"><circle cx="562" cy="93" r="9" class="badf"/><text x="562" y="97" class="c xs b w">✗</text></g>
+        <g class="pop" data-at="15"><circle cx="562" cy="93" r="9" class="okf"/><text x="562" y="97" class="c xs b w">✓</text></g>
+        <g class="pop" data-at="7"><circle cx="562" cy="125" r="9" class="okf"/><text x="562" y="129" class="c xs b w">✓</text></g>
+        <text x="16" y="164" class="s b" style="fill:var(--bad)" data-at="8" data-off="15">5 / 6 · “Strong wind” fails: the drone stays airborne</text>
+        <text x="16" y="164" class="s b" style="fill:var(--ok)" data-at="15">6 / 6 · all three gates pass: a logical architecture</text>
+        <!-- why: the logical architecture -->
+        <g class="rise" data-at="8">
+          <rect class="L3" x="16" y="190" width="110" height="38" rx="9"/><text x="71" y="214" class="c s b" style="fill:var(--ink)">Sensors</text>
+          <rect class="L3" x="160" y="190" width="120" height="38" rx="9"/><text x="220" y="214" class="c s b" style="fill:var(--ink)">Supervisor</text>
+          <rect class="L3" x="330" y="240" width="120" height="38" rx="9"/><text x="390" y="264" class="c s b" style="fill:var(--ink)">Communication</text>
+          <rect class="act" x="480" y="240" width="104" height="38" rx="9" style="stroke-dasharray:5 4"/><text x="532" y="264" class="c xs b" style="fill:var(--ink)">Ground station</text>
+          <rect class="L3" x="160" y="290" width="120" height="38" rx="9"/><text x="220" y="314" class="c s b" style="fill:var(--ink)">Orchestrator</text>
+          <rect class="L3" x="16" y="290" width="110" height="38" rx="9"/><text x="71" y="314" class="c s b" style="fill:var(--ink)">Navigation</text>
+          <path class="ln" d="M126,209 L160,209 M160,309 L126,309 M450,259 L480,259 M280,309 L330,270"/>
         </g>
-        <g class="m">
-          <circle r="7" class="aif" data-at="2" data-off="6"><animateMotion begin="indefinite" dur="0.9s" fill="freeze" path="M105,86 L300,86"/></circle>
-          <text x="202" y="52" class="c xs" data-at="2">strong wind</text>
+        <g data-at="9" data-off="12">
+          <circle r="7" class="aif"><animateMotion begin="indefinite" dur="0.9s" fill="freeze" path="M71,209 L154,209"/></circle>
+          <text x="143" y="184" class="c xs m">strongWind</text>
         </g>
-        <g data-at="3" data-off="5"><path class="lnbad" d="M300,112 L300,208"/><text x="312" y="150" class="s b" style="fill:var(--bad)">nobody receives</text><text x="312" y="168" class="s b" style="fill:var(--bad)">“strong wind”</text></g>
-        <path class="lnok draw" pathLength="1" data-at="5" d="M300,112 L300,206" marker-end="url(#ahok)"/>
-        <circle r="7" class="dot okf" data-at="6"><animateMotion begin="indefinite" dur="1.3s" fill="freeze" path="M300,86 L300,236 L495,236"/></circle>
-        <text x="398" y="280" class="c xs m" data-at="6">land</text>
-        <text x="30" y="318" class="s" data-at="3">Drone state:</text>
-        <g data-at="3" data-off="6"><rect class="bad" x="140" y="300" width="250" height="28" rx="14"/><text x="265" y="319" class="c s b" style="fill:var(--bad)">Monitoring · stays airborne</text></g>
-        <g class="pop" data-at="6"><rect class="ok" x="140" y="300" width="250" height="28" rx="14"/><text x="265" y="319" class="c s b" style="fill:var(--ok)">Emergency landing</text></g>
-        <g data-at="7">
-          <text x="30" y="370" class="s">Re-check:</text>
-          <rect class="ok" x="140" y="352" width="128" height="28" rx="14"/><text x="204" y="371" class="c xs b" style="fill:var(--ok)">✓ Traceability</text>
-          <rect class="ok" x="276" y="352" width="168" height="28" rx="14"/><text x="360" y="371" class="c xs b" style="fill:var(--ok)">✓ Diagram consistency</text>
-          <rect class="ok" x="452" y="352" width="128" height="28" rx="14"/><text x="516" y="371" class="c xs b" style="fill:var(--ok)">✓ Method</text>
-        </g>
+        <g data-at="9" data-off="12"><path class="lnbad" d="M280,209 L318,209"/><text x="324" y="214" class="s b" style="fill:var(--bad)">received by nobody</text></g>
+        <path class="lnok draw" pathLength="1" data-at="12" d="M280,218 L328,248" marker-end="url(#ahok)"/>
+        <circle r="7" class="dot okf" data-at="13"><animateMotion begin="indefinite" dur="1.2s" fill="freeze" path="M220,209 L390,259 L532,259"/></circle>
+        <text x="336" y="234" class="xs m" data-at="13">strongWind</text>
+        <circle r="7" class="dot okf" data-at="14"><animateMotion begin="indefinite" dur="1.6s" fill="freeze" path="M532,259 L390,259 L220,309 L71,309"/></circle>
+        <text x="336" y="312" class="xs m" data-at="14">emergencyLanding</text>
+        <g class="pop" data-at="12"><rect class="L1" x="16" y="342" width="568" height="28" rx="10"/><text x="300" y="361" class="c s b" style="fill:var(--ink)">New requirement · the Ground station orders the emergency landing</text></g>
       </svg>
       <div class="chat" style="margin:8px 0 0">
-        <div class="msg ia rise" data-at="4"><small>AI</small><span class="type" data-at="4" data-text="The supervisor detects the strong wind but sends it to nobody. Shall I add the Supervisor → Orchestrator connection?"></span></div>
-        <div class="msg me rise" data-at="5"><small>Engineer</small><span class="type" data-at="5" data-text="Ah, right. Go ahead."></span></div>
+        <div class="msg ia rise" data-at="10"><small>AI</small><span class="type" data-at="10" data-text="strongWind is received by nobody. A modelling slip, or a design gap? It is design: who should order the emergency landing?"></span></div>
+        <div class="msg me rise" data-at="11"><small>Engineer</small><span class="type" data-at="11" data-text="The Ground station."></span></div>
       </div>
       <button type="button" class="replay">↻ Replay</button>
     </div>
