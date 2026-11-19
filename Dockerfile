@@ -22,6 +22,7 @@ COPY tool /usr/share/nginx/html/tool
 COPY promo /usr/share/nginx/html/promo
 COPY support /usr/share/nginx/html/support
 COPY article /usr/share/nginx/html/article
+COPY vision /usr/share/nginx/html/vision
 COPY api/health.json /usr/share/nginx/html/api/health.json
 EXPOSE 80
 HEALTHCHECK --interval=15s --timeout=5s --retries=3 \
